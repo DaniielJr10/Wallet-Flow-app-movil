@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'login/iniciosesion.dart';
+import 'auth_wrapper.dart';
 
 void main() async {
   // Asegurar que los widgets estén inicializados
@@ -55,7 +55,7 @@ class WalletFlowApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const InicioSesionScreen(),
+      home: const AuthWrapper(),
     );
   }
 }

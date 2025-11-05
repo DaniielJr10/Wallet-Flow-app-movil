@@ -86,10 +86,7 @@ class _InicioSesionScreenState extends State<InicioSesionScreen> {
           // Éxito - usuario logueado
           _showSnackBar('¡Bienvenido a Wallet Flow!', const Color(0xFF10B981));
           
-          // TODO: Navegar a la pantalla principal cuando esté lista
-          // Navigator.pushReplacementNamed(context, '/home');
-          
-          // Por ahora, mostrar mensaje de éxito
+          // El AuthWrapper se encargará de la navegación automática
           print('Usuario logueado: ${_authService.emailUsuario}');
         } else {
           // Error - mostrar mensaje específico
