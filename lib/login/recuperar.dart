@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../firebase/autenticacion_servicio.dart';
 
 /// Pantalla de recuperar contraseña de Wallet Flow
 /// Presenta un diseño moderno y responsivo para recuperación de contraseña
@@ -10,6 +11,9 @@ class RecuperarScreen extends StatefulWidget {
 }
 
 class _RecuperarScreenState extends State<RecuperarScreen> {
+  // Servicio de autenticación Firebase
+  final AutenticacionServicio _authService = AutenticacionServicio();
+  
   // Controlador para el campo de correo
   final _emailController = TextEditingController();
   
@@ -51,25 +55,33 @@ class _RecuperarScreenState extends State<RecuperarScreen> {
     });
 
     try {
-      // Simular proceso de envío de código
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // Aquí iría la lógica real de envío de código
-      // Por ejemplo: await AuthService.sendResetCode(_emailController.text);
+      // Enviar email de recuperación con Firebase
+      final String? error = await _authService.recuperarPassword(
+        email: _emailController.text.trim(),
+      );
       
       if (mounted) {
-        _showSnackBar(
-          'Código de verificación enviado a ${_emailController.text}', 
-          const Color(0xFF10B981)
-        );
-        
-        // Navegar a pantalla de verificación de código
-        // Navigator.pushNamed(context, '/verify-code', arguments: _emailController.text);
+        if (error == null) {
+          // Éxito - email enviado
+          _showSnackBar(
+            'Email de recuperación enviado a ${_emailController.text}', 
+            const Color(0xFF10B981)
+          );
+          
+          // Mostrar instrucciones adicionales
+          _showSnackBar(
+            'Revisa tu bandeja de entrada y sigue las instrucciones', 
+            const Color(0xFF059669)
+          );
+        } else {
+          // Error en envío
+          _showSnackBar(error, const Color(0xFFEF4444));
+        }
       }
     } catch (e) {
       if (mounted) {
         _showSnackBar(
-          'Error al enviar el código. Verifica tu correo e intenta nuevamente.', 
+          'Error inesperado: $e', 
           const Color(0xFFEF4444)
         );
       }

@@ -41,13 +41,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'TU_WEB_API_KEY_AQUI',
-    appId: 'TU_WEB_APP_ID_AQUI',
+    apiKey: 'AIzaSyBD0TJc67vf9mZb_VwX6RWQ-qMrpWNDjo4',
+    appId: '1:873056120753:web:bcc92d9c0603e885c1d790',
     messagingSenderId: '873056120753',
     projectId: 'walletflow-app-f4069',
     authDomain: 'walletflow-app-f4069.firebaseapp.com',
     storageBucket: 'walletflow-app-f4069.firebasestorage.app',
-    measurementId: 'TU_MEASUREMENT_ID_AQUI',
+    measurementId: 'G-J4MD3S10NC',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -59,8 +59,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'TU_IOS_API_KEY_AQUI',
-    appId: 'TU_IOS_APP_ID_AQUI',
+    apiKey: 'AIzaSyB__DW00pEbSRLYg_ZxgO9-VaAQQYIOVoM',
+    appId: '1:873056120753:android:831224665a7538e0c1d790',
     messagingSenderId: '873056120753',
     projectId: 'walletflow-app-f4069',
     storageBucket: 'walletflow-app-f4069.firebasestorage.app',
@@ -68,8 +68,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'TU_MACOS_API_KEY_AQUI',
-    appId: 'TU_MACOS_APP_ID_AQUI',
+    apiKey: 'AIzaSyB__DW00pEbSRLYg_ZxgO9-VaAQQYIOVoM',
+    appId: '1:873056120753:android:831224665a7538e0c1d790',
     messagingSenderId: '873056120753',
     projectId: 'walletflow-app-f4069',
     storageBucket: 'walletflow-app-f4069.firebasestorage.app',
@@ -77,8 +77,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'TU_WINDOWS_API_KEY_AQUI',
-    appId: 'TU_WINDOWS_APP_ID_AQUI',
+    apiKey: 'AIzaSyB__DW00pEbSRLYg_ZxgO9-VaAQQYIOVoM',
+    appId: '1:873056120753:android:831224665a7538e0c1d790',
     messagingSenderId: '873056120753',
     projectId: 'walletflow-app-f4069',
     storageBucket: 'walletflow-app-f4069.firebasestorage.app',

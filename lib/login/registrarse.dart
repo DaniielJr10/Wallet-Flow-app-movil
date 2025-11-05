@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../firebase/autenticacion_servicio.dart';
+import '../firebase/base_datos_servicio.dart';
 
 /// Pantalla de registro de Wallet Flow
 /// Presenta un diseño moderno y responsivo para crear cuenta nueva
@@ -10,6 +12,10 @@ class RegistrarseScreen extends StatefulWidget {
 }
 
 class _RegistrarseScreenState extends State<RegistrarseScreen> {
+  // Servicios de Firebase
+  final AutenticacionServicio _authService = AutenticacionServicio();
+  final BaseDatosServicio _dbService = BaseDatosServicio();
+  
   // Controladores para los campos de texto
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -104,25 +110,43 @@ class _RegistrarseScreenState extends State<RegistrarseScreen> {
     });
 
     try {
-      // Simular proceso de registro
-      await Future.delayed(const Duration(seconds: 2));
+      // Separar nombre y apellido
+      final nombreCompleto = _nameController.text.trim().split(' ');
+      final nombre = nombreCompleto.isNotEmpty ? nombreCompleto[0] : '';
+      final apellido = nombreCompleto.length > 1 
+          ? nombreCompleto.sublist(1).join(' ') 
+          : '';
       
-      // Aquí iría la lógica real de registro
-      // Por ejemplo: await AuthService.register(_nameController.text, _emailController.text, _passwordController.text);
+      // Registrar usuario en Firebase Auth
+      final String? errorAuth = await _authService.registrarUsuario(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        nombre: nombre,
+        apellido: apellido,
+      );
       
       if (mounted) {
-        _showSnackBar(
-          '¡Cuenta creada exitosamente! Bienvenido a Wallet Flow', 
-          const Color(0xFF10B981)
-        );
-        
-        // Navegar a la pantalla principal o verificación de email
-        // Navigator.pushReplacementNamed(context, '/home');
+        if (errorAuth == null) {
+          // Éxito - usuario registrado
+          _showSnackBar(
+            '¡Cuenta creada exitosamente! Bienvenido a Wallet Flow', 
+            const Color(0xFF10B981)
+          );
+          
+          // TODO: Navegar a pantalla de completar perfil o home
+          // Navigator.pushReplacementNamed(context, '/complete-profile');
+          
+          // Por ahora, navegar de vuelta al login
+          Navigator.pop(context);
+        } else {
+          // Error en registro
+          _showSnackBar(errorAuth, const Color(0xFFEF4444));
+        }
       }
     } catch (e) {
       if (mounted) {
         _showSnackBar(
-          'Error al crear la cuenta. Verifica tus datos e intenta nuevamente.', 
+          'Error inesperado: $e', 
           const Color(0xFFEF4444)
         );
       }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../firebase/autenticacion_servicio.dart';
 import 'recuperar.dart';
 import 'registrarse.dart';
 
@@ -12,6 +13,9 @@ class InicioSesionScreen extends StatefulWidget {
 }
 
 class _InicioSesionScreenState extends State<InicioSesionScreen> {
+  // Servicio de autenticación de Firebase
+  final AutenticacionServicio _authService = AutenticacionServicio();
+  
   // Controladores para los campos de texto
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -60,7 +64,7 @@ class _InicioSesionScreenState extends State<InicioSesionScreen> {
     return null;
   }
 
-  /// Maneja el proceso de inicio de sesión
+  /// Maneja el proceso de inicio de sesión con Firebase
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -71,20 +75,30 @@ class _InicioSesionScreenState extends State<InicioSesionScreen> {
     });
 
     try {
-      // Simular proceso de autenticación
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // Aquí iría la lógica real de autenticación
-      // Por ejemplo: await AuthService.login(_emailController.text, _passwordController.text);
+      // Autenticación real con Firebase
+      final String? error = await _authService.iniciarSesion(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
       
       if (mounted) {
-        _showSnackBar('¡Inicio de sesión exitoso!', const Color(0xFF10B981));
-        // Navegar a la pantalla principal
-        // Navigator.pushReplacementNamed(context, '/home');
+        if (error == null) {
+          // Éxito - usuario logueado
+          _showSnackBar('¡Bienvenido a Wallet Flow!', const Color(0xFF10B981));
+          
+          // TODO: Navegar a la pantalla principal cuando esté lista
+          // Navigator.pushReplacementNamed(context, '/home');
+          
+          // Por ahora, mostrar mensaje de éxito
+          print('Usuario logueado: ${_authService.emailUsuario}');
+        } else {
+          // Error - mostrar mensaje específico
+          _showSnackBar(error, const Color(0xFFEF4444));
+        }
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Error al iniciar sesión. Verifica tus credenciales.', const Color(0xFFEF4444));
+        _showSnackBar('Error inesperado: $e', const Color(0xFFEF4444));
       }
     } finally {
       if (mounted) {
