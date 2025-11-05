@@ -3,17 +3,49 @@ import 'package:flutter/material.dart';
 import 'login/iniciosesion.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const WalletFlowApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+/// Aplicación principal de Wallet Flow
+class WalletFlowApp extends StatelessWidget {
+  const WalletFlowApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Wallet Flow',
       debugShowCheckedModeBanner: false,
-      home: InicioSesionPage(),
+      theme: ThemeData(
+        // Configuración del tema principal con colores verdes
+        primarySwatch: Colors.green,
+        primaryColor: const Color(0xFF10B981),
+        fontFamily: 'SF Pro Text', // Fuente moderna (opcional)
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        
+        // Configuración del tema de inputs
+        inputDecorationTheme: const InputDecorationTheme(
+          labelStyle: TextStyle(
+            color: Color(0xFF065F46),
+            fontWeight: FontWeight.w500,
+          ),
+          hintStyle: TextStyle(
+            color: Color(0xFF6B7280),
+          ),
+        ),
+        
+        // Configuración del tema de botones
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF10B981),
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        ),
+      ),
+      home: const InicioSesionScreen(),
     );
   }
 }
