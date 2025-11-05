@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'recuperar.dart';
+import 'registrarse.dart';
 
 /// Pantalla de inicio de sesión de Wallet Flow
 /// Presenta un diseño moderno y responsivo con validación de campos
@@ -127,8 +128,12 @@ class _InicioSesionScreenState extends State<InicioSesionScreen> {
 
   /// Navega a la pantalla de registro
   void _navigateToRegister() {
-    _showSnackBar('Función de registro próximamente', const Color(0xFF059669));
-    // Navigator.pushNamed(context, '/register');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const RegistrarseScreen(),
+      ),
+    );
   }
 
   @override
