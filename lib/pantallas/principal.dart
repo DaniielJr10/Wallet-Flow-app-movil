@@ -432,76 +432,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             
             const SizedBox(height: 32),
             
-            // Acciones rápidas
-            const Text(
-              'Acciones Rápidas',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1F2937),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _buildQuickActionButton(
-                  title: 'Nuevo\nIngreso',
-                  icon: Icons.add_circle_outline_rounded,
-                  color: Colors.green.shade600,
-                  onTap: () => _navigateToSection(1), // Ingresos
-                ),
-                _buildQuickActionButton(
-                  title: 'Añadir\nGasto',
-                  icon: Icons.remove_circle_outline_rounded,
-                  color: Colors.red.shade600,
-                  onTap: () => _navigateToSection(2), // Gastos
-                ),
-                _buildQuickActionButton(
-                  title: 'Nuevo\nAhorro',
-                  icon: Icons.savings_outlined,
-                  color: const Color(0xFF10B981),
-                  onTap: () => _navigateToSection(3), // Ahorros
-                ),
-                _buildQuickActionButton(
-                  title: 'Ver\nInversiones',
-                  icon: Icons.trending_up_rounded,
-                  color: Colors.blue.shade600,
-                  onTap: () => _navigateToSection(5), // Inversiones
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 32),
-            
-            // Menú de servicios organizados
-            const Text(
-              'Servicios Financieros',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1F2937),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            _buildFinancialServicesMenu(),
-            
-            const SizedBox(height: 32),
-            
-            // Análisis rápido
-            const Text(
-              'Análisis Rápido',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1F2937),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            _buildQuickAnalysis(),
-            
-            const SizedBox(height: 32),
+            // ...existing code...
             
             // Resumen financiero
             const Text(
@@ -513,7 +444,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
               ),
             ),
             const SizedBox(height: 16),
-            
             _buildFinancialCard(
               title: 'Ingresos del Mes',
               amount: '\$4,230.00',
@@ -522,7 +452,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
               subtitle: 'Último: Salario \$3,500',
               onTap: () => _navigateToSection(1),
             ),
-            
             _buildFinancialCard(
               title: 'Ahorros Totales',
               amount: '\$5,240.00',
@@ -531,7 +460,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
               subtitle: '3 objetivos activos',
               onTap: () => _navigateToSection(3),
             ),
-            
             _buildFinancialCard(
               title: 'Gastos del Mes',
               amount: '\$1,892.35',
@@ -540,7 +468,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
               subtitle: 'Último: Supermercado \$45.20',
               onTap: () => _navigateToSection(2),
             ),
-            
             _buildFinancialCard(
               title: 'Inversiones',
               amount: '\$8,750.22',
@@ -549,7 +476,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
               subtitle: '+12.5% este mes',
               onTap: () => _navigateToSection(5),
             ),
-            
             _buildFinancialCard(
               title: 'Deudas Pendientes',
               amount: '\$2,340.80',
@@ -558,6 +484,30 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
               subtitle: '2 pagos próximos',
               onTap: () => _navigateToSection(4),
             ),
+            const SizedBox(height: 32),
+            // Menú de servicios organizados
+            const Text(
+              'Servicios Financieros',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1F2937),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildFinancialServicesMenu(),
+            const SizedBox(height: 32),
+            // Análisis rápido
+            const Text(
+              'Análisis Rápido',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1F2937),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildQuickAnalysis(),
             
             const SizedBox(height: 100), // Espacio extra para el bottom nav
           ],
@@ -943,9 +893,9 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 label: 'Ahorros',
               ),
               NavigationDestination(
-                icon: Icon(Icons.more_horiz_outlined),
-                selectedIcon: Icon(Icons.more_horiz_rounded),
-                label: 'Más',
+                icon: Icon(Icons.person_outline_rounded),
+                selectedIcon: Icon(Icons.person_rounded),
+                label: 'Perfil',
               ),
             ],
           ),
