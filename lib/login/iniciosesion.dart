@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'recuperar.dart';
 
 /// Pantalla de inicio de sesión de Wallet Flow
 /// Presenta un diseño moderno y responsivo con validación de campos
@@ -116,8 +117,12 @@ class _InicioSesionScreenState extends State<InicioSesionScreen> {
 
   /// Navega a la pantalla de recuperación de contraseña
   void _navigateToForgotPassword() {
-    _showSnackBar('Función de recuperación de contraseña próximamente', const Color(0xFF059669));
-    // Navigator.pushNamed(context, '/forgot-password');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const RecuperarScreen(),
+      ),
+    );
   }
 
   /// Navega a la pantalla de registro
