@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../firebase/autenticacion_servicio.dart';
+import '../pantallas/principal.dart';
 import 'recuperar.dart';
 import 'registrarse.dart';
 
@@ -86,8 +87,16 @@ class _InicioSesionScreenState extends State<InicioSesionScreen> {
           // Éxito - usuario logueado
           _showSnackBar('¡Bienvenido a Wallet Flow!', const Color(0xFF10B981));
           
-          // El AuthWrapper se encargará de la navegación automática
-          print('Usuario logueado: ${_authService.emailUsuario}');
+          // Navegar a la pantalla principal después de mostrar el mensaje
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => const PantallaPrincipal(),
+                ),
+              );
+            }
+          });
         } else {
           // Error - mostrar mensaje específico
           _showSnackBar(error, const Color(0xFFEF4444));
