@@ -167,11 +167,16 @@ class _RegistrarseScreenState extends State<RegistrarseScreen> {
             const Color(0xFF10B981)
           );
           
-          // TODO: Navegar a pantalla de completar perfil o home
-          // Navigator.pushReplacementNamed(context, '/complete-profile');
+          // Esperar un momento para que Firebase procese el registro
+          await Future.delayed(const Duration(milliseconds: 500));
           
-          // Por ahora, navegar de vuelta al login
-          Navigator.pop(context);
+          // Navegar a la raíz y el AuthWrapper detectará al usuario autenticado
+          if (mounted) {
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/', 
+              (route) => false,
+            );
+          }
         } else {
           // Error en registro
           _showSnackBar(errorAuth, const Color(0xFFEF4444));
