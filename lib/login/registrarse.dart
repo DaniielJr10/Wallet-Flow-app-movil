@@ -54,7 +54,7 @@ class _RegistrarseScreenState extends State<RegistrarseScreen> {
     return null;
   }
 
-  /// Valida el formato del email
+  /// Valida el formato del email y que tenga un dominio válido
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) {
       return 'Por favor ingresa tu correo electrónico';
@@ -63,6 +63,41 @@ class _RegistrarseScreenState extends State<RegistrarseScreen> {
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value)) {
       return 'Ingresa un correo electrónico válido';
+    }
+    
+    // Validar que el dominio sea conocido y real
+    final domain = value.toLowerCase().split('@')[1];
+    final dominiosValidos = [
+      'gmail.com',
+      'hotmail.com',
+      'outlook.com',
+      'yahoo.com',
+      'yahoo.es',
+      'icloud.com',
+      'live.com',
+      'msn.com',
+      'protonmail.com',
+      'zoho.com',
+      'aol.com',
+      'mail.com',
+      'yandex.com',
+      'tutanota.com',
+      'fastmail.com',
+      // Dominios corporativos comunes
+      'empresa.com',
+      'company.com',
+      'corp.com',
+      // Dominios educativos
+      'soy.sena.edu.co',
+      'edu.co',
+      'edu',
+      'ac.uk',
+      'edu.mx',
+      'edu.ar',
+    ];
+    
+    if (!dominiosValidos.contains(domain)) {
+      return 'Por favor usa un correo de un proveedor conocido\n(Gmail, Hotmail, Yahoo, etc.)';
     }
     
     return null;
