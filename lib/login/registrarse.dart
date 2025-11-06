@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../firebase/autenticacion_servicio.dart';
-import '../firebase/base_datos_servicio.dart';
 
 /// Pantalla de registro de Wallet Flow
 /// Presenta un diseño moderno y responsivo para crear cuenta nueva
@@ -14,7 +13,7 @@ class RegistrarseScreen extends StatefulWidget {
 class _RegistrarseScreenState extends State<RegistrarseScreen> {
   // Servicios de Firebase
   final AutenticacionServicio _authService = AutenticacionServicio();
-  final BaseDatosServicio _dbService = BaseDatosServicio();
+
   
   // Controladores para los campos de texto
   final _nameController = TextEditingController();
