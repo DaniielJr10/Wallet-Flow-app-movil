@@ -55,55 +55,10 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             _nombreUsuario = datos['nombre'];
           });
         }
-      } else {
-        // MIGRACIÓN: Si no hay perfil en Firestore, crear uno desde Firebase Auth
-        await _migrarUsuarioExistente();
       }
     } catch (e) {
       print('Error al cargar nombre del usuario: $e');
       // Mantener el valor por defecto
-    }
-  }
-
-  /// Migra usuarios existentes desde Firebase Auth a Firestore
-  Future<void> _migrarUsuarioExistente() async {
-    try {
-      final usuario = _authService.usuarioActual;
-      if (usuario?.displayName != null) {
-        final nombreCompleto = usuario!.displayName!.split(' ');
-        final nombre = nombreCompleto.isNotEmpty ? nombreCompleto[0] : 'Usuario';
-        final apellido = nombreCompleto.length > 1 
-            ? nombreCompleto.sublist(1).join(' ') 
-            : '';
-        
-        // Guardar perfil en Firestore
-        final errorMigracion = await _baseDatosService.guardarPerfilUsuario(
-          nombre: nombre,
-          apellido: apellido,
-          identificacion: '', // Se puede completar después
-          telefono: '', // Se puede completar después
-          fechaNacimiento: DateTime.now(), // Se puede completar después
-          nombreUsuario: usuario.email?.split('@')[0] ?? 'usuario',
-        );
-        
-        if (errorMigracion == null) {
-          // Migración exitosa, actualizar UI
-          setState(() {
-            _nombreUsuario = nombre;
-          });
-          print('Usuario migrado exitosamente a Firestore');
-        } else {
-          // Si falla la migración, usar displayName directamente
-          setState(() {
-            _nombreUsuario = nombre;
-          });
-        }
-      } else {
-        // No hay displayName, mantener valor por defecto
-        print('No se encontró displayName para migrar');
-      }
-    } catch (e) {
-      print('Error al migrar usuario: $e');
     }
   }
 
