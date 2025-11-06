@@ -4,6 +4,7 @@ import '../firebase/autenticacion_servicio.dart';
 import '../login/iniciosesion.dart';
 import 'ingresos.dart';
 import 'gastos.dart';
+import 'cuentas.dart';
 
 class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
@@ -496,7 +497,9 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
   void _navigateToSection(int index) {
     HapticFeedback.lightImpact();
     
-    // Si se presiona "Más" (índice 4), abrir el drawer
+    print('Navegando a sección: $index'); // Debug log
+    
+    // Si se presiona "Perfil" (índice 4), abrir el drawer
     if (index == 4) {
       Scaffold.of(context).openDrawer();
       return;
@@ -505,6 +508,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
     setState(() {
       _selectedIndex = index;
     });
+    
+    print('Estado actualizado, selectedIndex: $_selectedIndex'); // Debug log
   }
 
 
@@ -692,6 +697,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
 
   @override
   Widget build(BuildContext context) {
+    print('Build principal - selectedIndex: $_selectedIndex'); // Debug log
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: IndexedStack(
@@ -703,7 +709,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           _buildPlaceholderScreen('Ahorros', Icons.savings_rounded, const Color(0xFF10B981)), // 3 - Ahorros
           _buildPlaceholderScreen('Deudas', Icons.credit_card_rounded, Colors.orange.shade600), // 4 - Deudas
           _buildPlaceholderScreen('Inversiones', Icons.trending_up_rounded, Colors.blue.shade600), // 5 - Inversiones
-          _buildPlaceholderScreen('Cuentas', Icons.account_balance_rounded, Colors.purple.shade600), // 6 - Cuentas
+          const PantallaCuentas(), // 6 - Cuentas
           _buildPlaceholderScreen('Objetivos', Icons.flag_outlined, Colors.teal.shade600), // 7 - Objetivos
           _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600), // 8 - Herramientas
           _buildPlaceholderScreen('Configuración', Icons.settings_outlined, Colors.grey.shade700), // 9 - Configuración
@@ -730,7 +736,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             topRight: Radius.circular(24),
           ),
           child: NavigationBar(
-            selectedIndex: _selectedIndex,
+            selectedIndex: _selectedIndex > 4 ? 4 : _selectedIndex,
             onDestinationSelected: _navigateToSection,
             backgroundColor: Colors.white,
             indicatorColor: const Color(0xFF10B981).withOpacity(0.2),
