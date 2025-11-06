@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../firebase/autenticacion_servicio.dart';
+import '../firebase/base_datos_servicio.dart';
 import '../login/iniciosesion.dart';
 import 'ingresos.dart';
 import 'gastos.dart';
@@ -16,9 +17,11 @@ class PantallaPrincipal extends StatefulWidget {
 class _PantallaPrincipalState extends State<PantallaPrincipal>
     with TickerProviderStateMixin {
   final AutenticacionServicio _authService = AutenticacionServicio();
+  final BaseDatosServicio _baseDatosService = BaseDatosServicio();
   int _selectedIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  String _nombreUsuario = 'Usuario'; // Valor por defecto
 
   @override
   void initState() {
@@ -38,6 +41,70 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
     ));
 
     _animationController.forward();
+    _cargarNombreUsuario(); // Cargar el nombre del usuario
+  }
+
+  /// Carga el nombre del usuario desde Firestore
+  Future<void> _cargarNombreUsuario() async {
+    try {
+      final perfil = await _baseDatosService.obtenerPerfilUsuario();
+      if (perfil != null && perfil.exists) {
+        final datos = perfil.data() as Map<String, dynamic>?;
+        if (datos != null && datos['nombre'] != null) {
+          setState(() {
+            _nombreUsuario = datos['nombre'];
+          });
+        }
+      } else {
+        // MIGRACIÓN: Si no hay perfil en Firestore, crear uno desde Firebase Auth
+        await _migrarUsuarioExistente();
+      }
+    } catch (e) {
+      print('Error al cargar nombre del usuario: $e');
+      // Mantener el valor por defecto
+    }
+  }
+
+  /// Migra usuarios existentes desde Firebase Auth a Firestore
+  Future<void> _migrarUsuarioExistente() async {
+    try {
+      final usuario = _authService.usuarioActual;
+      if (usuario?.displayName != null) {
+        final nombreCompleto = usuario!.displayName!.split(' ');
+        final nombre = nombreCompleto.isNotEmpty ? nombreCompleto[0] : 'Usuario';
+        final apellido = nombreCompleto.length > 1 
+            ? nombreCompleto.sublist(1).join(' ') 
+            : '';
+        
+        // Guardar perfil en Firestore
+        final errorMigracion = await _baseDatosService.guardarPerfilUsuario(
+          nombre: nombre,
+          apellido: apellido,
+          identificacion: '', // Se puede completar después
+          telefono: '', // Se puede completar después
+          fechaNacimiento: DateTime.now(), // Se puede completar después
+          nombreUsuario: usuario.email?.split('@')[0] ?? 'usuario',
+        );
+        
+        if (errorMigracion == null) {
+          // Migración exitosa, actualizar UI
+          setState(() {
+            _nombreUsuario = nombre;
+          });
+          print('Usuario migrado exitosamente a Firestore');
+        } else {
+          // Si falla la migración, usar displayName directamente
+          setState(() {
+            _nombreUsuario = nombre;
+          });
+        }
+      } else {
+        // No hay displayName, mantener valor por defecto
+        print('No se encontró displayName para migrar');
+      }
+    } catch (e) {
+      print('Error al migrar usuario: $e');
+    }
   }
 
   @override
@@ -192,7 +259,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           const SizedBox(width: 16),
           Expanded(
             child: Text(
-              'Hola, Daniel',
+              'Hola, $_nombreUsuario',
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
