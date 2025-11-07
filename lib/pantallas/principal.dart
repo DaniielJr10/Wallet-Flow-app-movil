@@ -8,6 +8,11 @@ import 'ingresos.dart';
 import 'gastos.dart';
 import 'cuentas.dart';
 import 'ahorros.dart';
+import 'deudas.dart';
+import 'objetivos.dart';
+import 'inversiones.dart';
+import 'configuracion.dart';
+import 'perfil.dart';
 
 class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
@@ -402,7 +407,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                   amount: '\$2,341',
                   icon: Icons.credit_card_rounded,
                   color: Colors.orange.shade600,
-                  onTap: () => _navigateToSection(4),
+                  onTap: () => _navigateToSection(5),
                 ),
               ),
             ],
@@ -537,19 +542,18 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
   void _navigateToSection(int index) {
     HapticFeedback.lightImpact();
     
-    print('Navegando a sección: $index'); // Debug log
-    
-    // Si se presiona "Perfil" (índice 4), abrir el drawer
-    if (index == 4) {
-      Scaffold.of(context).openDrawer();
-      return;
-    }
-    
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  void _handleBottomNavigation(int index) {
+    HapticFeedback.lightImpact();
     
-    print('Estado actualizado, selectedIndex: $_selectedIndex'); // Debug log
+    // Para navegación del bottom nav, permitir navegación directa a todas las secciones principales
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
 
@@ -577,7 +581,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 subtitle: 'Gestionar',
                 icon: Icons.credit_card_rounded,
                 color: Colors.orange.shade600,
-                onTap: () => _navigateToSection(4),
+                onTap: () => _navigateToSection(5),
               ),
               const SizedBox(width: 12),
               _buildMenuCard(
@@ -585,7 +589,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 subtitle: 'Portafolio',
                 icon: Icons.trending_up_rounded,
                 color: Colors.blue.shade600,
-                onTap: () => _navigateToSection(5),
+                onTap: () => _navigateToSection(6),
               ),
               const SizedBox(width: 12),
               _buildMenuCard(
@@ -593,7 +597,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 subtitle: 'Bancarias',
                 icon: Icons.account_balance_rounded,
                 color: Colors.purple.shade600,
-                onTap: () => _navigateToSection(6),
+                onTap: () => _navigateToSection(7),
               ),
             ],
           ),
@@ -606,7 +610,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 subtitle: 'Financieros',
                 icon: Icons.flag_outlined,
                 color: Colors.teal.shade600,
-                onTap: () => _navigateToSection(7),
+                onTap: () => _navigateToSection(8),
               ),
               const SizedBox(width: 12),
               _buildMenuCard(
@@ -614,7 +618,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 subtitle: 'Calculadoras',
                 icon: Icons.build_outlined,
                 color: Colors.indigo.shade600,
-                onTap: () => _navigateToSection(8),
+                onTap: () => _navigateToSection(9),
               ),
               const SizedBox(width: 12),
               _buildMenuCard(
@@ -622,7 +626,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 subtitle: 'Ajustes',
                 icon: Icons.settings_outlined,
                 color: Colors.grey.shade700,
-                onTap: () => _navigateToSection(9),
+                onTap: () => _navigateToSection(10),
               ),
             ],
           ),
@@ -737,7 +741,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
 
   @override
   Widget build(BuildContext context) {
-    print('Build principal - selectedIndex: $_selectedIndex'); // Debug log
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: IndexedStack(
@@ -747,12 +750,13 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           const PantallaIngresos(), // 1 - Ingresos
           const PantallaGastos(), // 2 - Gastos
           const PantallaAhorros(), // 3 - Ahorros
-          _buildPlaceholderScreen('Deudas', Icons.credit_card_rounded, Colors.orange.shade600), // 4 - Deudas
-          _buildPlaceholderScreen('Inversiones', Icons.trending_up_rounded, Colors.blue.shade600), // 5 - Inversiones
-          const PantallaCuentas(), // 6 - Cuentas
-          _buildPlaceholderScreen('Objetivos', Icons.flag_outlined, Colors.teal.shade600), // 7 - Objetivos
-          _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600), // 8 - Herramientas
-          _buildPlaceholderScreen('Configuración', Icons.settings_outlined, Colors.grey.shade700), // 9 - Configuración
+          const PantallaPerfil(), // 4 - Perfil
+          const PantallaDeudas(), // 5 - Deudas
+          const PantallaInversiones(), // 6 - Inversiones
+          const PantallaCuentas(), // 7 - Cuentas
+          const PantallaObjetivos(), // 8 - Objetivos
+          _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600), // 9 - Herramientas
+          const PantallaConfiguracion(), // 10 - Configuración
         ],
       ),
       bottomNavigationBar: Container(
@@ -776,8 +780,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             topRight: Radius.circular(24),
           ),
           child: NavigationBar(
-            selectedIndex: _selectedIndex > 4 ? 4 : _selectedIndex,
-            onDestinationSelected: _navigateToSection,
+            selectedIndex: _selectedIndex <= 4 ? _selectedIndex : 0,
+            onDestinationSelected: _handleBottomNavigation,
             backgroundColor: Colors.white,
             indicatorColor: const Color(0xFF10B981).withOpacity(0.2),
             height: 80,
@@ -965,6 +969,15 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       },
                     ),
                     _buildDrawerMenuItem(
+                      icon: Icons.person_rounded,
+                      title: 'Mi Perfil',
+                      color: Colors.purple.shade600,
+                      onTap: () {
+                        Navigator.pop(context);
+                        _navigateToSection(4);
+                      },
+                    ),
+                    _buildDrawerMenuItem(
                       icon: Icons.analytics_outlined,
                       title: 'Reportes',
                       color: Colors.cyan.shade600,
@@ -989,7 +1002,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       badge: '2',
                       onTap: () {
                         Navigator.pop(context);
-                        _navigateToSection(4);
+                        _navigateToSection(5);
                       },
                     ),
                     _buildDrawerMenuItem(
@@ -998,7 +1011,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       color: Colors.blue.shade600,
                       onTap: () {
                         Navigator.pop(context);
-                        _navigateToSection(5);
+                        _navigateToSection(6);
                       },
                     ),
                     _buildDrawerMenuItem(
@@ -1007,7 +1020,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       color: Colors.purple.shade600,
                       onTap: () {
                         Navigator.pop(context);
-                        _navigateToSection(6);
+                        _navigateToSection(7);
                       },
                     ),
                   ],
@@ -1025,7 +1038,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       color: Colors.teal.shade600,
                       onTap: () {
                         Navigator.pop(context);
-                        _navigateToSection(7);
+                        _navigateToSection(8);
                       },
                     ),
                     _buildDrawerMenuItem(
@@ -1034,7 +1047,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       color: Colors.indigo.shade600,
                       onTap: () {
                         Navigator.pop(context);
-                        _navigateToSection(8);
+                        _navigateToSection(9);
                       },
                     ),
                     _buildDrawerMenuItem(
@@ -1061,7 +1074,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       color: Colors.grey.shade700,
                       onTap: () {
                         Navigator.pop(context);
-                        _navigateToSection(9);
+                        _navigateToSection(10);
                       },
                     ),
                     _buildDrawerMenuItem(

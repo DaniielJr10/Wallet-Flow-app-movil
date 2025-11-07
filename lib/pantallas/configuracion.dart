@@ -1,0 +1,1035 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../firebase/autenticacion_servicio.dart';
+import '../login/iniciosesion.dart';
+
+/// Pantalla de configuración de la aplicación Wallet Flow
+/// 
+/// Permite al usuario personalizar la experiencia de la app, gestionar
+/// su perfil, configurar seguridad, notificaciones y exportar datos.
+/// 
+/// Características principales:
+/// - Gestión de perfil de usuario
+/// - Configuración de tema y moneda
+/// - Opciones de seguridad y privacidad
+/// - Exportación de datos y soporte
+class PantallaConfiguracion extends StatefulWidget {
+  const PantallaConfiguracion({super.key});
+
+  @override
+  State<PantallaConfiguracion> createState() => _PantallaConfiguracionState();
+}
+
+class _PantallaConfiguracionState extends State<PantallaConfiguracion>
+    with TickerProviderStateMixin {
+  
+  // ===== SERVICIOS Y CONTROLADORES =====
+  final AutenticacionServicio _authService = AutenticacionServicio();
+  
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  // ===== ESTADOS DE CONFIGURACIÓN =====
+  /// Controla si las notificaciones push están habilitadas
+  bool _notificacionesActivas = true;
+  
+  /// Controla si la autenticación biométrica está habilitada
+  bool _biometriaActiva = false;
+  
+  /// Controla el tema de la aplicación (claro/oscuro)
+  bool _modoOscuro = false;
+  
+  /// Controla la sincronización automática de datos
+  bool _sincronizacionAutomatica = true;
+  
+  /// Moneda seleccionada para mostrar valores
+  String _monedaSeleccionada = 'COP';
+  
+  /// Idioma seleccionado para la interfaz
+  String _idiomaSeleccionado = 'Español';
+
+  // ===== DATOS ESTÁTICOS =====
+  /// Lista de monedas disponibles en la aplicación
+  final List<Map<String, dynamic>> _monedas = [
+    {'codigo': 'COP', 'nombre': 'Peso Colombiano', 'simbolo': '\$'},
+    {'codigo': 'USD', 'nombre': 'Dólar Americano', 'simbolo': '\$'},
+    {'codigo': 'EUR', 'nombre': 'Euro', 'simbolo': '€'},
+    {'codigo': 'MXN', 'nombre': 'Peso Mexicano', 'simbolo': '\$'},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAnimations();
+    _cargarConfiguracion();
+  }
+
+  /// Inicializa las animaciones de entrada de la pantalla
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    // Animación de desvanecimiento gradual
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+    ));
+
+    // Animación de deslizamiento desde abajo
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
+    ));
+
+    _animationController.forward();
+  }
+
+  /// Carga la configuración del usuario desde Firebase/Local Storage
+  /// TODO: Implementar carga real desde base de datos
+  Future<void> _cargarConfiguracion() async {
+    try {
+      // Simular carga de configuración
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      // Aquí se cargarían las preferencias reales del usuario
+      // Ejemplo: await SharedPreferences.getInstance();
+      
+    } catch (e) {
+      debugPrint('Error al cargar configuración: $e');
+    }
+  }
+
+  /// Guarda una configuración específica en la base de datos
+  /// [key] La clave de la configuración
+  /// [value] El valor a guardar
+  Future<void> _guardarConfiguracion(String key, dynamic value) async {
+    try {
+      // TODO: Implementar guardado real en Firebase/SharedPreferences
+      debugPrint('Guardando configuración: $key = $value');
+      
+      // Mostrar feedback al usuario
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Configuración actualizada: $key'),
+            backgroundColor: const Color(0xFF10B981),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error al guardar configuración: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error al guardar configuración'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  // ===== CONSTRUCCIÓN DE UI =====
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              _buildAppBar(),
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _buildPerfilCard(),
+                    const SizedBox(height: 24),
+                    _buildSeccionGeneral(),
+                    const SizedBox(height: 24),
+                    _buildSeccionSeguridad(),
+                    const SizedBox(height: 24),
+                    _buildSeccionNotificaciones(),
+                    const SizedBox(height: 24),
+                    _buildSeccionDatos(),
+                    const SizedBox(height: 24),
+                    _buildSeccionAyuda(),
+                    const SizedBox(height: 32),
+                    _buildBotonCerrarSesion(),
+                    const SizedBox(height: 32),
+                  ]),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Construye la barra de aplicación con gradiente y título
+  Widget _buildAppBar() {
+    return SliverAppBar(
+      expandedHeight: 120,
+      floating: false,
+      pinned: true,
+      backgroundColor: const Color(0xFF1E293B),
+      elevation: 0,
+      flexibleSpace: FlexibleSpaceBar(
+        title: const Text(
+          'Configuración',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFF1E293B),
+                Color(0xFF334155),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Construye la tarjeta de perfil del usuario con información básica
+  Widget _buildPerfilCard() {
+    final user = FirebaseAuth.instance.currentUser;
+    final displayName = user?.displayName ?? 'Usuario';
+    final email = user?.email ?? 'correo@ejemplo.com';
+    final primerNombre = displayName.split(' ')[0];
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF10B981),
+            Color(0xFF059669),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Avatar del usuario
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 32,
+            ),
+          ),
+          const SizedBox(width: 16),
+          
+          // Información del usuario
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Hola, $primerNombre',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  email,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Botón editar perfil
+          IconButton(
+            onPressed: () {
+              // TODO: Navegar a pantalla de perfil
+              _navegarAPerfil();
+            },
+            icon: const Icon(
+              Icons.edit,
+              color: Colors.white,
+            ),
+            tooltip: 'Editar perfil',
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Construye la sección de configuración general
+  /// Incluye tema, moneda e idioma
+  Widget _buildSeccionGeneral() {
+    return _buildSeccion(
+      titulo: 'General',
+      icono: Icons.settings,
+      color: const Color(0xFF3B82F6),
+      children: [
+        _buildSwitchTile(
+          titulo: 'Modo Oscuro',
+          subtitulo: 'Cambiar apariencia de la aplicación',
+          icono: Icons.dark_mode,
+          valor: _modoOscuro,
+          onChanged: (value) {
+            setState(() {
+              _modoOscuro = value;
+            });
+            _guardarConfiguracion('modo_oscuro', value);
+            // TODO: Implementar cambio de tema real
+          },
+        ),
+        _buildOpcionTile(
+          titulo: 'Moneda',
+          subtitulo: _monedas.firstWhere((m) => m['codigo'] == _monedaSeleccionada)['nombre'],
+          icono: Icons.attach_money,
+          onTap: () => _mostrarSelectorMoneda(),
+        ),
+        _buildOpcionTile(
+          titulo: 'Idioma',
+          subtitulo: _idiomaSeleccionado,
+          icono: Icons.language,
+          onTap: () => _mostrarSelectorIdioma(),
+        ),
+      ],
+    );
+  }
+
+  /// Construye la sección de seguridad
+  /// Incluye biometría, contraseña y 2FA
+  Widget _buildSeccionSeguridad() {
+    return _buildSeccion(
+      titulo: 'Seguridad',
+      icono: Icons.security,
+      color: const Color(0xFFEF4444),
+      children: [
+        _buildSwitchTile(
+          titulo: 'Autenticación Biométrica',
+          subtitulo: 'Usar huella o reconocimiento facial',
+          icono: Icons.fingerprint,
+          valor: _biometriaActiva,
+          onChanged: (value) async {
+            setState(() {
+              _biometriaActiva = value;
+            });
+            await _guardarConfiguracion('biometria_activa', value);
+            // TODO: Configurar biometría real
+          },
+        ),
+        _buildOpcionTile(
+          titulo: 'Cambiar Contraseña',
+          subtitulo: 'Actualizar contraseña de tu cuenta',
+          icono: Icons.lock,
+          onTap: () => _cambiarContrasena(),
+        ),
+        _buildOpcionTile(
+          titulo: 'Verificación en Dos Pasos',
+          subtitulo: 'Agregar capa extra de seguridad',
+          icono: Icons.verified_user,
+          onTap: () => _configurar2FA(),
+        ),
+      ],
+    );
+  }
+
+  /// Construye la sección de notificaciones
+  Widget _buildSeccionNotificaciones() {
+    return _buildSeccion(
+      titulo: 'Notificaciones',
+      icono: Icons.notifications,
+      color: const Color(0xFFF59E0B),
+      children: [
+        _buildSwitchTile(
+          titulo: 'Notificaciones Push',
+          subtitulo: 'Recibir alertas importantes',
+          icono: Icons.notifications_active,
+          valor: _notificacionesActivas,
+          onChanged: (value) async {
+            setState(() {
+              _notificacionesActivas = value;
+            });
+            await _guardarConfiguracion('notificaciones_activas', value);
+            // TODO: Configurar notificaciones reales
+          },
+        ),
+        _buildOpcionTile(
+          titulo: 'Recordatorios de Gastos',
+          subtitulo: 'Configurar alertas de límites',
+          icono: Icons.alarm,
+          onTap: () => _configurarRecordatorios(),
+        ),
+      ],
+    );
+  }
+
+  /// Construye la sección de datos y privacidad
+  Widget _buildSeccionDatos() {
+    return _buildSeccion(
+      titulo: 'Datos y Privacidad',
+      icono: Icons.data_usage,
+      color: const Color(0xFF8B5CF6),
+      children: [
+        _buildSwitchTile(
+          titulo: 'Sincronización Automática',
+          subtitulo: 'Mantener datos actualizados en tiempo real',
+          icono: Icons.sync,
+          valor: _sincronizacionAutomatica,
+          onChanged: (value) async {
+            setState(() {
+              _sincronizacionAutomatica = value;
+            });
+            await _guardarConfiguracion('sincronizacion_automatica', value);
+            // TODO: Configurar sincronización real
+          },
+        ),
+        _buildOpcionTile(
+          titulo: 'Exportar Datos',
+          subtitulo: 'Descargar información en Excel/PDF',
+          icono: Icons.download,
+          onTap: () => _exportarDatos(),
+        ),
+        _buildOpcionTile(
+          titulo: 'Eliminar Cuenta',
+          subtitulo: 'Eliminar permanentemente tu cuenta',
+          icono: Icons.delete_forever,
+          onTap: () => _confirmarEliminarCuenta(),
+          esDestructivo: true,
+        ),
+      ],
+    );
+  }
+
+  /// Construye la sección de ayuda y soporte
+  Widget _buildSeccionAyuda() {
+    return _buildSeccion(
+      titulo: 'Ayuda y Soporte',
+      icono: Icons.help,
+      color: const Color(0xFF06B6D4),
+      children: [
+        _buildOpcionTile(
+          titulo: 'Preguntas Frecuentes',
+          subtitulo: 'Encuentra respuestas rápidas',
+          icono: Icons.quiz,
+          onTap: () => _abrirFAQ(),
+        ),
+        _buildOpcionTile(
+          titulo: 'Contactar Soporte',
+          subtitulo: 'Enviar mensaje al equipo de ayuda',
+          icono: Icons.support_agent,
+          onTap: () => _contactarSoporte(),
+        ),
+        _buildOpcionTile(
+          titulo: 'Acerca de',
+          subtitulo: 'Versión 1.0.0 - Wallet Flow',
+          icono: Icons.info,
+          onTap: () => _mostrarAcercaDe(),
+        ),
+      ],
+    );
+  }
+
+  // ===== WIDGETS AUXILIARES =====
+
+  /// Construye una sección de configuración con título e ícono
+  /// [titulo] Título de la sección
+  /// [icono] Ícono representativo
+  /// [color] Color temático de la sección
+  /// [children] Lista de widgets hijos
+  Widget _buildSeccion({
+    required String titulo,
+    required IconData icono,
+    required Color color,
+    required List<Widget> children,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Encabezado de la sección
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icono,
+                  color: color,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                titulo,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        
+        // Contenedor de opciones
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+
+  /// Construye un elemento de configuración con switch
+  Widget _buildSwitchTile({
+    required String titulo,
+    required String subtitulo,
+    required IconData icono,
+    required bool valor,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xFF10B981).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icono,
+          color: const Color(0xFF10B981),
+          size: 20,
+        ),
+      ),
+      title: Text(
+        titulo,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+          color: Color(0xFF1F2937),
+        ),
+      ),
+      subtitle: Text(
+        subtitulo,
+        style: TextStyle(
+          color: Colors.grey[600],
+          fontSize: 14,
+        ),
+      ),
+      trailing: Switch(
+        value: valor,
+        onChanged: onChanged,
+        activeColor: const Color(0xFF10B981),
+      ),
+    );
+  }
+
+  /// Construye un elemento de configuración navegable
+  Widget _buildOpcionTile({
+    required String titulo,
+    required String subtitulo,
+    required IconData icono,
+    required VoidCallback onTap,
+    bool esDestructivo = false,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: esDestructivo 
+              ? Colors.red.withOpacity(0.1)
+              : const Color(0xFF10B981).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icono,
+          color: esDestructivo ? Colors.red : const Color(0xFF10B981),
+          size: 20,
+        ),
+      ),
+      title: Text(
+        titulo,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+          color: esDestructivo ? Colors.red : const Color(0xFF1F2937),
+        ),
+      ),
+      subtitle: Text(
+        subtitulo,
+        style: TextStyle(
+          color: Colors.grey[600],
+          fontSize: 14,
+        ),
+      ),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: Colors.grey[400],
+      ),
+      onTap: onTap,
+    );
+  }
+
+  /// Construye el botón principal para cerrar sesión
+  Widget _buildBotonCerrarSesion() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ElevatedButton.icon(
+        onPressed: () => _confirmarCerrarSesion(),
+        icon: const Icon(Icons.logout),
+        label: const Text(
+          'Cerrar Sesión',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 0,
+        ),
+      ),
+    );
+  }
+
+  // ===== MÉTODOS DE NAVEGACIÓN Y ACCIONES =====
+
+  /// Navega a la pantalla de perfil del usuario
+  void _navegarAPerfil() {
+    // TODO: Implementar navegación a perfil
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Próximamente: Editar perfil'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
+
+  /// Muestra el selector de moneda en un bottom sheet
+  void _mostrarSelectorMoneda() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Indicador de arrastre
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Título
+            const Text(
+              'Seleccionar Moneda',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Lista de monedas
+            ..._monedas.map((moneda) => ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  moneda['simbolo'],
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF10B981),
+                  ),
+                ),
+              ),
+              title: Text(moneda['nombre']),
+              subtitle: Text(moneda['codigo']),
+              trailing: _monedaSeleccionada == moneda['codigo']
+                  ? const Icon(Icons.check, color: Color(0xFF10B981))
+                  : null,
+              onTap: () {
+                setState(() {
+                  _monedaSeleccionada = moneda['codigo'];
+                });
+                _guardarConfiguracion('moneda_seleccionada', moneda['codigo']);
+                Navigator.pop(context);
+              },
+            )),
+            
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Muestra el selector de idioma
+  void _mostrarSelectorIdioma() {
+    // TODO: Implementar selector de idioma completo
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Próximamente: Múltiples idiomas'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
+
+  /// Inicia el proceso de cambio de contraseña
+  void _cambiarContrasena() {
+    // TODO: Implementar cambio de contraseña con Firebase Auth
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Próximamente: Cambiar contraseña'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
+
+  /// Configura la autenticación de dos factores
+  void _configurar2FA() {
+    // TODO: Implementar 2FA
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Próximamente: Autenticación 2FA'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
+
+  /// Configura recordatorios personalizados
+  void _configurarRecordatorios() {
+    // TODO: Implementar configuración de recordatorios
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Próximamente: Recordatorios personalizados'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
+
+  /// Exporta los datos del usuario en formato Excel/PDF
+  void _exportarDatos() {
+    // TODO: Implementar exportación real de datos
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Próximamente: Exportar datos'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
+
+  /// Abre la sección de preguntas frecuentes
+  void _abrirFAQ() {
+    // TODO: Implementar FAQ
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Próximamente: Preguntas frecuentes'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
+
+  /// Abre el formulario de contacto con soporte
+  void _contactarSoporte() {
+    // TODO: Implementar contacto con soporte
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Próximamente: Contactar soporte'),
+        backgroundColor: Color(0xFF10B981),
+      ),
+    );
+  }
+
+  /// Muestra información sobre la aplicación
+  void _mostrarAcercaDe() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.info,
+                color: Color(0xFF10B981),
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Acerca de Wallet Flow'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Versión: 1.0.0'),
+            SizedBox(height: 8),
+            Text('Desarrollado con ❤️ usando Flutter'),
+            SizedBox(height: 8),
+            Text('Tu compañero financiero personal'),
+            SizedBox(height: 16),
+            Text(
+              '© 2025 Wallet Flow. Todos los derechos reservados.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cerrar',
+              style: TextStyle(color: Color(0xFF10B981)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Confirma la eliminación permanente de la cuenta
+  void _confirmarEliminarCuenta() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.warning,
+                color: Colors.red,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Eliminar Cuenta'),
+          ],
+        ),
+        content: const Text(
+          'Esta acción eliminará permanentemente tu cuenta y todos tus datos financieros. Esta acción no se puede deshacer.\n\n¿Estás completamente seguro?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // TODO: Implementar eliminación real de cuenta
+              _procesarEliminacionCuenta();
+            },
+            child: const Text(
+              'Eliminar Permanentemente',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Procesa la eliminación definitiva de la cuenta
+  void _procesarEliminacionCuenta() {
+    // TODO: Implementar eliminación real
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Función de eliminación disponible próximamente'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  /// Confirma el cierre de sesión del usuario
+  void _confirmarCerrarSesion() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.logout,
+                color: Colors.orange,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Cerrar Sesión'),
+          ],
+        ),
+        content: const Text(
+          '¿Estás seguro que deseas cerrar sesión?\n\nTus datos se mantendrán seguros y podrás acceder nuevamente cuando quieras.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _procesarCerrarSesion();
+            },
+            child: const Text(
+              'Cerrar Sesión',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Procesa el cierre de sesión y navega al login
+  Future<void> _procesarCerrarSesion() async {
+    try {
+      // Mostrar indicador de carga
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                CircularProgressIndicator(strokeWidth: 2),
+                SizedBox(width: 16),
+                Text('Cerrando sesión...'),
+              ],
+            ),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+      }
+
+      // Cerrar sesión con Firebase
+      await _authService.cerrarSesion();
+      
+      // Navegar al login y limpiar el stack de navegación
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const InicioSesionScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error al cerrar sesión: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error al cerrar sesión. Intenta nuevamente.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+}
