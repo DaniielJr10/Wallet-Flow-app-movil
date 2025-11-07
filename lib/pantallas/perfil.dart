@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 import '../firebase/autenticacion_servicio.dart';
 import '../firebase/base_datos_servicio.dart';
 
@@ -29,6 +32,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
   // ===== SERVICIOS Y CONTROLADORES =====
   final AutenticacionServicio _authService = AutenticacionServicio();
   final BaseDatosServicio _baseDatosService = BaseDatosServicio();
+  final ImagePicker _imagePicker = ImagePicker();
   
   /// Controlador principal de animaciones de la pantalla
   late AnimationController _animationController;
@@ -453,15 +457,85 @@ class _PantallaPerfilState extends State<PantallaPerfil>
   }
 
   /// Toma una foto con la cámara
-  void _tomarFotoCamera() {
-    // TODO: Implementar captura de foto con cámara
-    _mostrarInfo('Próximamente: Captura con cámara');
+  Future<void> _tomarFotoCamera() async {
+    try {
+      final XFile? foto = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 70,
+      );
+      
+      if (foto != null) {
+        await _subirImagenYActualizar(File(foto.path));
+      }
+    } catch (e) {
+      _mostrarError('Error al tomar la foto: $e');
+    }
   }
 
   /// Selecciona una foto de la galería
-  void _seleccionarDeGaleria() {
-    // TODO: Implementar selección de galería
-    _mostrarInfo('Próximamente: Selección de galería');
+  Future<void> _seleccionarDeGaleria() async {
+    try {
+      final XFile? foto = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 70,
+      );
+      
+      if (foto != null) {
+        await _subirImagenYActualizar(File(foto.path));
+      }
+    } catch (e) {
+      _mostrarError('Error al seleccionar la foto: $e');
+    }
+  }
+
+  /// Sube la imagen a Firebase Storage y actualiza el perfil
+  Future<void> _subirImagenYActualizar(File imagenFile) async {
+    try {
+      setState(() {
+        _guardando = true;
+      });
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('Usuario no autenticado');
+      }
+
+      // Crear referencia en Firebase Storage
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('perfil_fotos')
+          .child('${user.uid}.jpg');
+
+      // Subir archivo
+      await storageRef.putFile(imagenFile);
+      
+      // Obtener URL de descarga
+      final downloadURL = await storageRef.getDownloadURL();
+
+      // Actualizar perfil en Firebase Auth
+      await user.updatePhotoURL(downloadURL);
+
+      // Actualizar en Firestore también
+      await _baseDatosService.actualizarPerfilUsuario({
+        'fotoUrl': downloadURL,
+      });
+
+      setState(() {
+        _urlFotoPerfil = downloadURL;
+      });
+
+      _mostrarInfo('Foto de perfil actualizada correctamente');
+    } catch (e) {
+      _mostrarError('Error al actualizar la foto: $e');
+    } finally {
+      setState(() {
+        _guardando = false;
+      });
+    }
   }
 
   /// Elimina la foto de perfil actual

@@ -250,4 +250,23 @@ class BaseDatosServicio {
       return null;
     }
   }
+
+  /// PERFIL USUARIO - Actualizar información específica del usuario
+  Future<String?> actualizarPerfilUsuario(Map<String, dynamic> datos) async {
+    try {
+      if (_userId == null) return 'Usuario no autenticado';
+      
+      // Agregar timestamp de actualización
+      datos['fechaActualizacion'] = FieldValue.serverTimestamp();
+      
+      await _firestore
+          .collection('usuarios')
+          .doc(_userId)
+          .update(datos);
+      
+      return null; // Éxito
+    } catch (e) {
+      return 'Error al actualizar perfil: $e';
+    }
+  }
 }

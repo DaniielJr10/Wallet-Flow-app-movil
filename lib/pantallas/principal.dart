@@ -222,27 +222,58 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF10B981),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.person_rounded,
-              color: Colors.white,
-              size: 24,
+          // Avatar circular con foto de perfil
+          GestureDetector(
+            onTap: () {
+              // Navegar a la pantalla de perfil
+              setState(() {
+                _selectedIndex = 4; // Índice de la pantalla de perfil
+              });
+            },
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFF10B981),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF10B981).withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: _buildProfileImage(),
+              ),
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              'Hola, $_nombreUsuario',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1F2937),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Hola, $_nombreUsuario',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+                Text(
+                  'Bienvenido de vuelta',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
             ),
           ),
           IconButton(
@@ -260,6 +291,65 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Construye la imagen de perfil con fallback a avatar por defecto
+  Widget _buildProfileImage() {
+    final user = FirebaseAuth.instance.currentUser;
+    final photoURL = user?.photoURL;
+    
+    if (photoURL != null && photoURL.isNotEmpty) {
+      return Image.network(
+        photoURL,
+        fit: BoxFit.cover,
+        width: 52,
+        height: 52,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            width: 52,
+            height: 52,
+            decoration: const BoxDecoration(
+              color: Color(0xFF10B981),
+              shape: BoxShape.circle,
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                strokeWidth: 2,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return _buildDefaultAvatar();
+        },
+      );
+    } else {
+      return _buildDefaultAvatar();
+    }
+  }
+
+  /// Avatar por defecto cuando no hay imagen
+  Widget _buildDefaultAvatar() {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: const BoxDecoration(
+        color: Color(0xFF10B981),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          _nombreUsuario.isNotEmpty ? _nombreUsuario[0].toUpperCase() : 'U',
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
