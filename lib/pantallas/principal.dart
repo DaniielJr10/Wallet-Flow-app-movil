@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../firebase/autenticacion_servicio.dart';
 import '../firebase/base_datos_servicio.dart';
 import '../login/iniciosesion.dart';
@@ -44,21 +45,37 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
     _cargarNombreUsuario(); // Cargar el nombre del usuario
   }
 
-  /// Carga el nombre del usuario desde Firestore
+  /// Carga el nombre del usuario desde Firebase Auth o Firestore
   Future<void> _cargarNombreUsuario() async {
     try {
+      // Primero intentar obtener desde Firebase Auth (displayName)
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.displayName != null && user.displayName!.isNotEmpty) {
+        // Obtener solo el primer nombre del displayName
+        final nombreCompleto = user.displayName!;
+        final primerNombre = nombreCompleto.split(' ')[0];
+        setState(() {
+          _nombreUsuario = primerNombre;
+        });
+        return; // Salir si encontramos el nombre en Auth
+      }
+      
+      // Si no hay displayName, intentar desde Firestore
       final perfil = await _baseDatosService.obtenerPerfilUsuario();
       if (perfil != null && perfil.exists) {
         final datos = perfil.data() as Map<String, dynamic>?;
         if (datos != null && datos['nombre'] != null) {
+          // Obtener solo el primer nombre para el saludo
+          final nombreCompleto = datos['nombre'] as String;
+          final primerNombre = nombreCompleto.split(' ')[0];
           setState(() {
-            _nombreUsuario = datos['nombre'];
+            _nombreUsuario = primerNombre;
           });
         }
       }
     } catch (e) {
       print('Error al cargar nombre del usuario: $e');
-      // Mantener el valor por defecto
+      // Mantener el valor por defecto "Usuario"
     }
   }
 

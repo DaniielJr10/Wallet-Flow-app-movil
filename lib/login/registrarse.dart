@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../firebase/autenticacion_servicio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../pantallas/principal.dart';
 
 /// Pantalla de registro de Wallet Flow
 /// Presenta un diseño moderno y responsivo para crear cuenta nueva
@@ -11,10 +12,6 @@ class RegistrarseScreen extends StatefulWidget {
 }
 
 class _RegistrarseScreenState extends State<RegistrarseScreen> {
-  // Servicios de Firebase
-  final AutenticacionServicio _authService = AutenticacionServicio();
-
-  
   // Controladores para los campos de texto
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -151,49 +148,75 @@ class _RegistrarseScreenState extends State<RegistrarseScreen> {
           ? nombreCompleto.sublist(1).join(' ') 
           : '';
       
-      // Registrar usuario en Firebase Auth
-      final String? errorAuth = await _authService.registrarUsuario(
+      print('Iniciando registro para: $nombre $apellido');
+      
+      // Solo crear el usuario en Firebase Auth (sin Firestore por ahora)
+      final errorAuth = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        nombre: nombre,
-        apellido: apellido,
       );
       
+      print('Usuario creado exitosamente en Firebase Auth');
+      
+      // Actualizar el display name
+      await errorAuth.user?.updateDisplayName('$nombre $apellido');
+      
+      print('Display name actualizado');
+      
       if (mounted) {
-        if (errorAuth == null) {
-          // Éxito - usuario registrado
-          _showSnackBar(
-            '¡Cuenta creada exitosamente! Bienvenido a Wallet Flow', 
-            const Color(0xFF10B981)
-          );
-          
-          // Esperar un momento para que Firebase procese el registro
-          await Future.delayed(const Duration(milliseconds: 500));
-          
-          // Navegar a la raíz y el AuthWrapper detectará al usuario autenticado
-          if (mounted) {
-            Navigator.of(context).pushNamedAndRemoveUntil(
-              '/', 
-              (route) => false,
-            );
-          }
-        } else {
-          // Error en registro
-          _showSnackBar(errorAuth, const Color(0xFFEF4444));
-        }
-      }
-    } catch (e) {
-      if (mounted) {
+        setState(() {
+          _isLoading = false; // Parar loading inmediatamente
+        });
+        
         _showSnackBar(
-          'Error inesperado: $e', 
-          const Color(0xFFEF4444)
+          '¡Cuenta creada exitosamente! Bienvenido a Wallet Flow', 
+          const Color(0xFF10B981)
         );
+        
+        // Navegar directamente a la pantalla principal
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const PantallaPrincipal()), 
+            (route) => false,
+          );
+        }
+        return; // Salir aquí para evitar el finally
       }
-    } finally {
+    } on FirebaseAuthException catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
+        
+        String errorMessage;
+        switch (e.code) {
+          case 'weak-password':
+            errorMessage = 'La contraseña es muy débil. Debe tener al menos 6 caracteres';
+            break;
+          case 'email-already-in-use':
+            errorMessage = 'Ya existe una cuenta con este correo electrónico';
+            break;
+          case 'invalid-email':
+            errorMessage = 'El formato del correo electrónico es inválido';
+            break;
+          default:
+            errorMessage = 'Error al crear la cuenta. Intenta nuevamente';
+        }
+        
+        _showSnackBar(errorMessage, const Color(0xFFEF4444));
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        _showSnackBar(
+          'Error de conexión. Verifica tu internet e intenta nuevamente', 
+          const Color(0xFFEF4444)
+        );
       }
     }
   }
