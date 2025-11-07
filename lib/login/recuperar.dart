@@ -62,17 +62,18 @@ class _RecuperarScreenState extends State<RecuperarScreen> {
       
       if (mounted) {
         if (error == null) {
-          // Éxito - email enviado
+          // Éxito - mostrar mensaje simple
           _showSnackBar(
-            'Email de recuperación enviado a ${_emailController.text}', 
+            'Email de recuperación enviado. Revisa tu bandeja de entrada y spam.',
             const Color(0xFF10B981)
           );
           
-          // Mostrar instrucciones adicionales
-          _showSnackBar(
-            'Revisa tu bandeja de entrada y sigue las instrucciones', 
-            const Color(0xFF059669)
-          );
+          // Regresar al login después de un momento
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              Navigator.of(context).pop();
+            }
+          });
         } else {
           // Error en envío
           _showSnackBar(error, const Color(0xFFEF4444));
@@ -279,8 +280,8 @@ class _RecuperarScreenState extends State<RecuperarScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Ingresa tu correo electrónico registrado y te enviaremos un código de verificación para restablecer tu contraseña.',
-          style: TextStyle(
+              'Ingresa tu correo electrónico registrado y te enviaremos un enlace para restablecer tu contraseña. Recuerda revisar tu bandeja de entrada y también la carpeta de spam.',
+              style: TextStyle(
             fontSize: 16,
             color: const Color(0xFF059669).withOpacity(0.8), // Verde medio
             fontWeight: FontWeight.w500,

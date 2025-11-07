@@ -34,17 +34,27 @@ class AutenticacionServicio {
           return 'No existe una cuenta con este correo electrónico';
         case 'wrong-password':
           return 'Contraseña incorrecta';
+        case 'invalid-credential':
+          return 'Credenciales incorrectas. Verifica tu correo y contraseña';
         case 'invalid-email':
           return 'El formato del correo electrónico es inválido';
         case 'user-disabled':
           return 'Esta cuenta ha sido deshabilitada';
         case 'too-many-requests':
           return 'Demasiados intentos fallidos. Intenta más tarde';
+        case 'network-request-failed':
+          return 'Error de conexión. Verifica tu internet';
+        case 'operation-not-allowed':
+          return 'Esta operación no está permitida';
+        case 'weak-password':
+          return 'La contraseña es demasiado débil';
+        case 'email-already-in-use':
+          return 'Ya existe una cuenta con este correo electrónico';
         default:
-          return 'Error al iniciar sesión: ${e.message}';
+          return 'Error al iniciar sesión. Intenta nuevamente';
       }
     } catch (e) {
-      return 'Error inesperado: $e';
+      return 'Error de conexión. Verifica tu internet e intenta nuevamente';
     }
   }
   
@@ -87,18 +97,20 @@ class AutenticacionServicio {
       // Manejar errores específicos de Firebase
       switch (e.code) {
         case 'weak-password':
-          return 'La contraseña es muy débil';
+          return 'La contraseña es muy débil. Debe tener al menos 6 caracteres';
         case 'email-already-in-use':
           return 'Ya existe una cuenta con este correo electrónico';
         case 'invalid-email':
           return 'El formato del correo electrónico es inválido';
         case 'operation-not-allowed':
           return 'El registro con email/contraseña no está habilitado';
+        case 'network-request-failed':
+          return 'Error de conexión. Verifica tu internet';
         default:
-          return 'Error al registrar usuario: ${e.message}';
+          return 'Error al registrar usuario. Intenta nuevamente';
       }
     } catch (e) {
-      return 'Error inesperado: $e';
+      return 'Error de conexión. Verifica tu internet e intenta nuevamente';
     }
   }
   
@@ -114,11 +126,13 @@ class AutenticacionServicio {
           return 'No existe una cuenta con este correo electrónico';
         case 'invalid-email':
           return 'El formato del correo electrónico es inválido';
+        case 'network-request-failed':
+          return 'Error de conexión. Verifica tu internet';
         default:
-          return 'Error al enviar email: ${e.message}';
+          return 'Error al enviar email de recuperación. Intenta nuevamente';
       }
     } catch (e) {
-      return 'Error inesperado: $e';
+      return 'Error de conexión. Verifica tu internet e intenta nuevamente';
     }
   }
   
