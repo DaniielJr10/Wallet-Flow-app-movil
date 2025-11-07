@@ -7,6 +7,7 @@ import '../login/iniciosesion.dart';
 import 'ingresos.dart';
 import 'gastos.dart';
 import 'cuentas.dart';
+import 'ahorros.dart';
 
 class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
@@ -745,7 +746,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           _buildDashboard(), // 0 - Dashboard principal
           const PantallaIngresos(), // 1 - Ingresos
           const PantallaGastos(), // 2 - Gastos
-          _buildPlaceholderScreen('Ahorros', Icons.savings_rounded, const Color(0xFF10B981)), // 3 - Ahorros
+          const PantallaAhorros(), // 3 - Ahorros
           _buildPlaceholderScreen('Deudas', Icons.credit_card_rounded, Colors.orange.shade600), // 4 - Deudas
           _buildPlaceholderScreen('Inversiones', Icons.trending_up_rounded, Colors.blue.shade600), // 5 - Inversiones
           const PantallaCuentas(), // 6 - Cuentas
