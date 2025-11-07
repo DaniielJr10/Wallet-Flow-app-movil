@@ -14,6 +14,7 @@ class _PantallaGastosState extends State<PantallaGastos>
   final _montoController = TextEditingController();
   final _descripcionController = TextEditingController();
   final _notaController = TextEditingController();
+  final _busquedaController = TextEditingController();
   
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -24,8 +25,10 @@ class _PantallaGastosState extends State<PantallaGastos>
   String _cuentaAsociada = 'ninguna';
   bool _esRecurrente = false;
   String _frecuenciaRecurrente = 'mensual';
+  String _textoBusqueda = '';
   
   List<Map<String, dynamic>> _gastos = [];
+  List<Map<String, dynamic>> _gastosFiltrados = [];
 
   final List<String> _categorias = [
     'alimentación',
@@ -86,6 +89,7 @@ class _PantallaGastosState extends State<PantallaGastos>
     _montoController.dispose();
     _descripcionController.dispose();
     _notaController.dispose();
+    _busquedaController.dispose();
     super.dispose();
   }
 
@@ -116,6 +120,32 @@ class _PantallaGastosState extends State<PantallaGastos>
           'esRecurrente': true,
         },
       ];
+      _gastosFiltrados = List.from(_gastos);
+    });
+  }
+
+  /// Filtra los gastos basado en el texto de búsqueda
+  void _filtrarGastos(String textoBusqueda) {
+    setState(() {
+      _textoBusqueda = textoBusqueda;
+      if (textoBusqueda.isEmpty) {
+        _gastosFiltrados = List.from(_gastos);
+      } else {
+        _gastosFiltrados = _gastos.where((gasto) {
+          return gasto['descripcion']
+                  .toString()
+                  .toLowerCase()
+                  .contains(textoBusqueda.toLowerCase()) ||
+              gasto['categoria']
+                  .toString()
+                  .toLowerCase()
+                  .contains(textoBusqueda.toLowerCase()) ||
+              gasto['metodoPago']
+                  .toString()
+                  .toLowerCase()
+                  .contains(textoBusqueda.toLowerCase());
+        }).toList();
+      }
     });
   }
 
@@ -702,8 +732,86 @@ class _PantallaGastosState extends State<PantallaGastos>
     );
   }
 
+  /// Construye una barra de búsqueda moderna y profesional
+  Widget _buildBarraBusqueda() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _busquedaController,
+        onChanged: _filtrarGastos,
+        decoration: InputDecoration(
+          hintText: 'Buscar gastos...',
+          hintStyle: TextStyle(
+            fontSize: 16,
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w400,
+          ),
+          prefixIcon: Container(
+            padding: const EdgeInsets.all(12),
+            child: Icon(
+              Icons.search_rounded,
+              color: Colors.grey.shade400,
+              size: 24,
+            ),
+          ),
+          suffixIcon: _textoBusqueda.isNotEmpty
+              ? IconButton(
+                  onPressed: () {
+                    _busquedaController.clear();
+                    _filtrarGastos('');
+                  },
+                  icon: Icon(
+                    Icons.clear_rounded,
+                    color: Colors.grey.shade400,
+                    size: 20,
+                  ),
+                )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(
+              color: Colors.red.shade300,
+              width: 2,
+            ),
+          ),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
+        ),
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF1F2937),
+        ),
+      ),
+    );
+  }
+
   /// Construye la lista de gastos registrados o muestra estado vacío
   Widget _buildListaGastos() {
+    final gastosAMostrar = _textoBusqueda.isEmpty ? _gastos : _gastosFiltrados;
+    
+    if (gastosAMostrar.isEmpty && _textoBusqueda.isNotEmpty) {
+      return _buildEstadoSinResultados();
+    }
+    
     if (_gastos.isEmpty) {
       return _buildEstadoVacio();
     }
@@ -711,11 +819,52 @@ class _PantallaGastosState extends State<PantallaGastos>
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _gastos.length,
+      itemCount: gastosAMostrar.length,
       itemBuilder: (context, index) {
-        final gasto = _gastos[index];
-        return _buildTarjetaGastoSinCategoria(gasto, index);
+        final gasto = gastosAMostrar[index];
+        return _buildTarjetaGastoSinCategoria(gasto, _gastos.indexOf(gasto));
       },
+    );
+  }
+
+  /// Muestra un estado cuando no se encuentran resultados de búsqueda
+  Widget _buildEstadoSinResultados() {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(
+              Icons.search_off_rounded,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'No se encontraron gastos',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Intenta con otro término de búsqueda',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey.shade500,
+            ),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
     );
   }
 
@@ -1023,6 +1172,7 @@ class _PantallaGastosState extends State<PantallaGastos>
 
       setState(() {
         _gastos.insert(0, nuevoGasto);
+        _filtrarGastos(_textoBusqueda); // Actualizar lista filtrada
       });
 
       Navigator.pop(context);
@@ -1065,6 +1215,7 @@ class _PantallaGastosState extends State<PantallaGastos>
             onPressed: () {
               setState(() {
                 _gastos.removeAt(index);
+                _filtrarGastos(_textoBusqueda); // Actualizar lista filtrada
               });
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -1145,6 +1296,8 @@ class _PantallaGastosState extends State<PantallaGastos>
                 _buildGraficoGastos(),
                 const SizedBox(height: 32),
               ],
+              _buildBarraBusqueda(),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1156,15 +1309,20 @@ class _PantallaGastosState extends State<PantallaGastos>
                       color: Color(0xFF1F2937),
                     ),
                   ),
-                  IconButton(
+                  ElevatedButton.icon(
                     onPressed: _mostrarFormularioGasto,
                     icon: const Icon(Icons.add_rounded),
-                    style: IconButton.styleFrom(
+                    label: const Text(
+                      'Nuevo Gasto',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red.shade600,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                   ),
                 ],
@@ -1176,19 +1334,7 @@ class _PantallaGastosState extends State<PantallaGastos>
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _mostrarFormularioGasto,
-        backgroundColor: Colors.red.shade600,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text(
-          'Nuevo Gasto',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
+      // Eliminado FloatingActionButton
     );
   }
 }
