@@ -582,20 +582,15 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Saludo personalizado
             _buildPersonalizedGreeting(),
-            
-            const SizedBox(height: 24),
-            
             // Balance total
             _buildBalanceCard(),
-            
-            const SizedBox(height: 32),
-            
+            const SizedBox(height: 20),
             // Resumen financiero compacto
             const Text(
               'Resumen Financiero',
@@ -605,11 +600,9 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 color: Color(0xFF1F2937),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             _buildFinancialSummary(),
-            
-            const SizedBox(height: 32),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
             // Menú de servicios organizados
             const Text(
               'Servicios Financieros',
@@ -619,10 +612,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 color: Color(0xFF1F2937),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             _buildFinancialServicesMenu(),
-            const SizedBox(height: 32),
-            const SizedBox(height: 100), // Espacio extra para el bottom nav
           ],
         ),
       ),
@@ -850,59 +841,40 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         ],
       ),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
+        color: Colors.white,
+        child: NavigationBar(
+          selectedIndex: _selectedIndex <= 4 ? _selectedIndex : 0,
+          onDestinationSelected: _handleBottomNavigation,
+          backgroundColor: Colors.white,
+          indicatorColor: const Color(0xFF10B981).withOpacity(0.2),
+          height: 56,
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard_rounded),
+              label: 'Inicio',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.attach_money_outlined),
+              selectedIcon: Icon(Icons.attach_money_rounded),
+              label: 'Ingresos',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.payment_outlined),
+              selectedIcon: Icon(Icons.payment_rounded),
+              label: 'Gastos',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.savings_outlined),
+              selectedIcon: Icon(Icons.savings_rounded),
+              label: 'Ahorros',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline_rounded),
+              selectedIcon: Icon(Icons.person_rounded),
+              label: 'Perfil',
             ),
           ],
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
-          ),
-          child: NavigationBar(
-            selectedIndex: _selectedIndex <= 4 ? _selectedIndex : 0,
-            onDestinationSelected: _handleBottomNavigation,
-            backgroundColor: Colors.white,
-            indicatorColor: const Color(0xFF10B981).withOpacity(0.2),
-            height: 80,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.dashboard_outlined),
-                selectedIcon: Icon(Icons.dashboard_rounded),
-                label: 'Inicio',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.attach_money_outlined),
-                selectedIcon: Icon(Icons.attach_money_rounded),
-                label: 'Ingresos',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.payment_outlined),
-                selectedIcon: Icon(Icons.payment_rounded),
-                label: 'Gastos',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.savings_outlined),
-                selectedIcon: Icon(Icons.savings_rounded),
-                label: 'Ahorros',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.person_outline_rounded),
-                selectedIcon: Icon(Icons.person_rounded),
-                label: 'Perfil',
-              ),
-            ],
-          ),
         ),
       ),
       drawer: _buildDrawer(),
