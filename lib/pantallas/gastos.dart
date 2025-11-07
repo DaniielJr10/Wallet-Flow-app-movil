@@ -41,7 +41,6 @@ class _PantallaGastosState extends State<PantallaGastos>
 
   final List<String> _metodosPago = [
     'efectivo',
-    'tarjeta',
     'transferencia',
     'cheque'
   ];
@@ -49,8 +48,7 @@ class _PantallaGastosState extends State<PantallaGastos>
   final List<String> _cuentas = [
     'ninguna',
     'cuenta corriente',
-    'cuenta ahorros',
-    'tarjeta crédito'
+    'cuenta ahorros'
   ];
 
   final List<String> _frecuencias = [
@@ -101,7 +99,7 @@ class _PantallaGastosState extends State<PantallaGastos>
           'fecha': DateTime.now().subtract(const Duration(days: 1)),
           'descripcion': 'Supermercado',
           'categoria': 'alimentación',
-          'metodoPago': 'tarjeta',
+          'metodoPago': 'efectivo',
           'cuentaAsociada': 'cuenta corriente',
           'nota': 'Compras semanales',
           'esRecurrente': false,
@@ -116,17 +114,6 @@ class _PantallaGastosState extends State<PantallaGastos>
           'cuentaAsociada': 'ninguna',
           'nota': '',
           'esRecurrente': true,
-        },
-        {
-          'id': '3',
-          'monto': 89.99,
-          'fecha': DateTime.now().subtract(const Duration(days: 7)),
-          'descripcion': 'Cena restaurante',
-          'categoria': 'entretenimiento',
-          'metodoPago': 'tarjeta',
-          'cuentaAsociada': 'tarjeta crédito',
-          'nota': 'Cena con amigos',
-          'esRecurrente': false,
         },
       ];
     });
@@ -727,13 +714,13 @@ class _PantallaGastosState extends State<PantallaGastos>
       itemCount: _gastos.length,
       itemBuilder: (context, index) {
         final gasto = _gastos[index];
-        return _buildTarjetaGasto(gasto, index);
+        return _buildTarjetaGastoSinCategoria(gasto, index);
       },
     );
   }
 
   /// Construye una tarjeta individual para mostrar un gasto
-  Widget _buildTarjetaGasto(Map<String, dynamic> gasto, int index) {
+  Widget _buildTarjetaGastoSinCategoria(Map<String, dynamic> gasto, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -749,18 +736,6 @@ class _PantallaGastosState extends State<PantallaGastos>
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.red.shade50,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            _getIconoCategoria(gasto['categoria']),
-            color: Colors.red.shade600,
-            size: 24,
-          ),
-        ),
         title: Row(
           children: [
             Expanded(
@@ -796,7 +771,7 @@ class _PantallaGastosState extends State<PantallaGastos>
           children: [
             const SizedBox(height: 4),
             Text(
-              '${gasto['categoria'].toString().substring(0, 1).toUpperCase()}${gasto['categoria'].toString().substring(1)} • ${gasto['metodoPago'].toString().substring(0, 1).toUpperCase()}${gasto['metodoPago'].toString().substring(1)}',
+              '${gasto['metodoPago'].toString().substring(0, 1).toUpperCase()}${gasto['metodoPago'].toString().substring(1)}',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
@@ -828,7 +803,7 @@ class _PantallaGastosState extends State<PantallaGastos>
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '-\$${gasto['monto'].toStringAsFixed(2)}',
+              '-${gasto['monto'].toStringAsFixed(2)}',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -905,12 +880,7 @@ class _PantallaGastosState extends State<PantallaGastos>
       (sum, gasto) => sum + gasto['monto'],
     );
 
-    final gastosPorCategoria = <String, double>{};
-    for (final gasto in _gastos) {
-      final categoria = gasto['categoria'] as String;
-      gastosPorCategoria[categoria] = 
-          (gastosPorCategoria[categoria] ?? 0.0) + gasto['monto'];
-    }
+    // Eliminado cálculo por categoría
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -987,97 +957,8 @@ class _PantallaGastosState extends State<PantallaGastos>
 
   /// Construye el gráfico de distribución de gastos por categoría
   Widget _buildGraficoGastos() {
-    if (_gastos.isEmpty) return const SizedBox.shrink();
-
-    final gastosPorCategoria = <String, double>{};
-    for (final gasto in _gastos) {
-      final categoria = gasto['categoria'] as String;
-      gastosPorCategoria[categoria] = 
-          (gastosPorCategoria[categoria] ?? 0.0) + gasto['monto'];
-    }
-
-    final totalGastos = gastosPorCategoria.values.fold<double>(0.0, (sum, amount) => sum + amount);
-    
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Distribución por Categorías',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1F2937),
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Gráfico simplificado con barras horizontales
-          ...gastosPorCategoria.entries.map((entry) {
-            final percentage = (entry.value / totalGastos);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              color: _getColorCategoria(entry.key),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            entry.key.substring(0, 1).toUpperCase() + entry.key.substring(1),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        '\$${entry.value.toStringAsFixed(2)} (${(percentage * 100).toStringAsFixed(1)}%)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  LinearProgressIndicator(
-                    value: percentage,
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: AlwaysStoppedAnimation<Color>(_getColorCategoria(entry.key)),
-                    minHeight: 8,
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
+    // Eliminado gráfico de distribución por categorías
+    return const SizedBox.shrink();
   }
 
   /// Retorna el ícono correspondiente según la categoría del gasto
@@ -1105,28 +986,7 @@ class _PantallaGastosState extends State<PantallaGastos>
   }
 
   /// Retorna el color correspondiente según la categoría del gasto para el gráfico
-  Color _getColorCategoria(String categoria) {
-    switch (categoria) {
-      case 'alimentación':
-        return Colors.orange;
-      case 'transporte':
-        return Colors.blue;
-      case 'entretenimiento':
-        return Colors.purple;
-      case 'salud':
-        return Colors.red;
-      case 'educación':
-        return Colors.green;
-      case 'servicios':
-        return Colors.brown;
-      case 'compras':
-        return Colors.pink;
-      case 'viajes':
-        return Colors.teal;
-      default:
-        return Colors.grey;
-    }
-  }
+  // ...existing code...
 
   /// Abre el selector de fecha para elegir cuándo se realizó el gasto
   void _seleccionarFecha() async {
