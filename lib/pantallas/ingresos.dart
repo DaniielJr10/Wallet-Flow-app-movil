@@ -1109,42 +1109,62 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                         duration: const Duration(milliseconds: 250),
                         child: Icon(Icons.filter_alt_rounded, color: Color(0xFF2ecc71), key: ValueKey(_modoBusqueda)),
                       ),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      onSelected: (value) {
-                        setState(() {
-                          _modoBusqueda = value;
-                        });
-                      },
+                      color: Colors.white,
+                      elevation: 8,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: const BorderSide(color: Color(0xFF2ecc71), width: 0.7),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
                       itemBuilder: (context) => [
                         PopupMenuItem(
+                          enabled: false,
+                          padding: const EdgeInsets.only(left: 12, right: 12, top: 10, bottom: 6),
+                          child: Row(
+                            children: [
+                              Icon(Icons.tune_rounded, color: Color(0xFF2ecc71), size: 18),
+                              const SizedBox(width: 8),
+                              Text('Modo de búsqueda', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF2ecc71))),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuDivider(height: 1),
+                        PopupMenuItem(
                           value: 'categoría',
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           child: Row(
                             children: [
                               Icon(Icons.category_rounded, color: _modoBusqueda == 'categoría' ? Color(0xFF2ecc71) : Colors.grey, size: 20),
-                              const SizedBox(width: 8),
-                              const Text('Buscar por categoría'),
+                              const SizedBox(width: 10),
+                              Text('Por categoría', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
                               if (_modoBusqueda == 'categoría') ...[
-                                const SizedBox(width: 6),
-                                Icon(Icons.check, color: Color(0xFF2ecc71), size: 18),
+                                const SizedBox(width: 8),
+                                Icon(Icons.check_circle_rounded, color: Color(0xFF2ecc71), size: 18),
                               ]
                             ],
                           ),
                         ),
                         PopupMenuItem(
                           value: 'mes',
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           child: Row(
                             children: [
                               Icon(Icons.calendar_month_rounded, color: _modoBusqueda == 'mes' ? Color(0xFF2ecc71) : Colors.grey, size: 20),
-                              const SizedBox(width: 8),
-                              const Text('Buscar por mes'),
+                              const SizedBox(width: 10),
+                              Text('Por mes', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
                               if (_modoBusqueda == 'mes') ...[
-                                const SizedBox(width: 6),
-                                Icon(Icons.check, color: Color(0xFF2ecc71), size: 18),
+                                const SizedBox(width: 8),
+                                Icon(Icons.check_circle_rounded, color: Color(0xFF2ecc71), size: 18),
                               ]
                             ],
                           ),
                         ),
                       ],
+                      onSelected: (value) {
+                        setState(() {
+                          _modoBusqueda = value;
+                        });
+                      },
                     ),
                   ),
                 ],
