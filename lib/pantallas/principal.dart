@@ -13,6 +13,7 @@ import 'objetivos.dart';
 import 'inversiones.dart';
 import 'configuracion.dart';
 import 'perfil.dart';
+import 'herramientas.dart';
 
 class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
@@ -622,10 +623,17 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
 
   void _navigateToSection(int index) {
     HapticFeedback.lightImpact();
-    
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index == 9) {
+      // Navegar a la pantalla de herramientas
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const PantallaHerramientas()),
+      );
+    } else {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
   }
 
   void _handleBottomNavigation(int index) {
