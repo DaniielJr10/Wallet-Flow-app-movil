@@ -204,127 +204,122 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
 
 
   Widget _buildPersonalizedGreeting() {
-    return Container(
-      padding: const EdgeInsets.only(top: 8, left: 20, right: 20, bottom: 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF10B981).withOpacity(0.1),
-            const Color(0xFF059669).withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFF10B981).withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Logo y nombre app centrados arriba
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'images/logo.png',
-                width: 28,
-                height: 28,
-              ),
-              const SizedBox(width: 6),
-              const Text(
-                'WalletFlow',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF059669),
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
+    return Stack(
+      children: [
+        Container(
+          padding: const EdgeInsets.only(top: 8, left: 20, right: 20, bottom: 20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF10B981).withOpacity(0.1),
+                const Color(0xFF059669).withOpacity(0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0xFF10B981).withOpacity(0.2),
+              width: 1,
+            ),
           ),
-          const SizedBox(height: 16), // Más espacio entre logo/nombre y la fila inferior
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Foto de perfil y mensaje de bienvenida
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedIndex = 4;
-                  });
-                },
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  margin: const EdgeInsets.only(top: 2),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFF10B981),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF10B981).withOpacity(0.15),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: ClipOval(
-                    child: _buildProfileImage(),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Logo y nombre app centrados arriba
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    'Hola, $_nombreUsuario',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1F2937),
-                    ),
+                  Image.asset(
+                    'images/logo.png',
+                    width: 38,
+                    height: 38,
                   ),
-                  Text(
-                    'Bienvenido de vuelta',
+                  const SizedBox(width: 2),
+                  const Text(
+                    'Wallet Flow',
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade600,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF059669),
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
-              const Spacer(),
-              // Botón salir a la derecha
-              Center(
-                child: IconButton(
-                  onPressed: _cerrarSesion,
-                  icon: Icon(
-                    Icons.logout_rounded,
-                    color: Colors.grey.shade600,
-                    size: 28,
-                  ),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.grey.shade100,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Foto de perfil y mensaje de bienvenida
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedIndex = 4;
+                      });
+                    },
+            child: Container(
+                      width: 62,
+                      height: 62,
+              margin: const EdgeInsets.only(top: 2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFF10B981),
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF10B981).withOpacity(0.15),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: _buildProfileImage(),
+                      ),
                     ),
-                    padding: const EdgeInsets.all(14),
                   ),
-                  tooltip: 'Cerrar sesión',
-                ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Hola, $_nombreUsuario',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        Positioned(
+          top: 40,
+          right: 0,
+          child: IconButton(
+            onPressed: _cerrarSesion,
+            icon: const Icon(
+              Icons.logout_rounded,
+              color: Colors.red,
+              size: 28,
+            ),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              padding: EdgeInsets.zero,
+              shape: const CircleBorder(),
+            ),
+            tooltip: 'Cerrar sesión',
+          ),
+        ),
+      ],
     );
   }
 
