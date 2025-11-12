@@ -1,4 +1,4 @@
-package com.example.walletflow_app_movil
+package com.walletflow.app
 
 import io.flutter.embedding.android.FlutterActivity
 
