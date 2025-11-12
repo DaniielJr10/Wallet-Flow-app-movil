@@ -131,8 +131,8 @@ class _PantallaIngresosState extends State<PantallaIngresos>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.green.shade600,
-                  Colors.green.shade700,
+                  Color(0xFF2ecc71),
+                  Color(0xFF27ae60),
                 ],
               ),
               borderRadius: const BorderRadius.only(
@@ -242,7 +242,7 @@ class _PantallaIngresosState extends State<PantallaIngresos>
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.green.shade600, width: 2),
+              borderSide: BorderSide(color: Color(0xFF2ecc71), width: 2),
             ),
             filled: true,
             fillColor: Colors.grey.shade50,
@@ -282,7 +282,7 @@ class _PantallaIngresosState extends State<PantallaIngresos>
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.green.shade600, width: 2),
+              borderSide: BorderSide(color: Color(0xFF2ecc71), width: 2),
             ),
             filled: true,
             fillColor: Colors.grey.shade50,
@@ -319,7 +319,7 @@ class _PantallaIngresosState extends State<PantallaIngresos>
               children: [
                 Icon(
                   Icons.calendar_today_rounded,
-                  color: Colors.green.shade600,
+                  color: Color(0xFF2ecc71),
                   size: 20,
                 ),
                 const SizedBox(width: 12),
@@ -470,7 +470,7 @@ class _PantallaIngresosState extends State<PantallaIngresos>
           child: ElevatedButton(
             onPressed: _guardarIngreso,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.shade600,
+              backgroundColor: Color(0xFF2ecc71),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -577,7 +577,7 @@ class _PantallaIngresosState extends State<PantallaIngresos>
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Colors.green.shade600,
+                color: Color(0xFF2ecc71),
               ),
             ),
             IconButton(
@@ -664,14 +664,14 @@ class _PantallaIngresosState extends State<PantallaIngresos>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.green.shade600,
-            Colors.green.shade700,
+            Color(0xFF2ecc71),
+            Color(0xFF27ae60),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.shade600.withOpacity(0.3),
+            color: Color(0xFF2ecc71).withOpacity(0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -862,27 +862,9 @@ class _PantallaIngresosState extends State<PantallaIngresos>
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Ingresos',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1F2937),
-          ),
-        ),
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(
-            Icons.arrow_back_ios_rounded,
-            color: Color(0xFF1F2937),
-          ),
-          style: IconButton.styleFrom(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
+        automaticallyImplyLeading: false,
+        title: null,
+        toolbarHeight: 0, // Oculta la barra superior
       ),
       body: FadeTransition(
         opacity: _fadeAnimation,
@@ -891,6 +873,44 @@ class _PantallaIngresosState extends State<PantallaIngresos>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header bonito y centrado
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.trending_up_rounded,
+                        color: Color(0xFF2ecc71),
+                        size: 36,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'INGRESOS',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2ecc71), // #2ecc71
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Gestiona y controla todos tus ingresos',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
               _buildResumenIngresos(),
               const SizedBox(height: 24),
               // Campo de búsqueda
@@ -929,7 +949,7 @@ class _PantallaIngresosState extends State<PantallaIngresos>
                     icon: const Icon(Icons.add_rounded),
                     label: const Text('Nuevo Ingreso'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade600,
+                      backgroundColor: Color(0xFF2ecc71),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
