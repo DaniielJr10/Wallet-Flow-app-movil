@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'herramientass/calculadora.dart';
+import 'herramientass/calendario.dart';
+import 'herramientass/conversor_monedas.dart';
+import 'herramientass/notas.dart';
 
 /// Pantalla principal de Herramientas
 /// Muestra 4 tarjetas para acceder a utilidades: Calculadora, Calendario, Conversor de Monedas y Notas.
@@ -13,25 +17,25 @@ class PantallaHerramientas extends StatelessWidget {
 				nombre: 'Calculadora',
 				icono: Icons.calculate_rounded,
 				color: Colors.blueAccent,
-				destino: const CalculadoraPantalla(),
+				destino: const CalculadoraPantalla(), // Calculadora profesional
 			),
 			_HerramientaInfo(
 				nombre: 'Calendario',
 				icono: Icons.calendar_month_rounded,
 				color: Colors.deepPurple,
-				destino: const CalendarioPantalla(),
+				destino: const CalendarioScreen(),
 			),
 			_HerramientaInfo(
 				nombre: 'Conversor',
 				icono: Icons.currency_exchange_rounded,
 				color: Colors.teal,
-				destino: const ConversorMonedasPantalla(),
+				destino: const ConversorMonedasScreen(),
 			),
 			_HerramientaInfo(
 				nombre: 'Notas',
 				icono: Icons.note_alt_rounded,
 				color: Colors.orange,
-				destino: const NotasPantalla(),
+				destino: const NotasScreen(),
 			),
 		];
 
@@ -134,47 +138,4 @@ class _TarjetaHerramienta extends StatelessWidget {
 }
 
 // ===================
-// Pantallas vacías para cada herramienta (puedes reemplazar por tus implementaciones reales)
-class CalculadoraPantalla extends StatelessWidget {
-	const CalculadoraPantalla({super.key});
-	@override
-	Widget build(BuildContext context) {
-		return Scaffold(
-			appBar: AppBar(title: const Text('Calculadora')),
-			body: const Center(child: Text('Aquí irá la Calculadora')),
-		);
-	}
-}
-
-class CalendarioPantalla extends StatelessWidget {
-	const CalendarioPantalla({super.key});
-	@override
-	Widget build(BuildContext context) {
-		return Scaffold(
-			appBar: AppBar(title: const Text('Calendario')),
-			body: const Center(child: Text('Aquí irá el Calendario')),
-		);
-	}
-}
-
-class ConversorMonedasPantalla extends StatelessWidget {
-	const ConversorMonedasPantalla({super.key});
-	@override
-	Widget build(BuildContext context) {
-		return Scaffold(
-			appBar: AppBar(title: const Text('Conversor de Monedas')),
-			body: const Center(child: Text('Aquí irá el Conversor de Monedas')),
-		);
-	}
-}
-
-class NotasPantalla extends StatelessWidget {
-	const NotasPantalla({super.key});
-	@override
-	Widget build(BuildContext context) {
-		return Scaffold(
-			appBar: AppBar(title: const Text('Notas')),
-			body: const Center(child: Text('Aquí irán las Notas')),
-		);
-	}
-}
+// Si implementas las otras herramientas, elimina los Scaffold temporales y usa las pantallas reales.
