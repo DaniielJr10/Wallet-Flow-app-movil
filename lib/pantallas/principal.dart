@@ -659,58 +659,52 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           // Primera fila
           Row(
             children: [
-              _buildMenuCard(
-                title: 'Deudas',
-                subtitle: 'Gestionar',
-                icon: Icons.credit_card_rounded,
-                color: Colors.orange.shade600,
-                onTap: () => _navigateToSection(5),
-              ),
+                _buildMenuCard(
+                  title: 'Deudas',
+                  icon: Icons.credit_card_rounded,
+                  color: Colors.orange.shade600,
+                  onTap: () => _navigateToSection(5),
+                ),
               const SizedBox(width: 12),
-              _buildMenuCard(
-                title: 'Inversiones',
-                subtitle: 'Portafolio',
-                icon: Icons.trending_up_rounded,
-                color: Colors.blue.shade600,
-                onTap: () => _navigateToSection(6),
-              ),
+                _buildMenuCard(
+                  title: 'Inversiones',
+                  icon: Icons.trending_up_rounded,
+                  color: Colors.blue.shade600,
+                  onTap: () => _navigateToSection(6),
+                ),
               const SizedBox(width: 12),
-              _buildMenuCard(
-                title: 'Cuentas',
-                subtitle: 'Bancarias',
-                icon: Icons.account_balance_rounded,
-                color: Colors.purple.shade600,
-                onTap: () => _navigateToSection(7),
-              ),
+                _buildMenuCard(
+                  title: 'Cuentas',
+                  icon: Icons.account_balance_rounded,
+                  color: Colors.purple.shade600,
+                  onTap: () => _navigateToSection(7),
+                ),
             ],
           ),
           const SizedBox(height: 12),
           // Segunda fila
           Row(
             children: [
-              _buildMenuCard(
-                title: 'Objetivos',
-                subtitle: 'Financieros',
-                icon: Icons.flag_outlined,
-                color: Colors.teal.shade600,
-                onTap: () => _navigateToSection(8),
-              ),
+                _buildMenuCard(
+                  title: 'Objetivos',
+                  icon: Icons.flag_outlined,
+                  color: Colors.teal.shade600,
+                  onTap: () => _navigateToSection(8),
+                ),
               const SizedBox(width: 12),
-              _buildMenuCard(
-                title: 'Herramientas',
-                subtitle: 'Calculadoras',
-                icon: Icons.build_outlined,
-                color: Colors.indigo.shade600,
-                onTap: () => _navigateToSection(9),
-              ),
+                _buildMenuCard(
+                  title: 'Herramientas',
+                  icon: Icons.build_outlined,
+                  color: Colors.indigo.shade600,
+                  onTap: () => _navigateToSection(9),
+                ),
               const SizedBox(width: 12),
-              _buildMenuCard(
-                title: 'Configuración',
-                subtitle: 'Ajustes',
-                icon: Icons.settings_outlined,
-                color: Colors.grey.shade700,
-                onTap: () => _navigateToSection(10),
-              ),
+                _buildMenuCard(
+                  title: 'Configuración',
+                  icon: Icons.settings_outlined,
+                  color: Colors.grey.shade700,
+                  onTap: () => _navigateToSection(10),
+                ),
             ],
           ),
         ],
@@ -719,11 +713,10 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
   }
 
   Widget _buildMenuCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
+  required String title,
+  required IconData icon,
+  required Color color,
+  required VoidCallback onTap,
   }) {
     return Expanded(
       child: Container(
@@ -765,15 +758,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+                  // Subtítulo eliminado
                 ],
               ),
             ),
