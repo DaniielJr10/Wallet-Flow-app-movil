@@ -824,60 +824,66 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
 
   @override
   Widget build(BuildContext context) {
+    // Colores personalizados para cada ítem
+    final List<Color> itemColors = [
+      Color(0xFF2563EB), // Inicio - azul
+      Color(0xFF2ECC71), // Ingresos - verde (#2ecc71)
+      Color(0xFFEF4444), // Gastos - rojo
+      Color(0xFFF59E42), // Ahorros - naranja
+      Color(0xFF6366F1), // Perfil - morado
+    ];
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          _buildDashboard(), // 0 - Dashboard principal
-          const PantallaIngresos(), // 1 - Ingresos
-          const PantallaGastos(), // 2 - Gastos
-          const PantallaAhorros(), // 3 - Ahorros
-          const PantallaPerfil(), // 4 - Perfil
-          const PantallaDeudas(), // 5 - Deudas
-          const PantallaInversiones(), // 6 - Inversiones
-          const PantallaCuentas(), // 7 - Cuentas
-          const PantallaObjetivos(), // 8 - Objetivos
-          _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600), // 9 - Herramientas
-          const PantallaConfiguracion(), // 10 - Configuración
+          _buildDashboard(),
+          const PantallaIngresos(),
+          const PantallaGastos(),
+          const PantallaAhorros(),
+          const PantallaPerfil(),
+          const PantallaDeudas(),
+          const PantallaInversiones(),
+          const PantallaCuentas(),
+          const PantallaObjetivos(),
+          _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600),
+          const PantallaConfiguracion(),
         ],
       ),
-      bottomNavigationBar: Container(
-        color: Colors.white,
-        child: NavigationBar(
-          selectedIndex: _selectedIndex <= 4 ? _selectedIndex : 0,
-          onDestinationSelected: _handleBottomNavigation,
-          backgroundColor: Colors.white,
-          indicatorColor: const Color(0xFF10B981).withOpacity(0.2),
-          height: 56,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined),
-              selectedIcon: Icon(Icons.dashboard_rounded),
-              label: 'Inicio',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.attach_money_outlined),
-              selectedIcon: Icon(Icons.attach_money_rounded),
-              label: 'Ingresos',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.payment_outlined),
-              selectedIcon: Icon(Icons.payment_rounded),
-              label: 'Gastos',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.savings_outlined),
-              selectedIcon: Icon(Icons.savings_rounded),
-              label: 'Ahorros',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline_rounded),
-              selectedIcon: Icon(Icons.person_rounded),
-              label: 'Perfil',
-            ),
-          ],
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _selectedIndex <= 4 ? _selectedIndex : 0,
+        onTap: _handleBottomNavigation,
+        backgroundColor: Colors.white,
+        selectedFontSize: 13,
+        unselectedFontSize: 12,
+        elevation: 10,
+        showUnselectedLabels: true,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard_outlined, color: _selectedIndex == 0 ? itemColors[0] : Colors.grey.shade400),
+            label: 'Inicio',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.attach_money_outlined, color: _selectedIndex == 1 ? itemColors[1] : Colors.grey.shade400),
+            label: 'Ingresos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.payment_outlined, color: _selectedIndex == 2 ? itemColors[2] : Colors.grey.shade400),
+            label: 'Gastos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.savings_outlined, color: _selectedIndex == 3 ? itemColors[3] : Colors.grey.shade400),
+            label: 'Ahorros',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline_rounded, color: _selectedIndex == 4 ? itemColors[4] : Colors.grey.shade400),
+            label: 'Perfil',
+          ),
+        ],
+        selectedItemColor: itemColors[_selectedIndex <= 4 ? _selectedIndex : 0],
+        unselectedItemColor: Colors.grey.shade400,
       ),
       drawer: _buildDrawer(),
     );
