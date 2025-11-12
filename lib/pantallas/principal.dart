@@ -301,7 +301,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           ),
         ),
         Positioned(
-          top: 40,
+          top: 50,
           right: 0,
           child: IconButton(
             onPressed: _cerrarSesion,
