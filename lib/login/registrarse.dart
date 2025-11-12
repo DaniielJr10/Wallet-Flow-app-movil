@@ -258,115 +258,70 @@ class _RegistrarseScreenState extends State<RegistrarseScreen> {
         height: double.infinity,
         color: const Color(0xFFE8F5E8), // Verde suave uniforme
         child: SafeArea(
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            child: Container(
-              constraints: BoxConstraints(
-                minHeight: size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
-              ),
-              padding: EdgeInsets.symmetric(
-                horizontal: isTablet ? size.width * 0.25 : 32,
-                vertical: 48,
-              ),
-              child: Form(
-                key: _formKey,
-                child: Container(
-                  width: double.infinity,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: constraints.maxHeight > 700 ? const NeverScrollableScrollPhysics() : const BouncingScrollPhysics(),
+                child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    maxWidth: isTablet ? 450 : double.infinity,
+                    minHeight: constraints.maxHeight,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Botón de regreso
-                      _buildBackButton(),
-                      
-                      const SizedBox(height: 32),
-                      
-                      // Logo de la aplicación
-                      _buildLogo(),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Título de la pantalla
-                      _buildTitle(),
-                      
-                      const SizedBox(height: 40),
-                      
-                      // Campo de nombre
-                      _buildNameField(),
-                      
-                      const SizedBox(height: 20),
-                      
-                      // Campo de correo electrónico
-                      _buildEmailField(),
-                      
-                      const SizedBox(height: 20),
-                      
-                      // Campo de contraseña
-                      _buildPasswordField(),
-                      
-                      const SizedBox(height: 20),
-                      
-                      // Campo de confirmar contraseña
-                      _buildConfirmPasswordField(),
-                      
-                      const SizedBox(height: 32),
-                      
-                      // Botón de registrarse
-                      _buildRegisterButton(),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // Enlace para volver al login
-                      _buildBackToLoginLink(),
-                      
-                      const SizedBox(height: 20), // Espacio extra al final
-                    ],
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isTablet ? size.width * 0.25 : 32,
+                      vertical: 16,
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Container(
+                        width: double.infinity,
+                        constraints: BoxConstraints(
+                          maxWidth: isTablet ? 450 : double.infinity,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            // ...eliminado botón de regreso...
+                            const SizedBox(height: 8),
+                            // Logo de la aplicación
+                            _buildLogo(),
+                            const SizedBox(height: 12),
+                            // Título de la pantalla
+                            _buildTitle(),
+                            const SizedBox(height: 40),
+                            // Campo de nombre
+                            _buildNameField(),
+                            const SizedBox(height: 20),
+                            // Campo de correo electrónico
+                            _buildEmailField(),
+                            const SizedBox(height: 20),
+                            // Campo de contraseña
+                            _buildPasswordField(),
+                            const SizedBox(height: 20),
+                            // Campo de confirmar contraseña
+                            _buildConfirmPasswordField(),
+                            const SizedBox(height: 32),
+                            // Botón de registrarse
+                            _buildRegisterButton(),
+                            const SizedBox(height: 24),
+                            // Enlace para volver al login
+                            _buildBackToLoginLink(),
+                            const SizedBox(height: 20), // Espacio extra al final
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  /// Construye el botón de regreso
-  Widget _buildBackButton() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF10B981).withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: _navigateBackToLogin,
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Color(0xFF059669),
-                size: 24,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // ...eliminado _buildBackButton...
 
   /// Construye el logo de la aplicación
   Widget _buildLogo() {
