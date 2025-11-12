@@ -22,6 +22,14 @@ class _PantallaIngresosState extends State<PantallaIngresos>
   String _metodoPagoSeleccionado = 'transferencia';
   
   List<Map<String, dynamic>> _ingresos = [];
+  String _busqueda = '';
+  /// Filtra los ingresos según el texto de búsqueda
+  List<Map<String, dynamic>> get _ingresosFiltrados {
+    if (_busqueda.isEmpty) return _ingresos;
+    return _ingresos.where((ingreso) =>
+      ingreso['descripcion'].toString().toLowerCase().contains(_busqueda.toLowerCase())
+    ).toList();
+  }
 
   final List<String> _categorias = [
     'trabajo',
@@ -485,17 +493,19 @@ class _PantallaIngresosState extends State<PantallaIngresos>
 
   /// Construye la lista de ingresos registrados o muestra estado vacío
   Widget _buildListaIngresos() {
-    if (_ingresos.isEmpty) {
+    final lista = _ingresosFiltrados;
+    if (lista.isEmpty) {
       return _buildEstadoVacio();
     }
-
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _ingresos.length,
+      itemCount: lista.length,
       itemBuilder: (context, index) {
-        final ingreso = _ingresos[index];
-        return _buildTarjetaIngreso(ingreso, index);
+        final ingreso = lista[index];
+        // Buscar el índice real en la lista original para eliminar correctamente
+        final realIndex = _ingresos.indexOf(ingreso);
+        return _buildTarjetaIngreso(ingreso, realIndex);
       },
     );
   }
@@ -882,6 +892,26 @@ class _PantallaIngresosState extends State<PantallaIngresos>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildResumenIngresos(),
+              const SizedBox(height: 24),
+              // Campo de búsqueda
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Buscar ingresos...',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _busqueda = value;
+                  });
+                },
+              ),
               const SizedBox(height: 32),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -894,15 +924,18 @@ class _PantallaIngresosState extends State<PantallaIngresos>
                       color: Color(0xFF1F2937),
                     ),
                   ),
-                  IconButton(
+                  ElevatedButton.icon(
                     onPressed: _mostrarFormularioIngreso,
                     icon: const Icon(Icons.add_rounded),
-                    style: IconButton.styleFrom(
+                    label: const Text('Nuevo Ingreso'),
+                    style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade600,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
@@ -914,19 +947,7 @@ class _PantallaIngresosState extends State<PantallaIngresos>
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _mostrarFormularioIngreso,
-        backgroundColor: Colors.green.shade600,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text(
-          'Nuevo Ingreso',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
+      // FloatingActionButton eliminado según solicitud
     );
   }
 }
