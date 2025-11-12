@@ -799,14 +799,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2ecc71),
-            Color(0xFF27ae60),
-          ],
-        ),
+        color: Color(0xFF2ecc71),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
