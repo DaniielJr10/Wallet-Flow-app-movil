@@ -580,6 +580,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 45), // Más espacio para bajar la tarjeta de bienvenida
             // Saludo personalizado
             _buildPersonalizedGreeting(),
             const SizedBox(height: 16), // Espacio entre perfil y balance
