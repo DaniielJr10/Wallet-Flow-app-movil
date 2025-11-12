@@ -8,27 +8,166 @@ class PantallaIngresos extends StatefulWidget {
   State<PantallaIngresos> createState() => _PantallaIngresosState();
 }
 
-class _PantallaIngresosState extends State<PantallaIngresos>
-    with TickerProviderStateMixin {
+class _PantallaIngresosState extends State<PantallaIngresos> with TickerProviderStateMixin {
+  // Filtros adicionales
+  String _modoBusqueda = 'categoría'; // 'categoría' o 'mes'
+  String? _filtroCategoria;
+
   final _formKey = GlobalKey<FormState>();
   final _montoController = TextEditingController();
   final _descripcionController = TextEditingController();
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  
+
   DateTime? _fechaSeleccionada = DateTime.now();
   String _categoriaSeleccionada = 'trabajo';
   String _metodoPagoSeleccionado = 'transferencia';
-  
+
   List<Map<String, dynamic>> _ingresos = [];
   String _busqueda = '';
-  /// Filtra los ingresos según el texto de búsqueda
+  /// Filtra los ingresos según el texto de búsqueda y los filtros seleccionados
   List<Map<String, dynamic>> get _ingresosFiltrados {
-    if (_busqueda.isEmpty) return _ingresos;
-    return _ingresos.where((ingreso) =>
-      ingreso['descripcion'].toString().toLowerCase().contains(_busqueda.toLowerCase())
-    ).toList();
+    return _ingresos.where((ingreso) {
+      bool coincideBusqueda = true;
+      if (_busqueda.isNotEmpty) {
+        if (_modoBusqueda == 'categoría') {
+          coincideBusqueda = ingreso['categoria'].toString().toLowerCase().contains(_busqueda.toLowerCase());
+        } else if (_modoBusqueda == 'mes') {
+          // Buscar por mes escrito (ej: "noviembre")
+          final meses = [
+            'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+            'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+          ];
+          final fecha = ingreso['fecha'] as DateTime;
+          final mesIngreso = meses[fecha.month - 1];
+          coincideBusqueda = mesIngreso.contains(_busqueda.toLowerCase());
+        }
+      }
+      return coincideBusqueda;
+    }).toList();
+  }
+
+  /// Muestra el modal de filtros
+  void _mostrarModalFiltros() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: false,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 8,
+                offset: Offset(0, -2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 32,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Icon(Icons.filter_alt_rounded, color: Color(0xFF2ecc71), size: 20),
+                  const SizedBox(width: 8),
+                  const Text('Buscar por:', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _modoBusqueda = 'categoría');
+                        Navigator.pop(context);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(vertical: 7),
+                        decoration: BoxDecoration(
+                          color: _modoBusqueda == 'categoría' ? const Color(0xFF2ecc71) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Categoría',
+                            style: TextStyle(
+                              color: _modoBusqueda == 'categoría' ? Colors.white : Colors.grey.shade700,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _modoBusqueda = 'mes');
+                        Navigator.pop(context);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(vertical: 7),
+                        decoration: BoxDecoration(
+                          color: _modoBusqueda == 'mes' ? const Color(0xFF2ecc71) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Mes',
+                            style: TextStyle(
+                              color: _modoBusqueda == 'mes' ? Colors.white : Colors.grey.shade700,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, color: Colors.grey.shade400, size: 16),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Escribe el nombre de la categoría o el mes (ej: "noviembre") en la barra de búsqueda.',
+                      style: TextStyle(fontSize: 12.5, color: Colors.grey),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   final List<String> _categorias = [
@@ -913,24 +1052,102 @@ class _PantallaIngresosState extends State<PantallaIngresos>
               ),
               _buildResumenIngresos(),
               const SizedBox(height: 24),
-              // Campo de búsqueda
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Buscar ingresos...',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+              // Campo de búsqueda con botón de filtros
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: _modoBusqueda == 'categoría' ? 'Buscar por categoría...' : 'Buscar por mes (ej: noviembre)...',
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: Color(0xFF2ecc71), width: 1.2),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: Color(0xFF27ae60), width: 2),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                        suffixIcon: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          child: _busqueda.isNotEmpty
+                              ? IconButton(
+                                  key: const ValueKey('clear'),
+                                  icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                                  onPressed: () {
+                                    setState(() => _busqueda = '');
+                                  },
+                                )
+                              : null,
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _busqueda = value;
+                        });
+                      },
+                    ),
                   ),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _busqueda = value;
-                  });
-                },
+                  const SizedBox(width: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: PopupMenuButton<String>(
+                      icon: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        child: Icon(Icons.filter_alt_rounded, color: Color(0xFF2ecc71), key: ValueKey(_modoBusqueda)),
+                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      onSelected: (value) {
+                        setState(() {
+                          _modoBusqueda = value;
+                        });
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'categoría',
+                          child: Row(
+                            children: [
+                              Icon(Icons.category_rounded, color: _modoBusqueda == 'categoría' ? Color(0xFF2ecc71) : Colors.grey, size: 20),
+                              const SizedBox(width: 8),
+                              const Text('Buscar por categoría'),
+                              if (_modoBusqueda == 'categoría') ...[
+                                const SizedBox(width: 6),
+                                Icon(Icons.check, color: Color(0xFF2ecc71), size: 18),
+                              ]
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'mes',
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_month_rounded, color: _modoBusqueda == 'mes' ? Color(0xFF2ecc71) : Colors.grey, size: 20),
+                              const SizedBox(width: 8),
+                              const Text('Buscar por mes'),
+                              if (_modoBusqueda == 'mes') ...[
+                                const SizedBox(width: 6),
+                                Icon(Icons.check, color: Color(0xFF2ecc71), size: 18),
+                              ]
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
               Row(
