@@ -589,6 +589,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           children: [
             // Saludo personalizado
             _buildPersonalizedGreeting(),
+            const SizedBox(height: 16), // Espacio entre perfil y balance
             // Balance total
             _buildBalanceCard(),
             const SizedBox(height: 20),
