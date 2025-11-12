@@ -8,17 +8,19 @@ class PantallaGastos extends StatefulWidget {
   State<PantallaGastos> createState() => _PantallaGastosState();
 }
 
-class _PantallaGastosState extends State<PantallaGastos>
-    with TickerProviderStateMixin {
+class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStateMixin {
+  // Modo de búsqueda: 'categoría' o 'mes'
+  String _modoBusqueda = 'categoría';
+
   final _formKey = GlobalKey<FormState>();
   final _montoController = TextEditingController();
   final _descripcionController = TextEditingController();
   final _notaController = TextEditingController();
   final _busquedaController = TextEditingController();
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  
+
   DateTime? _fechaSeleccionada = DateTime.now();
   String _categoriaSeleccionada = 'alimentación';
   String _metodoPagoSeleccionado = 'efectivo';
@@ -26,7 +28,7 @@ class _PantallaGastosState extends State<PantallaGastos>
   bool _esRecurrente = false;
   String _frecuenciaRecurrente = 'mensual';
   String _textoBusqueda = '';
-  
+
   List<Map<String, dynamic>> _gastos = [];
   List<Map<String, dynamic>> _gastosFiltrados = [];
 
@@ -124,7 +126,7 @@ class _PantallaGastosState extends State<PantallaGastos>
     });
   }
 
-  /// Filtra los gastos basado en el texto de búsqueda
+  /// Filtra los gastos según el modo de búsqueda (categoría o mes)
   void _filtrarGastos(String textoBusqueda) {
     setState(() {
       _textoBusqueda = textoBusqueda;
@@ -132,18 +134,21 @@ class _PantallaGastosState extends State<PantallaGastos>
         _gastosFiltrados = List.from(_gastos);
       } else {
         _gastosFiltrados = _gastos.where((gasto) {
-          return gasto['descripcion']
-                  .toString()
-                  .toLowerCase()
-                  .contains(textoBusqueda.toLowerCase()) ||
-              gasto['categoria']
-                  .toString()
-                  .toLowerCase()
-                  .contains(textoBusqueda.toLowerCase()) ||
-              gasto['metodoPago']
-                  .toString()
-                  .toLowerCase()
-                  .contains(textoBusqueda.toLowerCase());
+          if (_modoBusqueda == 'categoría') {
+            return gasto['categoria']
+                .toString()
+                .toLowerCase()
+                .contains(textoBusqueda.toLowerCase());
+          } else if (_modoBusqueda == 'mes') {
+            final meses = [
+              'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+              'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+            ];
+            final fecha = gasto['fecha'] as DateTime;
+            final mesGasto = meses[fecha.month - 1];
+            return mesGasto.contains(textoBusqueda.toLowerCase());
+          }
+          return false;
         }).toList();
       }
     });
@@ -734,73 +739,158 @@ class _PantallaGastosState extends State<PantallaGastos>
 
   /// Construye una barra de búsqueda moderna y profesional
   Widget _buildBarraBusqueda() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: _busquedaController,
-        onChanged: _filtrarGastos,
-        decoration: InputDecoration(
-          hintText: 'Buscar gastos...',
-          hintStyle: TextStyle(
-            fontSize: 16,
-            color: Colors.grey.shade500,
-            fontWeight: FontWeight.w400,
-          ),
-          prefixIcon: Container(
-            padding: const EdgeInsets.all(12),
-            child: Icon(
-              Icons.search_rounded,
-              color: Colors.grey.shade400,
-              size: 24,
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ),
-          suffixIcon: _textoBusqueda.isNotEmpty
-              ? IconButton(
-                  onPressed: () {
-                    _busquedaController.clear();
-                    _filtrarGastos('');
-                  },
-                  icon: Icon(
-                    Icons.clear_rounded,
+            child: TextField(
+              controller: _busquedaController,
+              onChanged: _filtrarGastos,
+              decoration: InputDecoration(
+                hintText: _modoBusqueda == 'categoría'
+                    ? 'Buscar por categoría...'
+                    : 'Buscar por mes (ej: noviembre)...',
+                hintStyle: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w400,
+                ),
+                prefixIcon: Container(
+                  padding: const EdgeInsets.all(12),
+                  child: Icon(
+                    Icons.search_rounded,
                     color: Colors.grey.shade400,
-                    size: 20,
+                    size: 24,
                   ),
-                )
-              : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: Colors.red.shade300,
-              width: 2,
+                ),
+                suffixIcon: _textoBusqueda.isNotEmpty
+                    ? IconButton(
+                        onPressed: () {
+                          _busquedaController.clear();
+                          _filtrarGastos('');
+                        },
+                        icon: Icon(
+                          Icons.clear_rounded,
+                          color: Colors.grey.shade400,
+                          size: 20,
+                        ),
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: Colors.red.shade300,
+                    width: 2,
+                  ),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+              ),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF1F2937),
+              ),
             ),
           ),
-          filled: true,
-          fillColor: Colors.grey.shade50,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 16,
+        ),
+        const SizedBox(width: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: PopupMenuButton<String>(
+            icon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: Icon(Icons.filter_alt_rounded, color: Color(0xFFe53935), key: ValueKey(_modoBusqueda)),
+            ),
+            color: Colors.white,
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: Color(0xFFe53935), width: 0.7),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                enabled: false,
+                padding: const EdgeInsets.only(left: 12, right: 12, top: 10, bottom: 6),
+                child: Row(
+                  children: [
+                    Icon(Icons.tune_rounded, color: Color(0xFFe53935), size: 18),
+                    const SizedBox(width: 8),
+                    Text('Modo de búsqueda', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFe53935))),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(height: 1),
+              PopupMenuItem(
+                value: 'categoría',
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.category_rounded, color: _modoBusqueda == 'categoría' ? Color(0xFFe53935) : Colors.grey, size: 20),
+                    const SizedBox(width: 10),
+                    Text('Por categoría', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                    if (_modoBusqueda == 'categoría') ...[
+                      const SizedBox(width: 8),
+                      Icon(Icons.check_circle_rounded, color: Color(0xFFe53935), size: 18),
+                    ]
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'mes',
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_month_rounded, color: _modoBusqueda == 'mes' ? Color(0xFFe53935) : Colors.grey, size: 20),
+                    const SizedBox(width: 10),
+                    Text('Por mes', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                    if (_modoBusqueda == 'mes') ...[
+                      const SizedBox(width: 8),
+                      Icon(Icons.check_circle_rounded, color: Color(0xFFe53935), size: 18),
+                    ]
+                  ],
+                ),
+              ),
+            ],
+            onSelected: (value) {
+              setState(() {
+                _modoBusqueda = value;
+                _filtrarGastos(_textoBusqueda);
+              });
+            },
           ),
         ),
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF1F2937),
-        ),
-      ),
+      ],
     );
   }
 
