@@ -359,18 +359,11 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF10B981),
-            Color(0xFF059669),
-          ],
-        ),
+        color: const Color(0xFF2ecc71),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF10B981).withOpacity(0.3),
+            color: const Color(0xFF2ecc71).withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
