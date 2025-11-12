@@ -545,7 +545,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           decoration: BoxDecoration(
             border: Border.all(
               color: color.withOpacity(0.2),
-              width: 1,
+              width: 2,
             ),
             borderRadius: BorderRadius.circular(16),
           ),
@@ -681,6 +681,10 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             offset: const Offset(0, 5),
           ),
         ],
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.15),
+          width: 2,
+        ),
       ),
       child: Column(
         children: [
@@ -752,7 +756,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: color.withOpacity(0.2),
-            width: 1,
+            width: 2,
           ),
         ),
         child: Material(
