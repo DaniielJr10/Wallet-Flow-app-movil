@@ -1043,7 +1043,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
     final esEdicion = widget.cuentaExistente != null;
     
     return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
+      height: MediaQuery.of(context).size.height * 0.77,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -1090,7 +1090,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
           // Form
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -1171,7 +1171,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                       },
                     ),
                     
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     
                     // Nombre de la cuenta
                     TextFormField(
@@ -1192,7 +1192,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                       },
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
                     // Banco
                     TextFormField(
@@ -1213,7 +1213,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                       },
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
                     // Número de cuenta
                     TextFormField(
@@ -1238,7 +1238,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                       },
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
                     // Saldo
                     TextFormField(
@@ -1270,10 +1270,9 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
               ),
             ),
           ),
-          
           // Botón guardar
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
