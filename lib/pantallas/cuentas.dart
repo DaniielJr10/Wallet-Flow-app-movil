@@ -59,17 +59,14 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                   suffixIcon: _busquedaController.text.isNotEmpty
                       ? IconButton(
                           onPressed: () {
-                            _busquedaController.clear();
                             setState(() {
-                              if (_modoFiltro == 'buscar') {
-                                _busquedaNumero = '';
-                              } else {
-                                _busquedaCuenta = '';
-                              }
+                              _busquedaController.clear();
+                              _busquedaCuenta = '';
+                              _busquedaNumero = '';
                             });
                           },
                           icon: Icon(
-                            Icons.clear_rounded,
+                            Icons.clear,
                             color: Colors.grey.shade400,
                             size: 20,
                           ),
@@ -1612,36 +1609,7 @@ class _DetallesCuenta extends StatelessWidget {
                     destacado: true,
                   ),
                   
-                  const Spacer(),
-                  
-                  // Botones de acción
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            // TODO: Implementar transferencia
-                          },
-                          icon: const Icon(Icons.send),
-                          label: const Text('Transferir'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            // TODO: Implementar historial
-                          },
-                          icon: const Icon(Icons.history),
-                          label: const Text('Historial'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF007bff),
-                            foregroundColor: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Botones eliminados para evitar desbordamiento.
                 ],
               ),
             ),
