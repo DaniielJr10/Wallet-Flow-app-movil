@@ -58,13 +58,26 @@ class _PantallaCuentasState extends State<PantallaCuentas>
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        title: const Text(
-          'Mis Cuentas',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1A1D29),
-          ),
+        leading: null,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.account_balance_rounded,
+              color: Color(0xFF007bff),
+              size: 28,
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'CUENTAS',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF007bff),
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         actions: [
