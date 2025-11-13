@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class PantallaCuentas extends StatefulWidget {
   const PantallaCuentas({super.key});
 
-  @override
+  // const Divider(), // Eliminado para quitar la línea gris debajo del fondo azul
   State<PantallaCuentas> createState() => _PantallaCuentasState();
 }
 
@@ -1070,10 +1070,9 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
           // Header y handle bar con fondo azul
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(bottom: 8),
             decoration: const BoxDecoration(
               color: Color(0xFF007bff),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              // Sin borderRadius para el header azul
             ),
             child: Column(
               children: [
@@ -1110,7 +1109,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
             ),
           ),
           
-          const Divider(),
+          // const Divider(), // Eliminado para quitar la línea gris entre el header azul y el formulario
           
           // Form
           Expanded(
@@ -1576,7 +1575,7 @@ class _DetallesCuenta extends StatelessWidget {
             ),
           ),
           
-          const Divider(),
+          // const Divider(), // Eliminado para quitar la línea gris debajo del header
           
           // Contenido
           Expanded(
