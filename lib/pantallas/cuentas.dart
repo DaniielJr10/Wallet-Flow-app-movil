@@ -34,11 +34,15 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                 controller: _busquedaController,
                 onChanged: (value) {
                   setState(() {
-                    _textoBusqueda = value;
+                    if (_modoFiltro == 'buscar') {
+                      _busquedaNumero = value;
+                    } else {
+                      _busquedaCuenta = value;
+                    }
                   });
                 },
                 decoration: InputDecoration(
-                  hintText: 'Buscar cuenta...',
+                  hintText: _modoFiltro == 'buscar' ? 'Buscar por número de cuenta...' : 'Buscar cuenta...',
                   hintStyle: TextStyle(
                     fontSize: 16,
                     color: Colors.grey.shade500,
@@ -52,12 +56,16 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                       size: 24,
                     ),
                   ),
-                  suffixIcon: _textoBusqueda.isNotEmpty
+                  suffixIcon: _busquedaController.text.isNotEmpty
                       ? IconButton(
                           onPressed: () {
                             _busquedaController.clear();
                             setState(() {
-                              _textoBusqueda = '';
+                              if (_modoFiltro == 'buscar') {
+                                _busquedaNumero = '';
+                              } else {
+                                _busquedaCuenta = '';
+                              }
                             });
                           },
                           icon: Icon(
@@ -106,12 +114,90 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                 ),
               ],
             ),
-            child: IconButton(
-              icon: const Icon(Icons.filter_alt_rounded, color: Color(0xFF007bff)),
-              onPressed: () {
-                // Aquí puedes abrir un modal o menú de filtros personalizado
+            child: PopupMenuButton<String>(
+              icon: Icon(Icons.filter_alt_rounded, color: Color(0xFF007bff)),
+              color: Colors.white,
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(color: Color(0xFF007bff), width: 0.7),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  enabled: false,
+                  padding: const EdgeInsets.only(left: 12, right: 12, top: 10, bottom: 6),
+                  child: Row(
+                    children: [
+                      Icon(Icons.tune_rounded, color: Color(0xFF007bff), size: 18),
+                      const SizedBox(width: 8),
+                      Text('Modo de búsqueda', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF007bff))),
+                    ],
+                  ),
+                ),
+                const PopupMenuDivider(height: 1),
+                PopupMenuItem(
+                  value: 'ordenar_desc',
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.trending_down_rounded, color: _modoFiltro == 'ordenar' && _ordenSaldo == 'desc' ? Color(0xFF007bff) : Colors.grey, size: 20),
+                      const SizedBox(width: 10),
+                      Text('Mayor saldo', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                      if (_modoFiltro == 'ordenar' && _ordenSaldo == 'desc') ...[
+                        const SizedBox(width: 8),
+                        Icon(Icons.check_circle_rounded, color: Color(0xFF007bff), size: 18),
+                      ]
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'ordenar_asc',
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.trending_up_rounded, color: _modoFiltro == 'ordenar' && _ordenSaldo == 'asc' ? Color(0xFF007bff) : Colors.grey, size: 20),
+                      const SizedBox(width: 10),
+                      Text('Menor saldo', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                      if (_modoFiltro == 'ordenar' && _ordenSaldo == 'asc') ...[
+                        const SizedBox(width: 8),
+                        Icon(Icons.check_circle_rounded, color: Color(0xFF007bff), size: 18),
+                      ]
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'buscar',
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(Icons.search_rounded, color: _modoFiltro == 'buscar' ? Color(0xFF007bff) : Colors.grey, size: 20),
+                      const SizedBox(width: 10),
+                      Text('Buscar por número de cuenta', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                      if (_modoFiltro == 'buscar') ...[
+                        const SizedBox(width: 8),
+                        Icon(Icons.check_circle_rounded, color: Color(0xFF007bff), size: 18),
+                      ]
+                    ],
+                  ),
+                ),
+              ],
+              onSelected: (value) {
+                setState(() {
+                  if (value == 'ordenar_desc') {
+                    _modoFiltro = 'ordenar';
+                    _ordenSaldo = 'desc';
+                  } else if (value == 'ordenar_asc') {
+                    _modoFiltro = 'ordenar';
+                    _ordenSaldo = 'asc';
+                  } else if (value == 'buscar') {
+                    _modoFiltro = 'buscar';
+                  }
+                  _busquedaController.text = '';
+                  _busquedaCuenta = '';
+                  _busquedaNumero = '';
+                });
               },
-              tooltip: 'Filtrar cuentas',
             ),
           ),
         ],
@@ -121,7 +207,11 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
   // ...otros métodos y variables...
 
   final TextEditingController _busquedaController = TextEditingController();
-  String _textoBusqueda = '';
+
+  String _modoFiltro = 'ordenar';
+  String _ordenSaldo = 'desc';
+  String _busquedaCuenta = '';
+  String _busquedaNumero = '';
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -359,7 +449,6 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
       stream: _firestore
           .collection('cuentas')
           .where('usuarioId', isEqualTo: _auth.currentUser?.uid)
-          .orderBy('fechaCreacion', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -379,16 +468,44 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
         }
 
         // Filtrado por búsqueda
-        final docs = snapshot.data!.docs.where((doc) {
-          if (_textoBusqueda.isEmpty) return true;
+        var docs = snapshot.data!.docs.where((doc) {
           final cuenta = doc.data() as Map<String, dynamic>;
-          final nombre = (cuenta['nombre'] ?? '').toString().toLowerCase();
-          final banco = (cuenta['banco'] ?? '').toString().toLowerCase();
-          final numero = (cuenta['numeroCuenta'] ?? '').toString().toLowerCase();
-          return nombre.contains(_textoBusqueda.toLowerCase()) ||
-                 banco.contains(_textoBusqueda.toLowerCase()) ||
-                 numero.contains(_textoBusqueda.toLowerCase());
+          bool match = true;
+          if (_busquedaCuenta.isNotEmpty) {
+            final nombre = (cuenta['nombre'] ?? '').toString().toLowerCase();
+            final banco = (cuenta['banco'] ?? '').toString().toLowerCase();
+            final numero = (cuenta['numeroCuenta'] ?? '').toString().toLowerCase();
+            match = nombre.contains(_busquedaCuenta.toLowerCase()) ||
+                    banco.contains(_busquedaCuenta.toLowerCase()) ||
+                    numero.contains(_busquedaCuenta.toLowerCase());
+          }
+          if (_modoFiltro == 'buscar' && _busquedaNumero.isNotEmpty) {
+            final numero = (cuenta['numeroCuenta'] ?? '').toString().toLowerCase();
+            match = match && numero.contains(_busquedaNumero.toLowerCase());
+          }
+          return match;
         }).toList();
+
+        if (_modoFiltro == 'ordenar') {
+          docs.sort((a, b) {
+            final saldoA = (a.data() as Map<String, dynamic>)['saldo'] ?? 0.0;
+            final saldoB = (b.data() as Map<String, dynamic>)['saldo'] ?? 0.0;
+            if (_ordenSaldo == 'desc') {
+              return saldoB.compareTo(saldoA);
+            } else {
+              return saldoA.compareTo(saldoB);
+            }
+          });
+        } else {
+          docs.sort((a, b) {
+            final fechaA = (a.data() as Map<String, dynamic>)['fechaCreacion'] as Timestamp?;
+            final fechaB = (b.data() as Map<String, dynamic>)['fechaCreacion'] as Timestamp?;
+            if (fechaA == null && fechaB == null) return 0;
+            if (fechaA == null) return 1;
+            if (fechaB == null) return -1;
+            return fechaB.compareTo(fechaA);
+          });
+        }
 
         if (docs.isEmpty) {
           return Center(
