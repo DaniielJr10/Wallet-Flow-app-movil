@@ -172,7 +172,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
         backgroundColor: Colors.transparent,
          title: Column(
            mainAxisSize: MainAxisSize.min,
-           crossAxisAlignment: CrossAxisAlignment.start,
+           crossAxisAlignment: CrossAxisAlignment.center,
            children: [
              Row(
                mainAxisSize: MainAxisSize.min,
