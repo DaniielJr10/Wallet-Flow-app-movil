@@ -454,7 +454,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF007bff)),
             ),
           );
         }
@@ -725,13 +725,13 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withOpacity(0.1),
+              color: const Color(0xFF007bff).withOpacity(0.1),
               borderRadius: BorderRadius.circular(60),
             ),
             child: const Icon(
               Icons.account_balance_wallet_outlined,
               size: 60,
-              color: Color(0xFF6366F1),
+              color: Color(0xFF007bff),
             ),
           ),
           const SizedBox(height: 24),
@@ -759,7 +759,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
             icon: const Icon(Icons.add),
             label: const Text('Agregar Cuenta'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6366F1),
+              backgroundColor: const Color(0xFF007bff),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(
                 horizontal: 24,
@@ -999,7 +999,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
       'valor': 'ahorros',
       'nombre': 'Cuenta de Ahorros',
       'icono': Icons.savings_outlined,
-      'color': Color(0xFF10B981),
+      'color': Color(0xFF3B82F6),
     },
     {
       'valor': 'corriente',
@@ -1011,13 +1011,13 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
       'valor': 'credito',
       'nombre': 'Tarjeta de Crédito',
       'icono': Icons.credit_card_outlined,
-      'color': Color(0xFF8B5CF6),
+      'color': Color(0xFF3B82F6),
     },
     {
       'valor': 'inversion',
       'nombre': 'Cuenta de Inversión',
       'icono': Icons.trending_up_outlined,
-      'color': Color(0xFFF59E0B),
+      'color': Color(0xFF3B82F6),
     },
   ];
 
@@ -1220,7 +1220,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                       controller: _numeroController,
                       decoration: InputDecoration(
                         labelText: 'Número de cuenta',
-                        hintText: 'Últimos 4 dígitos',
+                        hintText: 'Número completo de la cuenta',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -1229,7 +1229,6 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                       keyboardType: TextInputType.number,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(4),
                       ],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -1280,7 +1279,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
               child: ElevatedButton(
                 onPressed: _cargando ? null : _guardarCuenta,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
+                  backgroundColor: const Color(0xFF007bff),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -1501,7 +1500,7 @@ class _DetallesCuenta extends StatelessWidget {
                           icon: const Icon(Icons.history),
                           label: const Text('Historial'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6366F1),
+                            backgroundColor: const Color(0xFF007bff),
                             foregroundColor: Colors.white,
                           ),
                         ),
@@ -1532,14 +1531,14 @@ class _DetallesCuenta extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: destacado 
-                ? const Color(0xFF6366F1).withOpacity(0.1)
+                ? const Color(0xFF007bff).withOpacity(0.1)
                 : Colors.grey[100],
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icono,
               color: destacado 
-                ? const Color(0xFF6366F1)
+                ? const Color(0xFF007bff)
                 : Colors.grey[600],
               size: 20,
             ),
@@ -1563,14 +1562,14 @@ class _DetallesCuenta extends StatelessWidget {
                     fontSize: destacado ? 18 : 16,
                     fontWeight: destacado ? FontWeight.bold : FontWeight.w600,
                     color: destacado 
-                      ? const Color(0xFF6366F1)
+                      ? const Color(0xFF007bff)
                       : const Color(0xFF1A1D29),
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ],  
       ),
     );
   }
