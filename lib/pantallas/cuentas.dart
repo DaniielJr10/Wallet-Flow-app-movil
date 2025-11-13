@@ -59,22 +59,38 @@ class _PantallaCuentasState extends State<PantallaCuentas>
         elevation: 0,
         backgroundColor: Colors.transparent,
         leading: null,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        title: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(
-              Icons.account_balance_rounded,
-              color: Color(0xFF007bff),
-              size: 28,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.account_balance_rounded,
+                  color: Color(0xFF007bff),
+                  size: 28,
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'CUENTAS',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF007bff),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
+            const SizedBox(height: 2),
             const Text(
-              'CUENTAS',
+              'Administra y visualiza todas tus cuentas bancarias',
               style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF007bff),
+                fontSize: 13,
+                color: Color(0xFF1A1D29),
+                fontWeight: FontWeight.w400,
+                letterSpacing: 0.1,
               ),
             ),
           ],
