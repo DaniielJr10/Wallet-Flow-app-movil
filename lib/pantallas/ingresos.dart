@@ -1014,18 +1014,34 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.trending_up_rounded,
-                        color: Color(0xFF2ecc71),
-                        size: 36,
+                        Icons.attach_money_rounded,
+                        color: Color(0xFF27ae60),
+                        size: 32,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black12,
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 6),
                       Text(
                         'INGRESOS',
                         style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2ecc71), // #2ecc71
-                          letterSpacing: 2,
+                          fontSize: 27,
+                          fontWeight: FontWeight.w900, // Aún más gruesa
+                          color: Color(0xFF27ae60),
+                          letterSpacing: 2.2,
+                          fontFamily: 'Montserrat',
+                          height: 1.1,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black12,
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
                         ),
                       ),
                     ],
