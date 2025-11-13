@@ -1067,37 +1067,45 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
       ),
       child: Column(
         children: [
-          // Handle bar
+          // Header y handle bar con fondo azul
           Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
+            width: double.infinity,
+            padding: const EdgeInsets.only(bottom: 8),
+            decoration: const BoxDecoration(
+              color: Color(0xFF007bff),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-          ),
-          
-          // Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
+            child: Column(
               children: [
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-                Expanded(
-                  child: Text(
-                    esEdicion ? 'Editar Cuenta' : 'Agregar Cuenta',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 48),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                    ),
+                    Expanded(
+                      child: Text(
+                        esEdicion ? 'Editar Cuenta' : 'Agregar Cuenta',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
               ],
             ),
           ),
