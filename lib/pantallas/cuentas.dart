@@ -264,7 +264,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
         }
 
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
+          margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Color(0xFF007bff),
