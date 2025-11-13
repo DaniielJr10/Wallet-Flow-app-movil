@@ -231,23 +231,30 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                     ),
                     GestureDetector(
                       onTap: _mostrarDialogoAgregarCuenta,
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.add,
-                            color: Color(0xFF007bff),
-                            size: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Agregar cuenta',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF007bff),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF007bff),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.add,
+                              color: Colors.white,
+                              size: 20,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Nueva cuenta',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
