@@ -45,88 +45,150 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
 		double saldoInicial = 0.0;
 		final formKey = GlobalKey<FormState>();
 
-		await showDialog(
+		await showModalBottomSheet(
 			context: context,
+			isScrollControlled: true,
+			backgroundColor: Colors.transparent,
 			builder: (context) {
-				return AlertDialog(
-					shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-					title: Row(
-						children: [
-							Icon(Icons.account_balance, color: Color(0xFF007bff)),
-							const SizedBox(width: 8),
-							const Text('Agregar cuenta bancaria'),
-						],
-					),
-					content: Form(
-						key: formKey,
-						child: SingleChildScrollView(
-							child: Column(
-								mainAxisSize: MainAxisSize.min,
-								children: [
-									TextFormField(
-										decoration: const InputDecoration(labelText: 'Banco'),
-										onChanged: (v) => nombreBanco = v,
-										validator: (v) => v == null || v.isEmpty ? 'Ingrese el banco' : null,
-									),
-									TextFormField(
-										decoration: const InputDecoration(labelText: 'Número de cuenta'),
-										keyboardType: TextInputType.number,
-										onChanged: (v) => numeroCuenta = v,
-										validator: (v) => v == null || v.isEmpty ? 'Ingrese el número de cuenta' : null,
-									),
-									TextFormField(
-										decoration: const InputDecoration(labelText: 'Tipo de cuenta'),
-										onChanged: (v) => tipoCuenta = v,
-										validator: (v) => v == null || v.isEmpty ? 'Ingrese el tipo de cuenta' : null,
-									),
-									TextFormField(
-										decoration: const InputDecoration(labelText: 'Alias'),
-										onChanged: (v) => alias = v,
-										validator: (v) => v == null || v.isEmpty ? 'Ingrese un alias' : null,
-									),
-									TextFormField(
-										decoration: const InputDecoration(labelText: 'Saldo inicial'),
-										keyboardType: TextInputType.numberWithOptions(decimal: true),
-										onChanged: (v) => saldoInicial = double.tryParse(v) ?? 0.0,
-										validator: (v) => v == null || v.isEmpty ? 'Ingrese el saldo' : null,
-									),
-								],
+				return FractionallySizedBox(
+					heightFactor: 0.85,
+					child: Container(
+						decoration: const BoxDecoration(
+							color: Colors.white,
+							borderRadius: BorderRadius.only(
+								topLeft: Radius.circular(25),
+								topRight: Radius.circular(25),
 							),
 						),
-					),
-					actions: [
-						TextButton(
-							onPressed: () => Navigator.pop(context),
-							child: const Text('Cancelar'),
-						),
-						ElevatedButton(
-							style: ElevatedButton.styleFrom(
-								backgroundColor: const Color(0xFF007bff),
-								shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+						child: Padding(
+							padding: EdgeInsets.only(
+								top: 24,
+								left: 24,
+								right: 24,
+								bottom: MediaQuery.of(context).viewInsets.bottom + 24,
 							),
-							onPressed: () async {
-								if (formKey.currentState!.validate()) {
-									final error = await _baseDatosService.crearCuentaBancaria(
-										nombreBanco: nombreBanco,
-										numeroCuenta: numeroCuenta,
-										tipoCuenta: tipoCuenta,
-										alias: alias,
-										saldoInicial: saldoInicial,
-									);
-									if (mounted) {
-										Navigator.pop(context);
-										ScaffoldMessenger.of(context).showSnackBar(
-											SnackBar(
-												content: Text(error ?? 'Cuenta agregada exitosamente'),
-												backgroundColor: error == null ? Colors.green : Colors.red,
+							child: Form(
+								key: formKey,
+								child: SingleChildScrollView(
+									child: Column(
+										mainAxisSize: MainAxisSize.min,
+										children: [
+											Row(
+												children: [
+													Icon(Icons.account_balance, color: Color(0xFF007bff), size: 28),
+													const SizedBox(width: 10),
+													Text('Agregar cuenta bancaria',
+														style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Color(0xFF22223B))),
+												],
 											),
-										);
-									}
-								}
-							},
-							child: const Text('Agregar'),
+											const SizedBox(height: 18),
+											TextFormField(
+												decoration: InputDecoration(
+													labelText: 'Banco',
+													prefixIcon: Icon(Icons.account_balance_outlined),
+													border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+													filled: true,
+													fillColor: Colors.grey[100],
+												),
+												onChanged: (v) => nombreBanco = v,
+												validator: (v) => v == null || v.isEmpty ? 'Ingrese el banco' : null,
+											),
+											const SizedBox(height: 14),
+											TextFormField(
+												decoration: InputDecoration(
+													labelText: 'Número de cuenta',
+													prefixIcon: Icon(Icons.numbers),
+													border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+													filled: true,
+													fillColor: Colors.grey[100],
+												),
+												keyboardType: TextInputType.number,
+												onChanged: (v) => numeroCuenta = v,
+												validator: (v) => v == null || v.isEmpty ? 'Ingrese el número de cuenta' : null,
+											),
+											const SizedBox(height: 14),
+											TextFormField(
+												decoration: InputDecoration(
+													labelText: 'Tipo de cuenta',
+													prefixIcon: Icon(Icons.credit_card),
+													border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+													filled: true,
+													fillColor: Colors.grey[100],
+												),
+												onChanged: (v) => tipoCuenta = v,
+												validator: (v) => v == null || v.isEmpty ? 'Ingrese el tipo de cuenta' : null,
+											),
+											const SizedBox(height: 14),
+											TextFormField(
+												decoration: InputDecoration(
+													labelText: 'Alias',
+													prefixIcon: Icon(Icons.alternate_email),
+													border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+													filled: true,
+													fillColor: Colors.grey[100],
+												),
+												onChanged: (v) => alias = v,
+												validator: (v) => v == null || v.isEmpty ? 'Ingrese un alias' : null,
+											),
+											const SizedBox(height: 14),
+											TextFormField(
+												decoration: InputDecoration(
+													labelText: 'Saldo inicial',
+													prefixIcon: Icon(Icons.attach_money),
+													border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+													filled: true,
+													fillColor: Colors.grey[100],
+												),
+												keyboardType: TextInputType.numberWithOptions(decimal: true),
+												onChanged: (v) => saldoInicial = double.tryParse(v) ?? 0.0,
+												validator: (v) => v == null || v.isEmpty ? 'Ingrese el saldo' : null,
+											),
+											const SizedBox(height: 24),
+											Row(
+												mainAxisAlignment: MainAxisAlignment.end,
+												children: [
+													TextButton(
+														onPressed: () => Navigator.pop(context),
+														child: const Text('Cancelar', style: TextStyle(color: Color(0xFF007bff))),
+													),
+													const SizedBox(width: 8),
+													ElevatedButton(
+														style: ElevatedButton.styleFrom(
+															backgroundColor: const Color(0xFF007bff),
+															shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+															padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+															elevation: 2,
+														),
+														child: const Text('Agregar', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+														onPressed: () async {
+															if (formKey.currentState!.validate()) {
+																final error = await _baseDatosService.crearCuentaBancaria(
+																	nombreBanco: nombreBanco,
+																	numeroCuenta: numeroCuenta,
+																	tipoCuenta: tipoCuenta,
+																	alias: alias,
+																	saldoInicial: saldoInicial,
+																);
+																if (mounted) {
+																	Navigator.pop(context);
+																	ScaffoldMessenger.of(context).showSnackBar(
+																		SnackBar(
+																			content: Text(error ?? 'Cuenta agregada exitosamente'),
+																			backgroundColor: error == null ? Colors.green : Colors.red,
+																		),
+																	);
+																}
+															}
+														},
+													),
+												],
+											),
+										],
+									),
+								),
+							),
 						),
-					],
+					),
 				);
 			},
 		);
