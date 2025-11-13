@@ -847,7 +847,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
       Color(0xFF2563EB), // Inicio - azul
       Color(0xFF2ECC71), // Ingresos - verde (#2ecc71)
       Color(0xFFEF4444), // Gastos - rojo
-      Color(0xFF6366F1), // Cuentas - morado
+      Color(0xFF007bff), // Cuentas - azul
       Color(0xFFF59E42), // Perfil - naranja
     ];
 

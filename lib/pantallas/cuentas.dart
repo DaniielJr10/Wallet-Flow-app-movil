@@ -136,7 +136,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
 	Widget build(BuildContext context) {
 		return Scaffold(
 			backgroundColor: const Color(0xFFF8FAFC),
-						appBar: AppBar(
+			appBar: AppBar(
 							backgroundColor: Colors.white,
 							elevation: 0,
 							title: Row(
