@@ -10,8 +10,119 @@ class PantallaCuentas extends StatefulWidget {
   State<PantallaCuentas> createState() => _PantallaCuentasState();
 }
 
-class _PantallaCuentasState extends State<PantallaCuentas>
-    with TickerProviderStateMixin {
+class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderStateMixin {
+
+  Widget _buildBarraBusqueda() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _busquedaController,
+                onChanged: (value) {
+                  setState(() {
+                    _textoBusqueda = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Buscar cuenta...',
+                  hintStyle: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  prefixIcon: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Icon(
+                      Icons.search_rounded,
+                      color: Colors.grey.shade400,
+                      size: 24,
+                    ),
+                  ),
+                  suffixIcon: _textoBusqueda.isNotEmpty
+                      ? IconButton(
+                          onPressed: () {
+                            _busquedaController.clear();
+                            setState(() {
+                              _textoBusqueda = '';
+                            });
+                          },
+                          icon: Icon(
+                            Icons.clear_rounded,
+                            color: Colors.grey.shade400,
+                            size: 20,
+                          ),
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Color(0xFF007bff).withOpacity(0.5),
+                      width: 2,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                ),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.filter_alt_rounded, color: Color(0xFF007bff)),
+              onPressed: () {
+                // Aquí puedes abrir un modal o menú de filtros personalizado
+              },
+              tooltip: 'Filtrar cuentas',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  // ...otros métodos y variables...
+
+  final TextEditingController _busquedaController = TextEditingController();
+  String _textoBusqueda = '';
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late AnimationController _animationController;
@@ -48,6 +159,7 @@ class _PantallaCuentasState extends State<PantallaCuentas>
   @override
   void dispose() {
     _animationController.dispose();
+    _busquedaController.dispose();
     super.dispose();
   }
 
@@ -58,44 +170,41 @@ class _PantallaCuentasState extends State<PantallaCuentas>
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(
-              Icons.account_balance_rounded,
-              color: Color(0xFF007bff),
-              size: 28,
-            ),
-            SizedBox(width: 8),
-            Text(
-              'CUENTAS',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF007bff),
-              ),
-            ),
-          ],
-        ),
+         title: Column(
+           mainAxisSize: MainAxisSize.min,
+           crossAxisAlignment: CrossAxisAlignment.center,
+           children: [
+             Row(
+               mainAxisSize: MainAxisSize.min,
+               children: const [
+                 Icon(
+                   Icons.account_balance_rounded,
+                   color: Color(0xFF007bff),
+                   size: 28,
+                 ),
+                 SizedBox(width: 8),
+                 Text(
+                   'CUENTAS',
+                   style: TextStyle(
+                     fontSize: 24,
+                     fontWeight: FontWeight.bold,
+                     color: Color(0xFF007bff),
+                   ),
+                 ),
+               ],
+             ),
+             const SizedBox(height: 2),
+             Text(
+               'Administra y visualiza todas tus cuentas bancarias',
+               style: TextStyle(
+                 fontSize: 14,
+                 color: Colors.grey,
+                 fontWeight: FontWeight.w500,
+               ),
+             ),
+           ],
+         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: _mostrarDialogoAgregarCuenta,
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF6366F1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-        ],
       ),
       body: FadeTransition(
         opacity: _fadeAnimation,
@@ -105,6 +214,53 @@ class _PantallaCuentasState extends State<PantallaCuentas>
             children: [
               _construirResumenFinanciero(),
               const SizedBox(height: 24),
+              _buildBarraBusqueda(),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Cuentas registradas',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _mostrarDialogoAgregarCuenta,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF007bff),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.add,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Nueva cuenta',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
               Expanded(
                 child: _construirListaCuentas(),
               ),
@@ -113,6 +269,7 @@ class _PantallaCuentasState extends State<PantallaCuentas>
         ),
       ),
     );
+
   }
 
   Widget _construirResumenFinanciero() {
@@ -134,7 +291,7 @@ class _PantallaCuentasState extends State<PantallaCuentas>
         }
 
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
+          margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Color(0xFF007bff),
@@ -221,11 +378,63 @@ class _PantallaCuentasState extends State<PantallaCuentas>
           return _construirEstadoVacio();
         }
 
+        // Filtrado por búsqueda
+        final docs = snapshot.data!.docs.where((doc) {
+          if (_textoBusqueda.isEmpty) return true;
+          final cuenta = doc.data() as Map<String, dynamic>;
+          final nombre = (cuenta['nombre'] ?? '').toString().toLowerCase();
+          final banco = (cuenta['banco'] ?? '').toString().toLowerCase();
+          final numero = (cuenta['numeroCuenta'] ?? '').toString().toLowerCase();
+          return nombre.contains(_textoBusqueda.toLowerCase()) ||
+                 banco.contains(_textoBusqueda.toLowerCase()) ||
+                 numero.contains(_textoBusqueda.toLowerCase());
+        }).toList();
+
+        if (docs.isEmpty) {
+          return Center(
+            child: Column(
+              children: [
+                const SizedBox(height: 40),
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Icon(
+                    Icons.search_off_rounded,
+                    size: 64,
+                    color: Colors.grey.shade400,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'No se encontraron cuentas',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Intenta con otro término de búsqueda',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
+          );
+        }
+
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: snapshot.data!.docs.length,
+          itemCount: docs.length,
           itemBuilder: (context, index) {
-            final doc = snapshot.data!.docs[index];
+            final doc = docs[index];
             final cuenta = doc.data() as Map<String, dynamic>;
             return _construirTarjetaCuenta(doc.id, cuenta, index);
           },
