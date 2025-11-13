@@ -30,7 +30,7 @@ class _CalculadoraPantallaState extends State<CalculadoraPantalla> {
         child: SafeArea(
           child: Column(
             children: [
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               // Header with back button
               Row(
                 children: [
@@ -195,29 +195,37 @@ class _KeyboardArea extends StatelessWidget {
         padding: const EdgeInsets.all(6.0),
         child: SizedBox(
           height: 70,
-          child: outlined
-              ? OutlinedButton(
-                  onPressed: onTap,
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: effectiveBorder),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    backgroundColor: Colors.white,
-                  ),
-                  child: Text(label, textAlign: TextAlign.center, maxLines: 1, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: effectiveText)),
-                )
-              : ElevatedButton(
-                  onPressed: onTap,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: effectiveText,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    side: BorderSide(color: effectiveBorder),
-                    minimumSize: const Size.fromHeight(70),
-                    padding: const EdgeInsets.symmetric(vertical: 0),
-                  ),
-                  child: Text(label, textAlign: TextAlign.center, maxLines: 1, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
-                ),
+          child: Builder(builder: (ctx) {
+            final VoidCallback? wrapped = onTap == null
+                ? null
+                : () {
+                    FocusScope.of(ctx).unfocus();
+                    onTap();
+                  };
+            return outlined
+                ? OutlinedButton(
+                    onPressed: wrapped,
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: effectiveBorder),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      backgroundColor: Colors.white,
+                    ).copyWith(overlayColor: MaterialStateProperty.all(Colors.transparent)),
+                    child: Text(label, textAlign: TextAlign.center, maxLines: 1, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: effectiveText)),
+                  )
+                : ElevatedButton(
+                    onPressed: wrapped,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: effectiveText,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: BorderSide(color: effectiveBorder),
+                      minimumSize: const Size.fromHeight(70),
+                      padding: const EdgeInsets.symmetric(vertical: 0),
+                    ).copyWith(overlayColor: MaterialStateProperty.all(Colors.transparent)),
+                    child: Text(label, textAlign: TextAlign.center, maxLines: 1, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+                  );
+          }),
         ),
       ),
     );
@@ -239,11 +247,20 @@ class _KeyboardArea extends StatelessWidget {
           ),
           child: Material(
             color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(14),
-              child: Center(child: Text(label, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white))),
-            ),
+            child: Builder(builder: (ctx) {
+              return InkWell(
+                onTap: onTap == null
+                    ? null
+                    : () {
+                        FocusScope.of(ctx).unfocus();
+                        onTap();
+                      },
+                borderRadius: BorderRadius.circular(14),
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                child: Center(child: Text(label, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white))),
+              );
+            }),
           ),
         ),
       ),
@@ -383,10 +400,13 @@ class _BottomActions extends StatelessWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
+                    FocusScope.of(context).unfocus();
                     controller.percent();
                     onStateChanged();
                   },
                   borderRadius: BorderRadius.circular(12),
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
                   child: const Center(child: Text('%', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white))),
                 ),
               ),
@@ -405,10 +425,13 @@ class _BottomActions extends StatelessWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
+                    FocusScope.of(context).unfocus();
                     controller.sqrtCurrent();
                     onStateChanged();
                   },
                   borderRadius: BorderRadius.circular(12),
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
                   child: const Center(child: Text('√', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white))),
                 ),
               ),
