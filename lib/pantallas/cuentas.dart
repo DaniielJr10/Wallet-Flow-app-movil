@@ -293,7 +293,7 @@ class _PantallaCuentasState extends State<PantallaCuentas>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '$banco • **** ${numeroCuenta.toString().length > 4 ? numeroCuenta.toString().substring(numeroCuenta.toString().length - 4) : numeroCuenta}',
+                              '$banco • $numeroCuenta',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],
