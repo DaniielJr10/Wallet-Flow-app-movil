@@ -58,13 +58,24 @@ class _PantallaCuentasState extends State<PantallaCuentas>
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        title: const Text(
-          'Mis Cuentas',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1A1D29),
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Icon(
+              Icons.account_balance_rounded,
+              color: Color(0xFF007bff),
+              size: 28,
+            ),
+            SizedBox(width: 8),
+            Text(
+              'CUENTAS',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF007bff),
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         actions: [
@@ -126,18 +137,11 @@ class _PantallaCuentasState extends State<PantallaCuentas>
           margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF6366F1),
-                Color(0xFF8B5CF6),
-              ],
-            ),
+            color: Color(0xFF007bff),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6366F1).withOpacity(0.3),
+                color: const Color(0xFF007bff).withOpacity(0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
