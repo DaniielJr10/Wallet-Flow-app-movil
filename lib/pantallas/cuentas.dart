@@ -205,24 +205,6 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
            ],
          ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            onPressed: _mostrarDialogoAgregarCuenta,
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF6366F1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-        ],
       ),
       body: FadeTransition(
         opacity: _fadeAnimation,
@@ -233,6 +215,44 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
               _construirResumenFinanciero(),
               const SizedBox(height: 24),
               _buildBarraBusqueda(),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Cuentas registradas',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _mostrarDialogoAgregarCuenta,
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.add,
+                            color: Color(0xFF007bff),
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Agregar cuenta',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF007bff),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 16),
               Expanded(
                 child: _construirListaCuentas(),
