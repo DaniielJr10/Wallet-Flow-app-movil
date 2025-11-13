@@ -692,6 +692,13 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           Row(
             children: [
                 _buildMenuCard(
+                  title: 'Ahorros',
+                  icon: Icons.savings_rounded,
+                  color: const Color(0xFF10B981),
+                  onTap: () => _navigateToSection(7),
+                ),
+              const SizedBox(width: 12),
+                _buildMenuCard(
                   title: 'Deudas',
                   icon: Icons.credit_card_rounded,
                   color: Colors.orange.shade600,
@@ -699,17 +706,10 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 ),
               const SizedBox(width: 12),
                 _buildMenuCard(
-                  title: 'Inversiones',
-                  icon: Icons.trending_up_rounded,
-                  color: Colors.blue.shade600,
-                  onTap: () => _navigateToSection(6),
-                ),
-              const SizedBox(width: 12),
-                _buildMenuCard(
-                  title: 'Ahorros',
-                  icon: Icons.savings_rounded,
-                  color: const Color(0xFF10B981),
-                  onTap: () => _navigateToSection(7),
+                  title: 'Objetivos',
+                  icon: Icons.flag_outlined,
+                  color: Colors.teal.shade600,
+                  onTap: () => _navigateToSection(8),
                 ),
             ],
           ),
@@ -718,10 +718,10 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           Row(
             children: [
                 _buildMenuCard(
-                  title: 'Objetivos',
-                  icon: Icons.flag_outlined,
-                  color: Colors.teal.shade600,
-                  onTap: () => _navigateToSection(8),
+                  title: 'Inversiones',
+                  icon: Icons.trending_up_rounded,
+                  color: Colors.blue.shade600,
+                  onTap: () => _navigateToSection(6),
                 ),
               const SizedBox(width: 12),
                 _buildMenuCard(
