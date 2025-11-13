@@ -812,10 +812,17 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _DialogoAgregarCuenta(
-        onCuentaAgregada: () {
-          setState(() {});
-        },
+      enableDrag: true,
+      useSafeArea: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: _DialogoAgregarCuenta(
+          onCuentaAgregada: () {
+            setState(() {});
+          },
+        ),
       ),
     );
   }
@@ -848,12 +855,19 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _DialogoAgregarCuenta(
-        cuentaId: id,
-        cuentaExistente: cuenta,
-        onCuentaAgregada: () {
-          setState(() {});
-        },
+      enableDrag: true,
+      useSafeArea: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: _DialogoAgregarCuenta(
+          cuentaId: id,
+          cuentaExistente: cuenta,
+          onCuentaAgregada: () {
+            setState(() {});
+          },
+        ),
       ),
     );
   }
@@ -1041,9 +1055,12 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
   @override
   Widget build(BuildContext context) {
     final esEdicion = widget.cuentaExistente != null;
+    final maxHeight = MediaQuery.of(context).size.height * 0.77;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final availableHeight = maxHeight - keyboardHeight;
     
     return Container(
-      height: MediaQuery.of(context).size.height * 0.77,
+      height: keyboardHeight > 0 ? availableHeight : maxHeight,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
