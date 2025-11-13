@@ -1013,25 +1013,25 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
       'valor': 'ahorros',
       'nombre': 'Cuenta de Ahorros',
       'icono': Icons.savings_outlined,
-      'color': Color(0xFF3B82F6),
+      'color': Color(0xFF007bff),
     },
     {
       'valor': 'corriente',
       'nombre': 'Cuenta Corriente',
       'icono': Icons.account_balance_outlined,
-      'color': Color(0xFF3B82F6),
+      'color': Color(0xFF007bff),
     },
     {
       'valor': 'credito',
       'nombre': 'Tarjeta de Crédito',
       'icono': Icons.credit_card_outlined,
-      'color': Color(0xFF3B82F6),
+      'color': Color(0xFF007bff),
     },
     {
       'valor': 'inversion',
       'nombre': 'Cuenta de Inversión',
       'icono': Icons.trending_up_outlined,
-      'color': Color(0xFF3B82F6),
+      'color': Color(0xFF007bff),
     },
   ];
 
@@ -1114,12 +1114,23 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Tipo de cuenta
-                    const Text(
-                      'Tipo de cuenta',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.category_outlined,
+                          color: Color(0xFF007bff),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Tipo de cuenta',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     GridView.builder(
@@ -1198,8 +1209,28 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                         hintText: 'Ej: Mi cuenta principal',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
-                        prefixIcon: const Icon(Icons.label_outline),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF007bff), width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red, width: 2),
+                        ),
+                        prefixIcon: const Icon(Icons.label_outline, color: Color(0xFF007bff)),
+                        labelStyle: const TextStyle(color: Colors.black87),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -1219,8 +1250,28 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                         hintText: 'Ej: Banco Nacional',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
-                        prefixIcon: const Icon(Icons.account_balance),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF007bff), width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red, width: 2),
+                        ),
+                        prefixIcon: const Icon(Icons.account_balance, color: Color(0xFF007bff)),
+                        labelStyle: const TextStyle(color: Colors.black87),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -1240,8 +1291,28 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                         hintText: 'Número completo de la cuenta',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
-                        prefixIcon: const Icon(Icons.credit_card),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF007bff), width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red, width: 2),
+                        ),
+                        prefixIcon: const Icon(Icons.credit_card, color: Color(0xFF007bff)),
+                        labelStyle: const TextStyle(color: Colors.black87),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
@@ -1265,8 +1336,28 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                         hintText: '0.00',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
-                        prefixIcon: const Icon(Icons.attach_money),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF007bff), width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red, width: 2),
+                        ),
+                        prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF007bff)),
+                        labelStyle: const TextStyle(color: Colors.black87),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
                       ),
                       keyboardType: TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
@@ -1290,8 +1381,18 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
           // Botón guardar
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-            child: SizedBox(
+            child: Container(
               width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF007bff).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: ElevatedButton(
                 onPressed: _cargando ? null : _guardarCuenta,
                 style: ElevatedButton.styleFrom(
@@ -1301,6 +1402,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  elevation: 0,
                 ),
                 child: _cargando
                   ? const SizedBox(
@@ -1311,12 +1413,22 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : Text(
-                      esEdicion ? 'Actualizar Cuenta' : 'Crear Cuenta',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          esEdicion ? Icons.update : Icons.save,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          esEdicion ? 'Actualizar Cuenta' : 'Crear Cuenta',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
               ),
             ),
