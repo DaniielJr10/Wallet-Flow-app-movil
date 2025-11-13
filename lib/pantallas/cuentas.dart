@@ -63,34 +63,51 @@ class _PantallaCuentasState extends State<PantallaCuentas>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            const SizedBox(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.account_balance_rounded,
+                  Icons.account_balance_wallet_rounded,
                   color: Color(0xFF007bff),
-                  size: 28,
+                  size: 32,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black12,
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                const Text(
+                const SizedBox(width: 6),
+                Text(
                   'CUENTAS',
                   style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 27,
+                    fontWeight: FontWeight.w900,
                     color: Color(0xFF007bff),
+                    letterSpacing: 2.2,
+                    fontFamily: 'Montserrat',
+                    height: 1.1,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black12,
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 2),
-            const Text(
+            const SizedBox(height: 8),
+            Text(
               'Administra y visualiza todas tus cuentas bancarias',
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 13,
-                color: Color(0xFF1A1D29),
-                fontWeight: FontWeight.w400,
-                letterSpacing: 0.1,
+                fontSize: 16,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -230,19 +247,16 @@ class _PantallaCuentasState extends State<PantallaCuentas>
           .orderBy('fechaCreacion', descending: true)
           .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
-            ),
-          );
-        }
-
         if (snapshot.hasError) {
           return _construirEstadoError();
         }
 
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        if (!snapshot.hasData) {
+          // Mostrar lista vacía mientras carga, sin spinner
+          return ListView();
+        }
+
+        if (snapshot.data!.docs.isEmpty) {
           return _construirEstadoVacio();
         }
 
