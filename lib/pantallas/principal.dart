@@ -502,25 +502,25 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: _buildSummaryItem(
-                  title: 'Ahorros',
-                  amount: '\$5,240',
-                  icon: Icons.savings_rounded,
-                  color: const Color(0xFF10B981),
-                  onTap: () => _navigateToSection(3),
+                Expanded(
+                  child: _buildSummaryItem(
+                    title: 'Cuentas',
+                    amount: '\$8,120',
+                    icon: Icons.account_balance_rounded,
+                    color: Colors.purple.shade600,
+                    onTap: () => _navigateToSection(3),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryItem(
-                  title: 'Deudas',
-                  amount: '\$2,341',
-                  icon: Icons.credit_card_rounded,
-                  color: Colors.orange.shade600,
-                  onTap: () => _navigateToSection(5),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildSummaryItem(
+                    title: 'Deudas',
+                    amount: '\$2,341',
+                    icon: Icons.credit_card_rounded,
+                    color: Colors.orange.shade600,
+                    onTap: () => _navigateToSection(5),
+                  ),
                 ),
-              ),
             ],
           ),
         ],
@@ -706,9 +706,9 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 ),
               const SizedBox(width: 12),
                 _buildMenuCard(
-                  title: 'Cuentas',
-                  icon: Icons.account_balance_rounded,
-                  color: Colors.purple.shade600,
+                  title: 'Ahorros',
+                  icon: Icons.savings_rounded,
+                  color: const Color(0xFF10B981),
                   onTap: () => _navigateToSection(7),
                 ),
             ],
@@ -753,6 +753,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: color.withOpacity(0.2),
@@ -846,8 +847,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
       Color(0xFF2563EB), // Inicio - azul
       Color(0xFF2ECC71), // Ingresos - verde (#2ecc71)
       Color(0xFFEF4444), // Gastos - rojo
-      Color(0xFFF59E42), // Ahorros - naranja
-      Color(0xFF6366F1), // Perfil - morado
+      Color(0xFF6366F1), // Cuentas - morado
+      Color(0xFFF59E42), // Perfil - naranja
     ];
 
     return Scaffold(
@@ -858,11 +859,11 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           _buildDashboard(),
           const PantallaIngresos(),
           const PantallaGastos(),
-          const PantallaAhorros(),
+          const PantallaCuentas(),
           const PantallaPerfil(),
           const PantallaDeudas(),
           const PantallaInversiones(),
-          const PantallaCuentas(),
+          const PantallaAhorros(),
           const PantallaObjetivos(),
           _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600),
           const PantallaConfiguracion(),
@@ -891,8 +892,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             label: 'Gastos',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.savings_outlined, color: _selectedIndex == 3 ? itemColors[3] : Colors.grey.shade400),
-            label: 'Ahorros',
+            icon: Icon(Icons.account_balance_rounded, color: _selectedIndex == 3 ? itemColors[3] : Colors.grey.shade400),
+            label: 'Cuentas',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline_rounded, color: _selectedIndex == 4 ? itemColors[4] : Colors.grey.shade400),
