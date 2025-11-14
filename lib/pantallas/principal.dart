@@ -234,7 +234,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF059669),
+                      color: Colors.white,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -282,8 +282,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                         'Hola, $_nombreUsuario',
                         style: const TextStyle(
                           fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1F2937),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ],
