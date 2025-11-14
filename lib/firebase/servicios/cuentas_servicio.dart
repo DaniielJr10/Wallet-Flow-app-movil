@@ -14,6 +14,20 @@ class CuentasServicio {
   /// ID del usuario actual
   String? get _userId => _auth.currentUser?.uid;
   
+  /// Referencia a la subcolección de cuentas del usuario autenticado
+  /// Estructura: usuarios/{uid}/cuentas
+  CollectionReference<Map<String, dynamic>> _cuentasRef() {
+    if (_userId == null) {
+      // Se usa una referencia a una colección ficticia cuando no hay usuario
+      // para evitar nulls; sin embargo, los métodos validarán el userId.
+      return _firestore.collection('usuarios/__no_user__/$_coleccionCuentas');
+    }
+    return _firestore
+      .collection('usuarios')
+      .doc(_userId)
+      .collection(_coleccionCuentas);
+  }
+  
   /// CREAR nueva cuenta bancaria
   Future<String?> crearCuenta({
     required String banco,
@@ -36,14 +50,14 @@ class CuentasServicio {
         return 'Ya existe una cuenta con este número';
       }
       
-      // Crear documento en Firestore
-      await _firestore.collection(_coleccionCuentas).add({
+      // Crear documento en la subcolección del usuario
+      await _cuentasRef().add({
         'banco': banco.trim(),
         'numeroCuenta': numeroCuenta.trim(),
         'tipo': tipo,
         'saldo': saldo,
         'alias': alias?.trim(),
-        'usuarioId': _userId,
+        'usuarioId': _userId, // opcional, útil para auditoría
         'fechaCreacion': FieldValue.serverTimestamp(),
         'fechaModificacion': FieldValue.serverTimestamp(),
         'activa': true,
@@ -62,10 +76,8 @@ class CuentasServicio {
       return const Stream.empty();
     }
     
-    // Consulta simplificada sin orderBy para evitar índices compuestos
-    return _firestore
-        .collection(_coleccionCuentas)
-        .where('usuarioId', isEqualTo: _userId)
+    // Subcolección por usuario; no requiere filtro por usuarioId
+    return _cuentasRef()
         .where('activa', isEqualTo: true)
         .snapshots();
   }
@@ -75,11 +87,11 @@ class CuentasServicio {
     try {
       if (_userId == null) return null;
       
-      final doc = await _firestore.collection(_coleccionCuentas).doc(cuentaId).get();
+      final doc = await _cuentasRef().doc(cuentaId).get();
       
       // Verificar que la cuenta pertenezca al usuario
       if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>?;
+        final data = doc.data();
         if (data?['usuarioId'] == _userId) {
           return doc;
         }
@@ -124,8 +136,8 @@ class CuentasServicio {
         return 'Ya existe otra cuenta con este número';
       }
       
-      // Actualizar documento
-      await _firestore.collection(_coleccionCuentas).doc(cuentaId).update({
+      // Actualizar documento en subcolección
+      await _cuentasRef().doc(cuentaId).update({
         'banco': banco.trim(),
         'numeroCuenta': numeroCuenta.trim(),
         'tipo': tipo,
@@ -153,7 +165,7 @@ class CuentasServicio {
       }
       
       // Eliminación lógica (marcar como inactiva)
-      await _firestore.collection(_coleccionCuentas).doc(cuentaId).update({
+      await _cuentasRef().doc(cuentaId).update({
         'activa': false,
         'fechaEliminacion': FieldValue.serverTimestamp(),
         'fechaModificacion': FieldValue.serverTimestamp(),
@@ -177,8 +189,8 @@ class CuentasServicio {
         return 'Cuenta no encontrada';
       }
       
-      // Eliminación física del documento
-      await _firestore.collection(_coleccionCuentas).doc(cuentaId).delete();
+      // Eliminación física del documento en subcolección
+      await _cuentasRef().doc(cuentaId).delete();
       
       return null; // Éxito - sin error
       
@@ -203,8 +215,8 @@ class CuentasServicio {
         return 'Cuenta no encontrada';
       }
       
-      // Actualizar solo el saldo
-      await _firestore.collection(_coleccionCuentas).doc(cuentaId).update({
+      // Actualizar solo el saldo en subcolección
+      await _cuentasRef().doc(cuentaId).update({
         'saldo': nuevoSaldo,
         'fechaModificacion': FieldValue.serverTimestamp(),
       });
@@ -221,9 +233,7 @@ class CuentasServicio {
     try {
       if (_userId == null) return 0.0;
       
-      final snapshot = await _firestore
-          .collection(_coleccionCuentas)
-          .where('usuarioId', isEqualTo: _userId)
+      final snapshot = await _cuentasRef()
           .where('activa', isEqualTo: true)
           .get();
       
@@ -247,9 +257,7 @@ class CuentasServicio {
     try {
       if (_userId == null) return 0;
       
-      final snapshot = await _firestore
-          .collection(_coleccionCuentas)
-          .where('usuarioId', isEqualTo: _userId)
+      final snapshot = await _cuentasRef()
           .where('activa', isEqualTo: true)
           .get();
       
@@ -269,9 +277,7 @@ class CuentasServicio {
       final texto = textoBusqueda.trim().toLowerCase();
       
       // Obtener todas las cuentas del usuario
-      final snapshot = await _firestore
-          .collection(_coleccionCuentas)
-          .where('usuarioId', isEqualTo: _userId)
+      final snapshot = await _cuentasRef()
           .where('activa', isEqualTo: true)
           .get();
       
@@ -300,9 +306,7 @@ class CuentasServicio {
     try {
       if (_userId == null) return false;
       
-      final snapshot = await _firestore
-          .collection(_coleccionCuentas)
-          .where('usuarioId', isEqualTo: _userId)
+      final snapshot = await _cuentasRef()
           .where('numeroCuenta', isEqualTo: numeroCuenta)
           .where('activa', isEqualTo: true)
           .limit(1)
@@ -321,9 +325,7 @@ class CuentasServicio {
     try {
       if (_userId == null) return false;
       
-      final snapshot = await _firestore
-          .collection(_coleccionCuentas)
-          .where('usuarioId', isEqualTo: _userId)
+      final snapshot = await _cuentasRef()
           .where('numeroCuenta', isEqualTo: numeroCuenta)
           .where('activa', isEqualTo: true)
           .get();
@@ -351,9 +353,7 @@ class CuentasServicio {
         };
       }
       
-      final snapshot = await _firestore
-          .collection(_coleccionCuentas)
-          .where('usuarioId', isEqualTo: _userId)
+      final snapshot = await _cuentasRef()
           .where('activa', isEqualTo: true)
           .get();
       
@@ -390,6 +390,37 @@ class CuentasServicio {
         'cuentaPorTipo': <String, int>{},
         'saldoPorTipo': <String, double>{},
       };
+    }
+  }
+
+  /// MIGRACIÓN: Copia las cuentas del usuario desde la colección raíz
+  /// 'cuentas' hacia 'usuarios/{uid}/cuentas' y elimina las antiguas.
+  /// Úsalo una sola vez si ya tenías datos en la colección raíz.
+  Future<String?> migrarCuentasDesdeColeccionRaiz() async {
+    try {
+      if (_userId == null) return 'Usuario no autenticado';
+
+      final origen = await _firestore
+          .collection(_coleccionCuentas)
+          .where('usuarioId', isEqualTo: _userId)
+          .get();
+
+      if (origen.docs.isEmpty) {
+        return null; // Nada que migrar
+      }
+
+      final batch = _firestore.batch();
+      for (final doc in origen.docs) {
+        final data = doc.data();
+        final destinoDoc = _cuentasRef().doc(doc.id);
+        batch.set(destinoDoc, data, SetOptions(merge: true));
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+      return null;
+    } catch (e) {
+      return 'Error al migrar cuentas: $e';
     }
   }
 }

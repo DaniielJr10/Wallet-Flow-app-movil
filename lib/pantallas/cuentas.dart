@@ -240,6 +240,12 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
     ));
 
     _animationController.forward();
+
+    // Intentar migrar datos existentes desde la colección raíz a
+    // usuarios/{uid}/cuentas. Es idempotente y solo afectará si hay datos
+    // antiguos. No bloquea la UI.
+    // Ignorar el resultado; sirve como paso de transición.
+    _cuentasServicio.migrarCuentasDesdeColeccionRaiz();
   }
 
   @override
@@ -492,8 +498,10 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
         // Manejo de errores más específico
         if (snapshot.hasError) {
           print('Error en lista de cuentas: ${snapshot.error}');
-          // Mostrar error solo si realmente no hay datos
-          return _construirEstadoError();
+          // Si hay datos a pesar del error, intentamos mostrarlos
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return _construirEstadoError();
+          }
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
