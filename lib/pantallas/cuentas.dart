@@ -631,35 +631,6 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                         ],
                       ),
                     ),
-                    PopupMenuButton<String>(
-                      onSelected: (value) => _manejarAccionCuenta(value, id, cuenta),
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'editar',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit, size: 20),
-                              SizedBox(width: 12),
-                              Text('Editar'),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'eliminar',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, size: 20, color: Colors.red),
-                              SizedBox(width: 12),
-                              Text('Eliminar', style: TextStyle(color: Colors.red)),
-                            ],
-                          ),
-                        ),
-                      ],
-                      child: Icon(
-                        Icons.more_vert,
-                        color: Colors.grey[600],
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -819,19 +790,10 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
       builder: (context) => _DetallesCuenta(
         cuentaId: id,
         cuenta: cuenta,
+        onEditar: () => _mostrarDialogoEditarCuenta(id, cuenta),
+        onEliminar: () => _confirmarEliminarCuenta(id, 'esta cuenta'),
       ),
     );
-  }
-
-  void _manejarAccionCuenta(String accion, String id, Map<String, dynamic> cuenta) {
-    switch (accion) {
-      case 'editar':
-        _mostrarDialogoEditarCuenta(id, cuenta);
-        break;
-      case 'eliminar':
-        _confirmarEliminarCuenta(id, 'esta cuenta');
-        break;
-    }
   }
 
   void _mostrarDialogoEditarCuenta(String id, Map<String, dynamic> cuenta) {
@@ -1447,10 +1409,14 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
 class _DetallesCuenta extends StatelessWidget {
   final String cuentaId;
   final Map<String, dynamic> cuenta;
+  final VoidCallback onEditar;
+  final VoidCallback onEliminar;
 
   const _DetallesCuenta({
     required this.cuentaId,
     required this.cuenta,
+    required this.onEditar,
+    required this.onEliminar,
   });
 
   @override
@@ -1528,6 +1494,49 @@ class _DetallesCuenta extends StatelessWidget {
                     '\$${(cuenta['saldo'] ?? 0.0).toStringAsFixed(2)}',
                     Icons.attach_money,
                     destacado: true,
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Botones de acción
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onEditar();
+                          },
+                          icon: const Icon(Icons.edit, color: Colors.white),
+                          label: const Text('Editar', style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF007bff),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onEliminar();
+                          },
+                          icon: const Icon(Icons.delete, color: Colors.white),
+                          label: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   
                   // Botones eliminados para evitar desbordamiento.
