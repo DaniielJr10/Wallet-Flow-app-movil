@@ -952,7 +952,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
       case 'credito':
         return 'Crédito';
       case 'inversion':
-        return 'Inversión';
+        return 'Digital';
       default:
         return 'Cuenta';
     }
@@ -1015,7 +1015,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
     },
     {
       'valor': 'inversion',
-      'nombre': 'Cuenta de Inversión',
+      'nombre': 'Cuenta Digital',
       'icono': Icons.trending_up_outlined,
       'color': Color(0xFF007bff),
     },
@@ -1675,7 +1675,7 @@ class _DetallesCuenta extends StatelessWidget {
       case 'credito':
         return 'Tarjeta de Crédito';
       case 'inversion':
-        return 'Cuenta de Inversión';
+        return 'Cuenta Digital';
       default:
         return 'Cuenta';
     }
