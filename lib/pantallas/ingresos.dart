@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../utilidades/formato_numeros.dart';
+import '../firebase/servicios/ingresos_servicio.dart';
+import '../firebase/servicios/cuentas_servicio.dart';
 
 class PantallaIngresos extends StatefulWidget {
   const PantallaIngresos({super.key});
@@ -10,9 +12,12 @@ class PantallaIngresos extends StatefulWidget {
 }
 
 class _PantallaIngresosState extends State<PantallaIngresos> with TickerProviderStateMixin {
+  // === SERVICIOS ===
+  final IngresosServicio _ingresosServicio = IngresosServicio();
+  final CuentasServicio _cuentasServicio = CuentasServicio();
+  
   // Filtros adicionales
   String _modoBusqueda = 'categoría'; // 'categoría' o 'mes'
-  String? _filtroCategoria;
 
   final _formKey = GlobalKey<FormState>();
   final _montoController = TextEditingController();
@@ -24,6 +29,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
   DateTime? _fechaSeleccionada = DateTime.now();
   String _categoriaSeleccionada = 'trabajo';
   String _metodoPagoSeleccionado = 'transferencia';
+  String _cuentaAsociada = 'ninguna';
 
   List<Map<String, dynamic>> _ingresos = [];
   String _busqueda = '';
@@ -898,27 +904,51 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     }
   }
 
-  /// Valida y guarda un nuevo ingreso en la lista
-  void _guardarIngreso() {
+  /// Valida y guarda un nuevo ingreso
+  Future<void> _guardarIngreso() async {
     if (_formKey.currentState!.validate()) {
       final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
       
-      final nuevoIngreso = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'monto': monto,
-        'fecha': _fechaSeleccionada ?? DateTime.now(),
-        'descripcion': _descripcionController.text,
-        'categoria': _categoriaSeleccionada,
-        'metodoPago': _metodoPagoSeleccionado,
-      };
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
 
-      setState(() {
-        _ingresos.insert(0, nuevoIngreso);
-      });
+      try {
+        // Registrar el ingreso usando el servicio
+        final error = await _ingresosServicio.registrarIngreso(
+          monto: monto,
+          fecha: _fechaSeleccionada ?? DateTime.now(),
+          descripcion: _descripcionController.text.trim(),
+          categoria: _categoriaSeleccionada,
+          metodoPago: _metodoPagoSeleccionado,
+          cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+        );
 
-      Navigator.pop(context);
-      _limpiarFormulario();
-      _mostrarMensajeExito();
+        if (mounted) {
+          // Cerrar indicador de carga
+          Navigator.pop(context);
+          
+          if (error != null) {
+            // Mostrar error
+            _mostrarError(error);
+          } else {
+            // Éxito
+            Navigator.pop(context); // Cerrar formulario
+            _limpiarFormulario();
+            _mostrarMensajeExito();
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context); // Cerrar indicador de carga
+          _mostrarError('Error inesperado: ${e.toString()}');
+        }
+      }
     }
   }
 
@@ -930,6 +960,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       _fechaSeleccionada = DateTime.now();
       _categoriaSeleccionada = 'trabajo';
       _metodoPagoSeleccionado = 'transferencia';
+      _cuentaAsociada = 'ninguna';
     });
   }
 
@@ -986,6 +1017,21 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+      ),
+    );
+  }
+
+  /// Muestra un mensaje de error
+  void _mostrarError(String mensaje) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensaje),
+        backgroundColor: Colors.red.shade800,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 4),
       ),
     );
   }
