@@ -71,9 +71,9 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
       final perfil = await _baseDatosService.obtenerPerfilUsuario();
       if (perfil != null && perfil.exists) {
         final datos = perfil.data() as Map<String, dynamic>?;
-        if (datos != null && datos['displayName'] != null) {
+        if (datos != null && datos['nombre'] != null) {
           // Obtener solo el primer nombre para el saludo
-          final nombreCompleto = datos['displayName'] as String;
+          final nombreCompleto = datos['nombre'] as String;
           final primerNombre = nombreCompleto.split(' ')[0];
           setState(() {
             _nombreUsuario = primerNombre;

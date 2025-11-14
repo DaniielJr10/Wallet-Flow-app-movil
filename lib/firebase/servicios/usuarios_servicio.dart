@@ -36,8 +36,8 @@ class UsuariosServicio {
       final now = FieldValue.serverTimestamp();
       await _perfilRef().set({
         'uid': uid,
+        'nombre': nombre,
         'email': user.email,
-        'displayName': user.displayName,
         'photoURL': user.photoURL,
         'fechaRegistro': now,
         'fechaActualizacion': now,

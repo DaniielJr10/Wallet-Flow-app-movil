@@ -66,13 +66,10 @@ class AutenticacionServicio {
   }) async {
     try {
       // Crear nueva cuenta
-      UserCredential resultado = await _auth.createUserWithEmailAndPassword(
+      await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
-      
-      // Actualizar el perfil del usuario con su nombre
-      await resultado.user?.updateDisplayName(nombre);
       
       // Guardar perfil básico en Firestore usando el servicio de usuarios
       final UsuariosServicio usuariosServicio = UsuariosServicio();
