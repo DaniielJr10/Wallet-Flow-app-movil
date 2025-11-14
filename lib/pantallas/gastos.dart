@@ -54,12 +54,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
 
   // Eliminado _cuentas, ahora se obtiene de Firestore
 
-  final List<String> _frecuencias = [
-    'diario',
-    'semanal',
-    'mensual',
-    'anual'
-  ];
+  // ...eliminado lista de frecuencias...
 
   /// Inicializa el estado del widget y configura las animaciones
   @override
@@ -247,11 +242,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                     const SizedBox(height: 20),
                     // ...eliminado campo de nota opcional...
                     const SizedBox(height: 20),
-                    _buildSwitchRecurrente(),
-                    if (_esRecurrente) ...[
-                      const SizedBox(height: 20),
-                      _buildSelectorFrecuencia(),
-                    ],
+                    // ...eliminado gasto recurrente...
                     const SizedBox(height: 32),
                     _buildBotonesAccion(),
                   ],
@@ -576,93 +567,10 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   // ...eliminado campo de nota opcional...
 
   /// Construye el switch para marcar el gasto como recurrente
-  Widget _buildSwitchRecurrente() {
-    return Row(
-      children: [
-        Switch(
-          value: _esRecurrente,
-          onChanged: (value) {
-            setState(() {
-              _esRecurrente = value;
-            });
-          },
-          activeColor: Colors.red.shade600,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Gasto Recurrente',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              Text(
-                'Marcar si este gasto se repite regularmente',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  // ...eliminado switch de gasto recurrente...
 
   /// Construye el selector de frecuencia para gastos recurrentes
-  Widget _buildSelectorFrecuencia() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Frecuencia',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _frecuenciaRecurrente,
-              isExpanded: true,
-              items: _frecuencias.map((frecuencia) {
-                return DropdownMenuItem(
-                  value: frecuencia,
-                  child: Text(
-                    frecuencia.substring(0, 1).toUpperCase() + frecuencia.substring(1),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _frecuenciaRecurrente = value!;
-                });
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // ...eliminado selector de frecuencia de gasto recurrente...
 
   /// Construye los botones de acción del formulario (Cancelar y Guardar)
   Widget _buildBotonesAccion() {
