@@ -473,11 +473,9 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
           final cuenta = doc.data() as Map<String, dynamic>;
           bool match = true;
           if (_busquedaCuenta.isNotEmpty) {
-            final nombre = (cuenta['nombre'] ?? '').toString().toLowerCase();
             final banco = (cuenta['banco'] ?? '').toString().toLowerCase();
             final numero = (cuenta['numeroCuenta'] ?? '').toString().toLowerCase();
-            match = nombre.contains(_busquedaCuenta.toLowerCase()) ||
-                    banco.contains(_busquedaCuenta.toLowerCase()) ||
+            match = banco.contains(_busquedaCuenta.toLowerCase()) ||
                     numero.contains(_busquedaCuenta.toLowerCase());
           }
           if (_modoFiltro == 'buscar' && _busquedaNumero.isNotEmpty) {
@@ -563,7 +561,6 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
 
   Widget _construirTarjetaCuenta(String id, Map<String, dynamic> cuenta, int index) {
     final tipoCuenta = cuenta['tipo'] ?? 'ahorros';
-    final nombreCuenta = cuenta['nombre'] ?? 'Cuenta sin nombre';
     final saldo = (cuenta['saldo'] ?? 0.0).toDouble();
     final numeroCuenta = cuenta['numeroCuenta'] ?? '****';
     final banco = cuenta['banco'] ?? 'Banco';
@@ -615,7 +612,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            nombreCuenta,
+                            _obtenerNombreTipoCuenta(tipoCuenta),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -831,7 +828,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
         _mostrarDialogoEditarCuenta(id, cuenta);
         break;
       case 'eliminar':
-        _confirmarEliminarCuenta(id, cuenta['nombre'] ?? 'esta cuenta');
+        _confirmarEliminarCuenta(id, 'esta cuenta');
         break;
     }
   }
@@ -949,10 +946,6 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
         return 'Ahorros';
       case 'corriente':
         return 'Corriente';
-      case 'credito':
-        return 'Crédito';
-      case 'inversion':
-        return 'Digital';
       default:
         return 'Cuenta';
     }
@@ -986,7 +979,6 @@ class _DialogoAgregarCuenta extends StatefulWidget {
 
 class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
   final _formKey = GlobalKey<FormState>();
-  final _nombreController = TextEditingController();
   final _bancoController = TextEditingController();
   final _numeroController = TextEditingController();
   final _saldoController = TextEditingController();
@@ -1007,18 +999,6 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
       'icono': Icons.account_balance_outlined,
       'color': Color(0xFF007bff),
     },
-    {
-      'valor': 'credito',
-      'nombre': 'Tarjeta de Crédito',
-      'icono': Icons.credit_card_outlined,
-      'color': Color(0xFF007bff),
-    },
-    {
-      'valor': 'inversion',
-      'nombre': 'Cuenta Digital',
-      'icono': Icons.trending_up_outlined,
-      'color': Color(0xFF007bff),
-    },
   ];
 
   @override
@@ -1031,7 +1011,6 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
 
   void _cargarDatosCuenta() {
     final cuenta = widget.cuentaExistente!;
-    _nombreController.text = cuenta['nombre'] ?? '';
     _bancoController.text = cuenta['banco'] ?? '';
     _numeroController.text = cuenta['numeroCuenta'] ?? '';
     _saldoController.text = (cuenta['saldo'] ?? 0.0).toString();
@@ -1193,47 +1172,6 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                     ),
                     
                     const SizedBox(height: 16),
-                    
-                    // Nombre de la cuenta
-                    TextFormField(
-                      controller: _nombreController,
-                      decoration: InputDecoration(
-                        labelText: 'Nombre de la cuenta',
-                        hintText: 'Ej: Mi cuenta principal',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Color(0xFF007bff), width: 2),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red, width: 2),
-                        ),
-                        prefixIcon: const Icon(Icons.label_outline, color: Color(0xFF007bff)),
-                        labelStyle: const TextStyle(color: Colors.black87),
-                        filled: true,
-                        fillColor: Colors.grey.shade50,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'El nombre es requerido';
-                        }
-                        return null;
-                      },
-                    ),
-                    
-                    const SizedBox(height: 12),
                     
                     // Banco
                     TextFormField(
@@ -1440,7 +1378,6 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
 
     try {
       final datosCuenta = {
-        'nombre': _nombreController.text.trim(),
         'banco': _bancoController.text.trim(),
         'numeroCuenta': _numeroController.text.trim(),
         'saldo': double.parse(_saldoController.text),
@@ -1499,7 +1436,6 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
 
   @override
   void dispose() {
-    _nombreController.dispose();
     _bancoController.dispose();
     _numeroController.dispose();
     _saldoController.dispose();
@@ -1588,8 +1524,8 @@ class _DetallesCuenta extends StatelessWidget {
                   ),
                   _construirItemDetalle(
                     'Tipo',
-                    _obtenerNombreTipo(cuenta['tipo'] ?? 'ahorros'),
-                    _obtenerIconoTipo(cuenta['tipo'] ?? 'ahorros'),
+                    _obtenerNombreTipoLocal(cuenta['tipo'] ?? 'ahorros'),
+                    _obtenerIconoTipoLocal(cuenta['tipo'] ?? 'ahorros'),
                   ),
                   _construirItemDetalle(
                     'Saldo actual',
@@ -1666,31 +1602,23 @@ class _DetallesCuenta extends StatelessWidget {
     );
   }
 
-  String _obtenerNombreTipo(String tipo) {
+  String _obtenerNombreTipoLocal(String tipo) {
     switch (tipo) {
       case 'ahorros':
         return 'Cuenta de Ahorros';
       case 'corriente':
         return 'Cuenta Corriente';
-      case 'credito':
-        return 'Tarjeta de Crédito';
-      case 'inversion':
-        return 'Cuenta Digital';
       default:
         return 'Cuenta';
     }
   }
 
-  IconData _obtenerIconoTipo(String tipo) {
+  IconData _obtenerIconoTipoLocal(String tipo) {
     switch (tipo) {
       case 'ahorros':
         return Icons.savings_outlined;
       case 'corriente':
         return Icons.account_balance_outlined;
-      case 'credito':
-        return Icons.credit_card_outlined;
-      case 'inversion':
-        return Icons.trending_up_outlined;
       default:
         return Icons.account_balance_wallet_outlined;
     }
