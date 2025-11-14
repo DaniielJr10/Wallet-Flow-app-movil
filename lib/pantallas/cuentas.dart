@@ -1508,18 +1508,13 @@ class _DetallesCuenta extends StatelessWidget {
                 children: [
                   // Información básica
                   _construirItemDetalle(
-                    'Nombre',
-                    cuenta['nombre'] ?? 'Sin nombre',
-                    Icons.label_outline,
-                  ),
-                  _construirItemDetalle(
                     'Banco',
                     cuenta['banco'] ?? 'Sin banco',
                     Icons.account_balance,
                   ),
                   _construirItemDetalle(
                     'Número de cuenta',
-                    '**** ${cuenta['numeroCuenta'] ?? '****'}',
+                    cuenta['numeroCuenta'] ?? '****',
                     Icons.credit_card,
                   ),
                   _construirItemDetalle(
