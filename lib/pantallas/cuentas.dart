@@ -612,7 +612,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _obtenerNombreTipoCuenta(tipoCuenta),
+                            banco,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -621,10 +621,11 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                           ),
                           const SizedBox(height: 4),
                           Text(
-                              '$banco • $numeroCuenta',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
+                              numeroCuenta,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A1D29),
                             ),
                           ),
                         ],
