@@ -76,10 +76,8 @@ class CuentasServicio {
       return const Stream.empty();
     }
     
-    // Subcolección por usuario; no requiere filtro por usuarioId
-    return _cuentasRef()
-        .where('activa', isEqualTo: true)
-        .snapshots();
+    // Temporalmente sin filtro para debug
+    return _cuentasRef().snapshots();
   }
   
   /// OBTENER cuenta específica por ID

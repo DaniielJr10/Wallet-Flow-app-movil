@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../firebase/servicios/cuentas_servicio.dart';
+import '../firebase/servicios/gastos_servicio.dart';
 import '../utilidades/formato_numeros.dart';
 
 class PantallaGastos extends StatefulWidget {
@@ -14,6 +15,7 @@ class PantallaGastos extends StatefulWidget {
 
 class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStateMixin {
   final CuentasServicio _cuentasServicio = CuentasServicio();
+  final GastosServicio _gastosServicio = GastosServicio();
   // Modo de búsqueda: 'categoría' o 'mes'
   String _modoBusqueda = 'categoría';
 
@@ -52,7 +54,6 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   final List<String> _metodosPago = [
     'efectivo',
     'transferencia',
-    'cheque'
   ];
 
   // Eliminado _cuentas, ahora se obtiene de Firestore
@@ -91,7 +92,14 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     super.dispose();
   }
 
+  /// Carga datos de gastos reales desde Firebase
+  void _cargarGastosReales() {
+    // Ya no es necesario porque usamos StreamBuilder en la UI
+    // El StreamBuilder se encargará de cargar los datos automáticamente
+  }
+
   /// Carga datos de prueba para mostrar ejemplos de gastos
+  /// TODO: Eliminar cuando los gastos reales estén funcionando
   void _cargarGastosDePrueba() {
     setState(() {
       _gastos = [
@@ -491,10 +499,12 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                   ),
                 );
               }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _metodoPagoSeleccionado = value!;
-                });
+              onChanged: (String? newValue) {
+                if (newValue != null && newValue != _metodoPagoSeleccionado) {
+                  setState(() {
+                    _metodoPagoSeleccionado = newValue;
+                  });
+                }
               },
             ),
           ),
@@ -528,31 +538,68 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             child: StreamBuilder<QuerySnapshot>(
               stream: _cuentasServicio.obtenerCuentas(),
               builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return DropdownButton<String>(
+                    value: 'ninguna',
+                    isExpanded: true,
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'ninguna',
+                        child: Text('Cargando...', style: TextStyle(fontSize: 16)),
+                      ),
+                    ],
+                    onChanged: null,
+                  );
+                }
+
                 List<DropdownMenuItem<String>> items = [
                   const DropdownMenuItem(
                     value: 'ninguna',
                     child: Text('Ninguna', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                   ),
                 ];
-                if (snapshot.hasData) {
+                
+                if (snapshot.hasData && snapshot.data != null) {
                   for (var doc in snapshot.data!.docs) {
-                    final cuenta = doc.data() as Map<String, dynamic>;
-                    final banco = cuenta['banco'] ?? 'Banco';
-                    final numero = cuenta['numeroCuenta'] ?? '****';
-                    items.add(DropdownMenuItem(
-                      value: doc.id,
-                      child: Text('$banco - $numero', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                    ));
+                    try {
+                      final cuenta = doc.data() as Map<String, dynamic>?;
+                      if (cuenta != null) {
+                        final banco = cuenta['banco']?.toString() ?? 'Banco';
+                        final numero = cuenta['numeroCuenta']?.toString() ?? '****';
+                        final cuentaId = doc.id;
+                        
+                        items.add(DropdownMenuItem(
+                          value: cuentaId,
+                          child: Text(
+                            '$banco - $numero', 
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ));
+                      }
+                    } catch (e) {
+                      // Continúa si hay error en una cuenta
+                      continue;
+                    }
                   }
                 }
+                
+                // Verificar si el valor actual es válido
+                final validValues = items.map((item) => item.value).toSet();
+                if (!validValues.contains(_cuentaAsociada)) {
+                  _cuentaAsociada = 'ninguna';
+                }
+                
                 return DropdownButton<String>(
                   value: _cuentaAsociada,
                   isExpanded: true,
                   items: items,
-                  onChanged: (value) {
-                    setState(() {
-                      _cuentaAsociada = value!;
-                    });
+                  onChanged: (String? newValue) {
+                    if (newValue != null && newValue != _cuentaAsociada) {
+                      setState(() {
+                        _cuentaAsociada = newValue;
+                      });
+                    }
                   },
                 );
               },
@@ -938,7 +985,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
               ),
             ),
             IconButton(
-              onPressed: () => _eliminarGasto(index),
+              onPressed: () => _eliminarGasto(_gastosFiltrados[index]['id']),
               icon: Icon(
                 Icons.delete_outline_rounded,
                 color: Colors.red.shade400,
@@ -1132,32 +1179,56 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     }
   }
 
-  /// Valida y guarda un nuevo gasto en la lista
-  void _guardarGasto() {
+  /// Valida y guarda un nuevo gasto
+  Future<void> _guardarGasto() async {
     if (_formKey.currentState!.validate()) {
       final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
       
-      final nuevoGasto = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'monto': monto,
-        'fecha': _fechaSeleccionada ?? DateTime.now(),
-        'descripcion': _descripcionController.text,
-        'categoria': _categoriaSeleccionada,
-        'metodoPago': _metodoPagoSeleccionado,
-        'cuentaAsociada': _cuentaAsociada,
-        // ...eliminado campo nota...
-        'esRecurrente': _esRecurrente,
-        'frecuencia': _esRecurrente ? _frecuenciaRecurrente : null,
-      };
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
 
-      setState(() {
-        _gastos.insert(0, nuevoGasto);
-        _filtrarGastos(_textoBusqueda); // Actualizar lista filtrada
-      });
+      try {
+        // Registrar el gasto usando el servicio
+        final error = await _gastosServicio.registrarGasto(
+          monto: monto,
+          fecha: _fechaSeleccionada ?? DateTime.now(),
+          descripcion: _descripcionController.text.trim(),
+          categoria: _categoriaSeleccionada,
+          metodoPago: _metodoPagoSeleccionado,
+          cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+          esRecurrente: _esRecurrente,
+          frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
+        );
 
-      Navigator.pop(context);
-      _limpiarFormulario();
-      _mostrarMensajeExito();
+        if (mounted) {
+          // Cerrar indicador de carga
+          Navigator.pop(context);
+          
+          if (error != null) {
+            // Mostrar error
+            _mostrarError(error);
+          } else {
+            // Éxito
+            Navigator.pop(context); // Cerrar formulario
+            _limpiarFormulario();
+            _mostrarMensajeExito();
+            
+            // Recargar los gastos si es necesario
+            _cargarGastosDePrueba(); // Puedes cambiar esto por cargar gastos reales
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context); // Cerrar indicador de carga
+          _mostrarError('Error inesperado: ${e.toString()}');
+        }
+      }
     }
   }
 
@@ -1177,7 +1248,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   }
 
   /// Muestra un diálogo de confirmación para eliminar un gasto
-  void _eliminarGasto(int index) {
+  void _eliminarGasto(String gastoId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1192,22 +1263,49 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _gastos.removeAt(index);
-                _filtrarGastos(_textoBusqueda); // Actualizar lista filtrada
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Gasto eliminado correctamente'),
-                  backgroundColor: Colors.red.shade600,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            onPressed: () async {
+              Navigator.pop(context); // Cerrar diálogo
+              
+              // Mostrar indicador de carga
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(
+                  child: CircularProgressIndicator(),
                 ),
               );
+
+              try {
+                final error = await _gastosServicio.eliminarGasto(gastoId);
+                
+                if (mounted) {
+                  // Cerrar indicador de carga
+                  Navigator.pop(context);
+                  
+                  if (error != null) {
+                    _mostrarError(error);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Gasto eliminado correctamente'),
+                        backgroundColor: Colors.red.shade600,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    );
+                    
+                    // Recargar los gastos
+                    _cargarGastosDePrueba(); // Puedes cambiar esto por cargar gastos reales
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context); // Cerrar indicador de carga
+                  _mostrarError('Error inesperado: ${e.toString()}');
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade600,
@@ -1230,6 +1328,21 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+      ),
+    );
+  }
+
+  /// Muestra un mensaje de error
+  void _mostrarError(String mensaje) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensaje),
+        backgroundColor: Colors.red.shade800,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 4),
       ),
     );
   }
