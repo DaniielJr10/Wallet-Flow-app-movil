@@ -15,7 +15,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   final _formKey = GlobalKey<FormState>();
   final _montoController = TextEditingController();
   final _descripcionController = TextEditingController();
-  final _notaController = TextEditingController();
+  // ...eliminado controlador de nota...
   final _busquedaController = TextEditingController();
 
   late AnimationController _animationController;
@@ -90,7 +90,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     _animationController.dispose();
     _montoController.dispose();
     _descripcionController.dispose();
-    _notaController.dispose();
+    // ...eliminado dispose de notaController...
     _busquedaController.dispose();
     super.dispose();
   }
@@ -247,7 +247,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                     const SizedBox(height: 20),
                     _buildSelectorCuentaAsociada(),
                     const SizedBox(height: 20),
-                    _buildCampoNota(),
+                    // ...eliminado campo de nota opcional...
                     const SizedBox(height: 20),
                     _buildSwitchRecurrente(),
                     if (_esRecurrente) ...[
@@ -561,39 +561,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   }
 
   /// Construye el campo opcional para notas adicionales
-  Widget _buildCampoNota() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Nota (opcional)',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _notaController,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Información adicional sobre el gasto...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-          ),
-        ),
-      ],
-    );
-  }
+  // ...eliminado campo de nota opcional...
 
   /// Construye el switch para marcar el gasto como recurrente
   Widget _buildSwitchRecurrente() {
@@ -1255,7 +1223,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
         'categoria': _categoriaSeleccionada,
         'metodoPago': _metodoPagoSeleccionado,
         'cuentaAsociada': _cuentaAsociada,
-        'nota': _notaController.text,
+        // ...eliminado campo nota...
         'esRecurrente': _esRecurrente,
         'frecuencia': _esRecurrente ? _frecuenciaRecurrente : null,
       };
@@ -1275,7 +1243,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   void _limpiarFormulario() {
     _montoController.clear();
     _descripcionController.clear();
-    _notaController.clear();
+    // ...eliminado clear de notaController...
     setState(() {
       _fechaSeleccionada = DateTime.now();
       _categoriaSeleccionada = 'alimentación';
