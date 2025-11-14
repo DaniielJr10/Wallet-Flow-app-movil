@@ -209,14 +209,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         Container(
           padding: const EdgeInsets.only(top: 8, left: 20, right: 20, bottom: 20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF10B981).withOpacity(0.1),
-                const Color(0xFF059669).withOpacity(0.05),
-              ],
-            ),
+            color: const Color(0xFF2ecc71),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: const Color(0xFF10B981).withOpacity(0.2),
@@ -382,83 +375,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
     );
   }
 
-  Widget _buildBalanceCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2ecc71),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2ecc71).withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Balance Total',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.trending_up_rounded,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '+2.5%',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            '\$12,345.67',
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Actualizado hace unos minutos',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.8),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildFinancialSummary() {
     return Container(
@@ -610,9 +526,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             const SizedBox(height: 45), // Más espacio para bajar la tarjeta de bienvenida
             // Saludo personalizado
             _buildPersonalizedGreeting(),
-            const SizedBox(height: 16), // Espacio entre perfil y balance
-            // Balance total
-            _buildBalanceCard(),
             const SizedBox(height: 20),
             // Resumen financiero compacto
             const Text(
