@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class PantallaGastos extends StatefulWidget {
   const PantallaGastos({super.key});
@@ -50,11 +52,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     'cheque'
   ];
 
-  final List<String> _cuentas = [
-    'ninguna',
-    'cuenta corriente',
-    'cuenta ahorros'
-  ];
+  // Eliminado _cuentas, ahora se obtiene de Firestore
 
   final List<String> _frecuencias = [
     'diario',
@@ -533,25 +531,39 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             color: Colors.grey.shade50,
           ),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _cuentaAsociada,
-              isExpanded: true,
-              items: _cuentas.map((cuenta) {
-                return DropdownMenuItem(
-                  value: cuenta,
-                  child: Text(
-                    cuenta.substring(0, 1).toUpperCase() + cuenta.substring(1),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('cuentas')
+                  .where('usuarioId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                List<DropdownMenuItem<String>> items = [
+                  const DropdownMenuItem(
+                    value: 'ninguna',
+                    child: Text('Ninguna', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                   ),
+                ];
+                if (snapshot.hasData) {
+                  for (var doc in snapshot.data!.docs) {
+                    final cuenta = doc.data() as Map<String, dynamic>;
+                    final banco = cuenta['banco'] ?? 'Banco';
+                    final numero = cuenta['numeroCuenta'] ?? '****';
+                    items.add(DropdownMenuItem(
+                      value: doc.id,
+                      child: Text('$banco - $numero', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                    ));
+                  }
+                }
+                return DropdownButton<String>(
+                  value: _cuentaAsociada,
+                  isExpanded: true,
+                  items: items,
+                  onChanged: (value) {
+                    setState(() {
+                      _cuentaAsociada = value!;
+                    });
+                  },
                 );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _cuentaAsociada = value!;
-                });
               },
             ),
           ),
