@@ -25,7 +25,6 @@ class UsuariosServicio {
   /// Crea el perfil básico del usuario si no existe
   Future<String?> crearPerfilUsuario({
     required String nombre,
-    required String apellido,
   }) async {
     final uid = _userId;
     final user = _auth.currentUser;
@@ -37,8 +36,6 @@ class UsuariosServicio {
       final now = FieldValue.serverTimestamp();
       await _perfilRef().set({
         'uid': uid,
-        'nombre': nombre,
-        'apellido': apellido,
         'email': user.email,
         'displayName': user.displayName,
         'photoURL': user.photoURL,

@@ -83,7 +83,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
   // ===== DATOS DE USUARIO =====
   /// Información completa del usuario obtenida de Firebase
   Map<String, dynamic> _datosUsuario = {
-    'nombre': '',
+    'displayName': '',
     'email': '',
     'telefono': '',
     'biografia': '',
@@ -183,7 +183,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
       if (user != null) {
         // Cargar datos básicos del usuario
         _datosUsuario = {
-          'nombre': user.displayName ?? '',
+          'displayName': user.displayName ?? '',
           'email': user.email ?? '',
           'telefono': '', // TODO: Obtener de Firestore
           'biografia': '', // TODO: Obtener de Firestore
@@ -192,7 +192,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
         };
 
         // Actualizar controladores de texto
-        _nombreController.text = _datosUsuario['nombre'];
+        _nombreController.text = _datosUsuario['displayName'];
         _emailController.text = _datosUsuario['email'];
         _telefonoController.text = _datosUsuario['telefono'];
         _biografiaController.text = _datosUsuario['biografia'];
@@ -291,7 +291,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
         await _guardarDatosFirestore();
 
         // Actualizar estado local
-        _datosUsuario['nombre'] = _nombreController.text;
+        _datosUsuario['displayName'] = _nombreController.text;
         _datosUsuario['email'] = _emailController.text;
         _datosUsuario['telefono'] = _telefonoController.text;
         _datosUsuario['biografia'] = _biografiaController.text;
@@ -549,7 +549,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
       _modoEdicion = false;
       
       // Restaurar valores originales
-      _nombreController.text = _datosUsuario['nombre'];
+      _nombreController.text = _datosUsuario['displayName'];
       _emailController.text = _datosUsuario['email'];
       _telefonoController.text = _datosUsuario['telefono'];
       _biografiaController.text = _datosUsuario['biografia'];

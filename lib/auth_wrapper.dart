@@ -88,19 +88,17 @@ class _PerfilVerificadorState extends State<_PerfilVerificador> {
         final email = widget.user.email ?? '';
         
         String nombre = 'Usuario';
-        String apellido = '';
+    
         
         if (displayName.isNotEmpty) {
           final partes = displayName.split(' ');
           nombre = partes.isNotEmpty ? partes.first : 'Usuario';
-          apellido = partes.length > 1 ? partes.sublist(1).join(' ') : '';
         } else if (email.isNotEmpty) {
           nombre = email.split('@').first;
         }
         
         final error = await usuariosServicio.crearPerfilUsuario(
           nombre: nombre,
-          apellido: apellido,
         );
         
         if (error != null) {
