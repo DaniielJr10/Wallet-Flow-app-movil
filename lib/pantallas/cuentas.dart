@@ -755,22 +755,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
             ),
           ),
           const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: _mostrarDialogoAgregarCuenta,
-            icon: const Icon(Icons.add),
-            label: const Text('Agregar Cuenta'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF007bff),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
+          // Botón 'Agregar Cuenta' eliminado según solicitud
         ],
       ),
     );
