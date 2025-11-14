@@ -417,46 +417,45 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _categoriaSeleccionada,
-              isExpanded: true,
-              items: _categorias.map((categoria) {
-                return DropdownMenuItem(
-                  value: categoria,
-                  child: Row(
-                    children: [
-                      Icon(
-                        _getIconoCategoria(categoria),
-                        color: Colors.red.shade600,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        categoria.substring(0, 1).toUpperCase() + categoria.substring(1),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _categoriaSeleccionada = value!;
-                });
-              },
+        DropdownButtonFormField<String>(
+          value: _categoriaSeleccionada,
+          isExpanded: true,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
             ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
           ),
+          items: _categorias.map((categoria) {
+            return DropdownMenuItem(
+              value: categoria,
+              child: Row(
+                children: [
+                  Icon(
+                    _getIconoCategoria(categoria),
+                    color: Colors.red.shade600,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    categoria.substring(0, 1).toUpperCase() + categoria.substring(1),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _categoriaSeleccionada = value!;
+            });
+          },
         ),
       ],
     );
@@ -476,38 +475,37 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _metodoPagoSeleccionado,
-              isExpanded: true,
-              items: _metodosPago.map((metodo) {
-                return DropdownMenuItem(
-                  value: metodo,
-                  child: Text(
-                    metodo.substring(0, 1).toUpperCase() + metodo.substring(1),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                if (newValue != null && newValue != _metodoPagoSeleccionado) {
-                  setState(() {
-                    _metodoPagoSeleccionado = newValue;
-                  });
-                }
-              },
+        DropdownButtonFormField<String>(
+          value: _metodoPagoSeleccionado,
+          isExpanded: true,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
             ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
           ),
+          items: _metodosPago.map((metodo) {
+            return DropdownMenuItem(
+              value: metodo,
+              child: Text(
+                metodo.substring(0, 1).toUpperCase() + metodo.substring(1),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            if (newValue != null && newValue != _metodoPagoSeleccionado) {
+              setState(() {
+                _metodoPagoSeleccionado = newValue;
+              });
+            }
+          },
         ),
       ],
     );
@@ -527,84 +525,70 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
-          ),
-          child: DropdownButtonHideUnderline(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _cuentasServicio.obtenerCuentas(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return DropdownButton<String>(
-                    value: 'ninguna',
-                    isExpanded: true,
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'ninguna',
-                        child: Text('Cargando...', style: TextStyle(fontSize: 16)),
+        StreamBuilder<QuerySnapshot>(
+          stream: _cuentasServicio.obtenerCuentas(),
+          builder: (context, snapshot) {
+            List<DropdownMenuItem<String>> items = [
+              const DropdownMenuItem(
+                value: 'ninguna',
+                child: Text('Ninguna', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              ),
+            ];
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              items = [
+                const DropdownMenuItem(
+                  value: 'ninguna',
+                  child: Text('Cargando...', style: TextStyle(fontSize: 16)),
+                ),
+              ];
+            } else if (snapshot.hasData && snapshot.data != null) {
+              for (var doc in snapshot.data!.docs) {
+                try {
+                  final cuenta = doc.data() as Map<String, dynamic>?;
+                  if (cuenta != null) {
+                    final banco = cuenta['banco']?.toString() ?? 'Banco';
+                    final numero = cuenta['numeroCuenta']?.toString() ?? '****';
+                    final cuentaId = doc.id;
+                    items.add(DropdownMenuItem(
+                      value: cuentaId,
+                      child: Text(
+                        '$banco - $numero',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                    onChanged: null,
-                  );
-                }
-
-                List<DropdownMenuItem<String>> items = [
-                  const DropdownMenuItem(
-                    value: 'ninguna',
-                    child: Text('Ninguna', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                  ),
-                ];
-                
-                if (snapshot.hasData && snapshot.data != null) {
-                  for (var doc in snapshot.data!.docs) {
-                    try {
-                      final cuenta = doc.data() as Map<String, dynamic>?;
-                      if (cuenta != null) {
-                        final banco = cuenta['banco']?.toString() ?? 'Banco';
-                        final numero = cuenta['numeroCuenta']?.toString() ?? '****';
-                        final cuentaId = doc.id;
-                        
-                        items.add(DropdownMenuItem(
-                          value: cuentaId,
-                          child: Text(
-                            '$banco - $numero', 
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ));
-                      }
-                    } catch (e) {
-                      // Continúa si hay error en una cuenta
-                      continue;
-                    }
+                    ));
                   }
+                } catch (e) {
+                  continue;
                 }
-                
-                // Verificar si el valor actual es válido
-                final validValues = items.map((item) => item.value).toSet();
-                if (!validValues.contains(_cuentaAsociada)) {
-                  _cuentaAsociada = 'ninguna';
+              }
+            }
+            final validValues = items.map((item) => item.value).toSet();
+            if (!validValues.contains(_cuentaAsociada)) {
+              _cuentaAsociada = 'ninguna';
+            }
+            return DropdownButtonFormField<String>(
+              value: _cuentaAsociada,
+              isExpanded: true,
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+              ),
+              items: items,
+              onChanged: (String? newValue) {
+                if (newValue != null && newValue != _cuentaAsociada) {
+                  setState(() {
+                    _cuentaAsociada = newValue;
+                  });
                 }
-                
-                return DropdownButton<String>(
-                  value: _cuentaAsociada,
-                  isExpanded: true,
-                  items: items,
-                  onChanged: (String? newValue) {
-                    if (newValue != null && newValue != _cuentaAsociada) {
-                      setState(() {
-                        _cuentaAsociada = newValue;
-                      });
-                    }
-                  },
-                );
               },
-            ),
-          ),
+            );
+          },
         ),
       ],
     );
