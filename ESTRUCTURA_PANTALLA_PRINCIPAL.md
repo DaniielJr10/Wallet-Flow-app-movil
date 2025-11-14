@@ -22,7 +22,7 @@ Organizado en **4 secciones** principales:
 
 ##### 💼 **Finanzas**
 - **💳 Deudas** - Gestión de deudas pendientes
-- **📈 Inversiones** - Portfolio de inversiones
+
 - **🏦 Cuentas Bancarias** - Administración de cuentas
 
 ##### 🎯 **Metas y Objetivos**
