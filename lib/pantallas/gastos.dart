@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../firebase/servicios/cuentas_servicio.dart';
+import '../utilidades/formato_numeros.dart';
 
 class PantallaGastos extends StatefulWidget {
   const PantallaGastos({super.key});
@@ -273,15 +274,15 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
         const SizedBox(height: 8),
         TextFormField(
           controller: _montoController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: false),
           inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+            FormateadorNumeros(),
           ],
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Por favor ingresa el monto';
             }
-            final monto = double.tryParse(value);
+            final monto = FormatoNumeros.convertirANumero(value);
             if (monto == null || monto <= 0) {
               return 'Ingresa un monto válido mayor a 0';
             }
@@ -929,7 +930,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '-${gasto['monto'].toStringAsFixed(2)}',
+              '-${FormatoNumeros.formatearParaMostrar(gasto['monto'])}',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -1134,9 +1135,11 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   /// Valida y guarda un nuevo gasto en la lista
   void _guardarGasto() {
     if (_formKey.currentState!.validate()) {
+      final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
+      
       final nuevoGasto = {
         'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'monto': double.parse(_montoController.text),
+        'monto': monto,
         'fecha': _fechaSeleccionada ?? DateTime.now(),
         'descripcion': _descripcionController.text,
         'categoria': _categoriaSeleccionada,

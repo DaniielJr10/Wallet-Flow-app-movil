@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../utilidades/formato_numeros.dart';
 
 class PantallaIngresos extends StatefulWidget {
   const PantallaIngresos({super.key});
@@ -358,15 +359,15 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
         const SizedBox(height: 8),
         TextFormField(
           controller: _montoController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: false),
           inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+            FormateadorNumeros(),
           ],
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Por favor ingresa el monto';
             }
-            final monto = double.tryParse(value);
+            final monto = FormatoNumeros.convertirANumero(value);
             if (monto == null || monto <= 0) {
               return 'Ingresa un monto válido mayor a 0';
             }
@@ -374,7 +375,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
           },
           decoration: InputDecoration(
             prefixText: '\$ ',
-            hintText: '0.00',
+            hintText: '45.789',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey.shade300),
@@ -712,7 +713,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '\$${ingreso['monto'].toStringAsFixed(2)}',
+              '\$${FormatoNumeros.formatearParaMostrar(ingreso['monto'])}',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -900,9 +901,11 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
   /// Valida y guarda un nuevo ingreso en la lista
   void _guardarIngreso() {
     if (_formKey.currentState!.validate()) {
+      final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
+      
       final nuevoIngreso = {
         'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'monto': double.parse(_montoController.text),
+        'monto': monto,
         'fecha': _fechaSeleccionada ?? DateTime.now(),
         'descripcion': _descripcionController.text,
         'categoria': _categoriaSeleccionada,

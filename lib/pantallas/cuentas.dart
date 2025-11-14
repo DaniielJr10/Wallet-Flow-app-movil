@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../firebase/servicios/cuentas_servicio.dart';
+import '../utilidades/formato_numeros.dart';
 
 class PantallaCuentas extends StatefulWidget {
   const PantallaCuentas({super.key});
@@ -966,13 +967,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
   }
 
   String _formatearMoneda(double cantidad) {
-    if (cantidad >= 1000000) {
-      return '${(cantidad / 1000000).toStringAsFixed(1)}M';
-    } else if (cantidad >= 1000) {
-      return '${(cantidad / 1000).toStringAsFixed(1)}K';
-    } else {
-      return cantidad.toStringAsFixed(0);
-    }
+    return FormatoNumeros.formatearParaMostrar(cantidad);
   }
 }
 
@@ -1027,7 +1022,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
     final cuenta = widget.cuentaExistente!;
     _bancoController.text = cuenta['banco'] ?? '';
     _numeroController.text = cuenta['numeroCuenta'] ?? '';
-    _saldoController.text = (cuenta['saldo'] ?? 0.0).toString();
+    _saldoController.text = FormatoNumeros.formatearNumero(cuenta['saldo'] ?? 0.0);
     _tipoSeleccionado = cuenta['tipo'] ?? 'ahorros';
   }
 
@@ -1304,15 +1299,16 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                         filled: true,
                         fillColor: Colors.grey.shade50,
                       ),
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: TextInputType.numberWithOptions(decimal: false),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                        FormateadorNumeros(),
                       ],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'El saldo es requerido';
                         }
-                        if (double.tryParse(value) == null) {
+                        final saldo = FormatoNumeros.convertirANumero(value);
+                        if (saldo == null) {
                           return 'Ingresa un saldo válido';
                         }
                         return null;
@@ -1401,7 +1397,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
           banco: _bancoController.text.trim(),
           numeroCuenta: _numeroController.text.trim(),
           tipo: _tipoSeleccionado,
-          saldo: double.parse(_saldoController.text),
+          saldo: FormatoNumeros.convertirANumero(_saldoController.text) ?? 0,
         );
       } else {
         // Crear nueva cuenta
@@ -1409,7 +1405,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
           banco: _bancoController.text.trim(),
           numeroCuenta: _numeroController.text.trim(),
           tipo: _tipoSeleccionado,
-          saldo: double.parse(_saldoController.text),
+          saldo: FormatoNumeros.convertirANumero(_saldoController.text) ?? 0,
         );
       }
 
@@ -1551,7 +1547,7 @@ class _DetallesCuenta extends StatelessWidget {
                   ),
                   _construirItemDetalle(
                     'Saldo actual',
-                    '\$${(cuenta['saldo'] ?? 0.0).toStringAsFixed(2)}',
+                    '\$${FormatoNumeros.formatearParaMostrar(cuenta['saldo'] ?? 0.0)}',
                     Icons.attach_money,
                     destacado: true,
                   ),

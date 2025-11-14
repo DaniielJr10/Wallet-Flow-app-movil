@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../utilidades/formato_numeros.dart';
 
 /// Pantalla de gestión de metas de ahorro
 /// 
@@ -1030,13 +1031,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
 
   /// Formatea las cantidades monetarias para mostrar
   String _formatearMoneda(double cantidad) {
-    if (cantidad >= 1000000) {
-      return '${(cantidad / 1000000).toStringAsFixed(1)}M';
-    } else if (cantidad >= 1000) {
-      return '${(cantidad / 1000).toStringAsFixed(1)}K';
-    } else {
-      return cantidad.toStringAsFixed(0);
-    }
+    return FormatoNumeros.formatearParaMostrar(cantidad);
   }
 
   // === MÉTODOS DE ACCIÓN ===
