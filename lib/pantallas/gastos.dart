@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../firebase/servicios/cuentas_servicio.dart';
 
 class PantallaGastos extends StatefulWidget {
   const PantallaGastos({super.key});
@@ -11,6 +12,7 @@ class PantallaGastos extends StatefulWidget {
 }
 
 class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStateMixin {
+  final CuentasServicio _cuentasServicio = CuentasServicio();
   // Modo de búsqueda: 'categoría' o 'mes'
   String _modoBusqueda = 'categoría';
 
@@ -523,10 +525,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           ),
           child: DropdownButtonHideUnderline(
             child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('cuentas')
-                  .where('usuarioId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-                  .snapshots(),
+              stream: _cuentasServicio.obtenerCuentas(),
               builder: (context, snapshot) {
                 List<DropdownMenuItem<String>> items = [
                   const DropdownMenuItem(
