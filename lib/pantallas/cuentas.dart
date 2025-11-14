@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../firebase/servicios/cuentas_servicio.dart';
 
 class PantallaCuentas extends StatefulWidget {
   const PantallaCuentas({super.key});
@@ -210,8 +210,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
   String _busquedaCuenta = '';
   String _busquedaNumero = '';
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final CuentasServicio _cuentasServicio = CuentasServicio();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -365,20 +364,42 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
 
   Widget _construirResumenFinanciero() {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore
-          .collection('cuentas')
-          .where('usuarioId', isEqualTo: _auth.currentUser?.uid)
-          .snapshots(),
+      stream: _cuentasServicio.obtenerCuentas(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const SizedBox(height: 120);
+        // Manejo de estado de conexión
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
+            height: 120,
+            decoration: BoxDecoration(
+              color: Color(0xFF007bff),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+          );
         }
 
-        double totalBalance = 0;
-        int totalCuentas = snapshot.data!.docs.length;
+        // Si hay error, mostrar resumen con valores por defecto
+        if (snapshot.hasError) {
+          print('Error en resumen financiero: ${snapshot.error}');
+        }
 
-        for (var doc in snapshot.data!.docs) {
-          totalBalance += (doc.data() as Map<String, dynamic>)['saldo'] ?? 0.0;
+        // Procesar datos (incluso si hay error, mostrar lo que se pueda)
+        double totalBalance = 0;
+        int totalCuentas = 0;
+        
+        if (snapshot.hasData && snapshot.data != null) {
+          totalCuentas = snapshot.data!.docs.length;
+          for (var doc in snapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>?;
+            if (data != null && data['saldo'] != null) {
+              totalBalance += (data['saldo'] as num).toDouble();
+            }
+          }
         }
 
         return Container(
@@ -447,11 +468,19 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
 
   Widget _construirListaCuentas() {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore
-          .collection('cuentas')
-          .where('usuarioId', isEqualTo: _auth.currentUser?.uid)
-          .snapshots(),
+      stream: _cuentasServicio.obtenerCuentas(),
       builder: (context, snapshot) {
+        print('🔍 Estado del snapshot: ${snapshot.connectionState}');
+        print('🔍 Tiene datos: ${snapshot.hasData}');
+        print('🔍 Tiene error: ${snapshot.hasError}');
+        if (snapshot.hasError) {
+          print('🚨 Error específico: ${snapshot.error}');
+          print('🚨 Stack trace: ${snapshot.stackTrace}');
+        }
+        if (snapshot.hasData) {
+          print('📊 Número de documentos: ${snapshot.data!.docs.length}');
+        }
+        
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(
@@ -460,7 +489,10 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
           );
         }
 
+        // Manejo de errores más específico
         if (snapshot.hasError) {
+          print('Error en lista de cuentas: ${snapshot.error}');
+          // Mostrar error solo si realmente no hay datos
           return _construirEstadoError();
         }
 
@@ -850,15 +882,25 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
 
     if (confirmacion == true) {
       try {
-        await _firestore.collection('cuentas').doc(id).delete();
+        final error = await _cuentasServicio.eliminarCuentaPermanente(id);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$nombre eliminada correctamente'),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          if (error == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$nombre eliminada correctamente'),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: $error'),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
         }
       } catch (e) {
         if (mounted) {
@@ -1341,43 +1383,52 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
     });
 
     try {
-      final datosCuenta = {
-        'banco': _bancoController.text.trim(),
-        'numeroCuenta': _numeroController.text.trim(),
-        'saldo': double.parse(_saldoController.text),
-        'tipo': _tipoSeleccionado,
-        'usuarioId': FirebaseAuth.instance.currentUser?.uid,
-        'fechaModificacion': FieldValue.serverTimestamp(),
-      };
-
+      final cuentasServicio = CuentasServicio();
+      String? error;
+      
       if (widget.cuentaId != null) {
         // Actualizar cuenta existente
-        await FirebaseFirestore.instance
-            .collection('cuentas')
-            .doc(widget.cuentaId)
-            .update(datosCuenta);
+        error = await cuentasServicio.actualizarCuenta(
+          cuentaId: widget.cuentaId!,
+          banco: _bancoController.text.trim(),
+          numeroCuenta: _numeroController.text.trim(),
+          tipo: _tipoSeleccionado,
+          saldo: double.parse(_saldoController.text),
+        );
       } else {
         // Crear nueva cuenta
-        datosCuenta['fechaCreacion'] = FieldValue.serverTimestamp();
-        await FirebaseFirestore.instance
-            .collection('cuentas')
-            .add(datosCuenta);
+        error = await cuentasServicio.crearCuenta(
+          banco: _bancoController.text.trim(),
+          numeroCuenta: _numeroController.text.trim(),
+          tipo: _tipoSeleccionado,
+          saldo: double.parse(_saldoController.text),
+        );
       }
 
       if (mounted) {
-        Navigator.pop(context);
-        widget.onCuentaAgregada();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.cuentaId != null 
-                ? 'Cuenta actualizada correctamente'
-                : 'Cuenta creada correctamente'
+        if (error == null) {
+          Navigator.pop(context);
+          widget.onCuentaAgregada();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                widget.cuentaId != null 
+                  ? 'Cuenta actualizada correctamente'
+                  : 'Cuenta creada correctamente'
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
             ),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $error'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
