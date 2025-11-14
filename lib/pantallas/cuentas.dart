@@ -631,6 +631,25 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                         ],
                       ),
                     ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 40),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _obtenerColorTipoCuenta(tipoCuenta).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _obtenerNombreTipoCuenta(tipoCuenta),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _obtenerColorTipoCuenta(tipoCuenta),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -657,24 +676,6 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                           ),
                         ),
                       ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _obtenerColorTipoCuenta(tipoCuenta).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _obtenerNombreTipoCuenta(tipoCuenta),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _obtenerColorTipoCuenta(tipoCuenta),
-                        ),
-                      ),
                     ),
                   ],
                 ),
