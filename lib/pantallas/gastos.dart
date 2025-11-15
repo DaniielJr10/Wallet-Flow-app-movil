@@ -877,137 +877,235 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     );
   }
 
+  /// Muestra un modal con los detalles completos del gasto
+  void _mostrarDetalleGasto(Map<String, dynamic> gasto) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(_getIconoCategoria(gasto['categoria']), color: Colors.red.shade600, size: 32),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      gasto['descripcion'] ?? '',
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text('Monto:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              Text(
+                '-${FormatoNumeros.formatearParaMostrar(gasto['monto'])}',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.red.shade600),
+              ),
+              const SizedBox(height: 12),
+              Text('Fecha:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              Text(
+                gasto['fecha'] != null
+                  ? '${gasto['fecha'].day}/${gasto['fecha'].month}/${gasto['fecha'].year}'
+                  : '',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              Text('Categoría:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              Text(
+                gasto['categoria'] ?? '',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              Text('Método de pago:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              Text(
+                gasto['metodoPago'] ?? '',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              Text('Cuenta asociada:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              Text(
+                gasto['cuentaAsociada'] ?? 'Ninguna',
+                style: const TextStyle(fontSize: 16),
+              ),
+              if (gasto['nota'] != null && gasto['nota'].isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text('Nota:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                Text(
+                  gasto['nota'],
+                  style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                ),
+              ],
+              if (gasto['esRecurrente'] == true) ...[
+                const SizedBox(height: 12),
+                Text('Recurrente', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.orange)),
+                if (gasto['frecuencia'] != null)
+                  Text('Frecuencia: ${gasto['frecuencia']}', style: const TextStyle(fontSize: 16)),
+              ],
+              const SizedBox(height: 24),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Cerrar'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   /// Construye una tarjeta individual para mostrar un gasto
   Widget _buildTarjetaGastoSinCategoria(Map<String, dynamic> gasto, int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        gasto['descripcion'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1F2937),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (gasto['esRecurrente'])
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+    return GestureDetector(
+      onTap: () => _mostrarDetalleGasto(gasto),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
                         child: Text(
-                          'Recurrente',
-                          style: TextStyle(
-                            fontSize: 10,
+                          gasto['descripcion'],
+                          style: const TextStyle(
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Colors.orange.shade700,
+                            color: Color(0xFF1F2937),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${gasto['metodoPago'].toString().substring(0, 1).toUpperCase()}${gasto['metodoPago'].toString().substring(1)}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
+                      if (gasto['esRecurrente'])
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Recurrente',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.orange.shade700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${gasto['fecha'].day}/${gasto['fecha'].month}/${gasto['fecha'].year}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (gasto['nota'] != null && gasto['nota'].isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
-                    gasto['nota'],
+                    '${gasto['metodoPago'].toString().substring(0, 1).toUpperCase()}${gasto['metodoPago'].toString().substring(1)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${gasto['fecha'].day}/${gasto['fecha'].month}/${gasto['fecha'].year}',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade500,
-                      fontStyle: FontStyle.italic,
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  if (gasto['nota'] != null && gasto['nota'].isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      gasto['nota'],
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                SizedBox(
+                  width: 80,
+                  child: Text(
+                    '-${FormatoNumeros.formatearParaMostrar(gasto['monto'])}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.red.shade600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => _eliminarGasto(_gastosFiltrados[index]['id']),
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.red.shade400,
+                    size: 20,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.red.shade50,
+                    padding: const EdgeInsets.all(4),
+                    minimumSize: const Size(32, 32),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              SizedBox(
-                width: 80,
-                child: Text(
-                  '-${FormatoNumeros.formatearParaMostrar(gasto['monto'])}',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.red.shade600,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                ),
-              ),
-              IconButton(
-                onPressed: () => _eliminarGasto(_gastosFiltrados[index]['id']),
-                icon: Icon(
-                  Icons.delete_outline_rounded,
-                  color: Colors.red.shade400,
-                  size: 20,
-                ),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.red.shade50,
-                  padding: const EdgeInsets.all(4),
-                  minimumSize: const Size(32, 32),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
