@@ -499,39 +499,61 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                 child: Text('Ninguna', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
               ),
             ];
+            
             if (snapshot.connectionState == ConnectionState.waiting) {
-              items = [
-                const DropdownMenuItem(
-                  value: 'ninguna',
-                  child: Text('Cargando...', style: TextStyle(fontSize: 16)),
-                ),
-              ];
-            } else if (snapshot.hasData && snapshot.data != null) {
+              items.add(const DropdownMenuItem(
+                value: 'cargando',
+                child: Text('Cargando cuentas...', style: TextStyle(fontSize: 16, color: Colors.grey)),
+              ));
+            } else if (snapshot.hasError) {
+              print('Error al cargar cuentas: ${snapshot.error}');
+              items.add(const DropdownMenuItem(
+                value: 'error',
+                child: Text('Error al cargar cuentas', style: TextStyle(fontSize: 16, color: Colors.red)),
+              ));
+            } else if (snapshot.hasData && snapshot.data != null && snapshot.data!.docs.isNotEmpty) {
               for (var doc in snapshot.data!.docs) {
                 try {
                   final cuenta = doc.data() as Map<String, dynamic>?;
                   if (cuenta != null) {
+                    // Verificar que la cuenta esté activa
+                    final activa = cuenta['activa'] as bool? ?? true;
+                    if (!activa) continue;
+                    
                     final banco = cuenta['banco']?.toString() ?? 'Banco';
                     final numero = cuenta['numeroCuenta']?.toString() ?? '****';
+                    final alias = cuenta['alias']?.toString();
                     final cuentaId = doc.id;
+                    
+                    String displayName;
+                    if (alias != null && alias.isNotEmpty) {
+                      displayName = '$alias ($banco)';
+                    } else {
+                      displayName = '$banco - ***${numero.length > 4 ? numero.substring(numero.length - 4) : numero}';
+                    }
+                    
                     items.add(DropdownMenuItem(
                       value: cuentaId,
                       child: Text(
-                        '$banco - $numero',
+                        displayName,
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ));
                   }
                 } catch (e) {
+                  print('Error procesando cuenta: $e');
                   continue;
                 }
               }
             }
+            
+            // Verificar que el valor actual sea válido
             final validValues = items.map((item) => item.value).toSet();
             if (!validValues.contains(_cuentaAsociada)) {
               _cuentaAsociada = 'ninguna';
             }
+            
             return DropdownButtonFormField<String>(
               value: _cuentaAsociada,
               isExpanded: true,
@@ -546,7 +568,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
               ),
               items: items,
               onChanged: (String? newValue) {
-                if (newValue != null && newValue != _cuentaAsociada) {
+                if (newValue != null && newValue != _cuentaAsociada && newValue != 'cargando' && newValue != 'error') {
                   setState(() {
                     _cuentaAsociada = newValue;
                   });
@@ -1696,6 +1718,15 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
       );
 
       try {
+        // Debug: Información antes de crear el gasto
+        print('🔍 Debug - Creando gasto:');
+        print('   Descripción: ${_descripcionController.text.trim()}');
+        print('   Monto: $monto');
+        print('   Categoría: $_categoriaSeleccionada');
+        print('   Método de pago: $_metodoPagoSeleccionado');
+        print('   Cuenta asociada: $_cuentaAsociada');
+        print('   Es recurrente: $_esRecurrente');
+        
         // Registrar el gasto usando el servicio real
         final error = await _gastosServicio.crearGasto(
           descripcion: _descripcionController.text.trim(),
@@ -1709,21 +1740,26 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           notas: '', // Puedes agregar un campo de notas si lo necesitas
         );
 
+        print('🔍 Debug - Resultado del servicio: $error');
+
         if (mounted) {
           // Cerrar indicador de carga
           Navigator.pop(context);
           
           if (error != null) {
             // Mostrar error
+            print('❌ Error al crear gasto: $error');
             _mostrarError(error);
           } else {
             // Éxito
+            print('✅ Gasto creado exitosamente');
             Navigator.pop(context); // Cerrar formulario
             _limpiarFormulario();
             _mostrarMensajeExito();
           }
         }
       } catch (e) {
+        print('❌ Error inesperado: $e');
         if (mounted) {
           Navigator.pop(context); // Cerrar indicador de carga
           _mostrarError('Error inesperado: ${e.toString()}');

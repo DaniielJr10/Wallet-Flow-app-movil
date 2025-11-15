@@ -41,7 +41,14 @@ class GastosServicio {
     String? notas,
   }) async {
     try {
-      if (_userId == null) return 'Usuario no autenticado';
+      print('🔍 GastosServicio - Iniciando creación de gasto');
+      
+      if (_userId == null) {
+        print('❌ Usuario no autenticado');
+        return 'Usuario no autenticado';
+      }
+      
+      print('✅ Usuario autenticado: $_userId');
       
       // Validaciones básicas
       if (descripcion.trim().isEmpty) return 'La descripción es requerida';
@@ -49,22 +56,51 @@ class GastosServicio {
       if (categoria.trim().isEmpty) return 'La categoría es requerida';
       if (metodoPago.trim().isEmpty) return 'El método de pago es requerido';
       
+      print('✅ Validaciones básicas completadas');
+      
       // Verificar si la cuenta asociada existe (si se especificó una)
       if (cuentaAsociada != null && cuentaAsociada != 'ninguna' && cuentaAsociada.isNotEmpty) {
+        print('🔍 Verificando cuenta asociada: $cuentaAsociada');
+        
         final cuentaExiste = await _verificarCuentaExiste(cuentaAsociada);
         if (!cuentaExiste) {
+          print('❌ La cuenta asociada no existe');
           return 'La cuenta asociada no existe';
         }
+        
+        print('✅ Cuenta existe, verificando saldo');
         
         // Verificar saldo suficiente
         final saldoSuficiente = await _verificarSaldoSuficiente(cuentaAsociada, monto);
         if (!saldoSuficiente) {
+          print('❌ Saldo insuficiente en la cuenta');
           return 'Saldo insuficiente en la cuenta';
         }
+        
+        print('✅ Saldo suficiente');
+      } else {
+        print('ℹ️ No se especificó cuenta asociada o es "ninguna"');
       }
+      
+      print('🔍 Iniciando transacción para crear gasto');
       
       // Usar transacción para garantizar consistencia
       await _firestore.runTransaction((transaction) async {
+        print('🔍 Dentro de la transacción');
+        
+        // IMPORTANTE: Hacer todas las LECTURAS primero
+        DocumentSnapshot? cuentaDoc;
+        final cuentaRef = cuentaAsociada != null && cuentaAsociada != 'ninguna' && cuentaAsociada.isNotEmpty
+            ? _firestore.collection('usuarios').doc(_userId).collection('cuentas').doc(cuentaAsociada)
+            : null;
+        
+        if (cuentaRef != null) {
+          print('🔍 Leyendo datos de cuenta antes de escribir');
+          cuentaDoc = await transaction.get(cuentaRef);
+        }
+        
+        // Ahora hacer todas las ESCRITURAS
+        
         // 1. Crear documento del gasto en la subcolección del usuario
         final gastoRef = _gastosRef().doc();
         
@@ -84,45 +120,51 @@ class GastosServicio {
           'activo': true,
         };
         
+        print('🔍 Datos del gasto a guardar: $gastoData');
+        
         transaction.set(gastoRef, gastoData);
+        print('✅ Gasto creado en Firestore');
         
         // 2. Si hay cuenta asociada, actualizar saldo
-        if (cuentaAsociada != null && cuentaAsociada != 'ninguna' && cuentaAsociada.isNotEmpty) {
-          final cuentaRef = _firestore
-              .collection('usuarios')
-              .doc(_userId)
-              .collection('cuentas')
-              .doc(cuentaAsociada);
+        if (cuentaRef != null && cuentaDoc != null && cuentaDoc.exists) {
+          print('🔍 Actualizando saldo de cuenta: $cuentaAsociada');
           
-          final cuentaDoc = await transaction.get(cuentaRef);
-          if (cuentaDoc.exists) {
-            final cuentaData = cuentaDoc.data()!;
-            final saldoActual = (cuentaData['saldo'] as num).toDouble();
-            final nuevoSaldo = saldoActual - monto;
-            
-            transaction.update(cuentaRef, {
-              'saldo': nuevoSaldo,
-              'fechaModificacion': FieldValue.serverTimestamp(),
-            });
-            
-            // Registrar movimiento en historial de la cuenta
-            final movimientoRef = cuentaRef.collection('movimientos').doc();
-            transaction.set(movimientoRef, {
-              'tipo': 'gasto',
-              'monto': -monto,
-              'descripcion': 'Gasto: $descripcion',
-              'categoria': categoria,
-              'fecha': Timestamp.fromDate(fecha),
-              'gastoId': gastoRef.id,
-              'fechaCreacion': FieldValue.serverTimestamp(),
-            });
-          }
+          final cuentaData = cuentaDoc.data()! as Map<String, dynamic>;
+          final saldoActual = (cuentaData['saldo'] as num).toDouble();
+          final nuevoSaldo = saldoActual - monto;
+          
+          print('🔍 Saldo actual: $saldoActual, Nuevo saldo: $nuevoSaldo');
+          
+          transaction.update(cuentaRef, {
+            'saldo': nuevoSaldo,
+            'fechaModificacion': FieldValue.serverTimestamp(),
+          });
+          
+          print('✅ Saldo actualizado');
+          
+          // Registrar movimiento en historial de la cuenta
+          final movimientoRef = cuentaRef.collection('movimientos').doc();
+          transaction.set(movimientoRef, {
+            'tipo': 'gasto',
+            'monto': -monto,
+            'descripcion': 'Gasto: $descripcion',
+            'categoria': categoria,
+            'fecha': Timestamp.fromDate(fecha),
+            'gastoId': gastoRef.id,
+            'fechaCreacion': FieldValue.serverTimestamp(),
+          });
+          
+          print('✅ Movimiento registrado');
+        } else if (cuentaRef != null) {
+          print('❌ La cuenta no existe al intentar actualizar saldo');
         }
       });
       
+      print('✅ Transacción completada exitosamente');
       return null; // Éxito - sin error
       
     } catch (e) {
+      print('❌ Error en crearGasto: $e');
       return 'Error al crear gasto: $e';
     }
   }
@@ -350,7 +392,12 @@ class GastosServicio {
   /// Verifica si una cuenta existe
   Future<bool> _verificarCuentaExiste(String cuentaId) async {
     try {
-      if (_userId == null) return false;
+      if (_userId == null) {
+        print('❌ _verificarCuentaExiste: Usuario no autenticado');
+        return false;
+      }
+      
+      print('🔍 _verificarCuentaExiste: Verificando cuenta $cuentaId para usuario $_userId');
       
       final doc = await _firestore
           .collection('usuarios')
@@ -359,8 +406,17 @@ class GastosServicio {
           .doc(cuentaId)
           .get();
       
-      return doc.exists;
+      final existe = doc.exists;
+      print('🔍 _verificarCuentaExiste: Cuenta $cuentaId existe: $existe');
+      
+      if (existe) {
+        final data = doc.data();
+        print('🔍 _verificarCuentaExiste: Datos de la cuenta: $data');
+      }
+      
+      return existe;
     } catch (e) {
+      print('❌ _verificarCuentaExiste: Error $e');
       return false;
     }
   }
@@ -368,7 +424,12 @@ class GastosServicio {
   /// Verifica si una cuenta tiene saldo suficiente
   Future<bool> _verificarSaldoSuficiente(String cuentaId, double monto) async {
     try {
-      if (_userId == null) return false;
+      if (_userId == null) {
+        print('❌ _verificarSaldoSuficiente: Usuario no autenticado');
+        return false;
+      }
+      
+      print('🔍 _verificarSaldoSuficiente: Verificando saldo para cuenta $cuentaId, monto requerido: $monto');
       
       final doc = await _firestore
           .collection('usuarios')
@@ -377,12 +438,20 @@ class GastosServicio {
           .doc(cuentaId)
           .get();
       
-      if (!doc.exists) return false;
+      if (!doc.exists) {
+        print('❌ _verificarSaldoSuficiente: Cuenta no existe');
+        return false;
+      }
       
       final saldo = (doc.data()!['saldo'] as num).toDouble();
-      return saldo >= monto;
+      final suficiente = saldo >= monto;
+      
+      print('🔍 _verificarSaldoSuficiente: Saldo actual: $saldo, Suficiente: $suficiente');
+      
+      return suficiente;
       
     } catch (e) {
+      print('❌ _verificarSaldoSuficiente: Error $e');
       return false;
     }
   }
