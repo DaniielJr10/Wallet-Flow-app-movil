@@ -176,8 +176,7 @@ class GastosServicio {
     }
     
     try {
-      // Simplificamos la consulta para evitar índices compuestos
-      // Solo ordenamos por fecha de creación, el filtro 'activo' lo haremos en el cliente
+      // Obtener todos los gastos ordenados por fecha de creación
       return _gastosRef()
           .orderBy('fechaCreacion', descending: true)
           .snapshots();
@@ -237,15 +236,24 @@ class GastosServicio {
     }
   }
   
-  /// ELIMINAR gasto (soft delete)
+  /// ELIMINAR gasto (eliminación completa de la base de datos)
   Future<String?> eliminarGasto(String gastoId) async {
     try {
-      if (_userId == null) return 'Usuario no autenticado';
-      if (gastoId.trim().isEmpty) return 'ID del gasto requerido';
+      print('🗑️ Iniciando eliminación de gasto: $gastoId');
+      
+      if (_userId == null) {
+        print('❌ Usuario no autenticado');
+        return 'Usuario no autenticado';
+      }
+      if (gastoId.trim().isEmpty) {
+        print('❌ ID del gasto vacío');
+        return 'ID del gasto requerido';
+      }
       
       // Verificar que el gasto existe
       final gastoDoc = await _gastosRef().doc(gastoId).get();
       if (!gastoDoc.exists) {
+        print('❌ El gasto no existe en la base de datos');
         return 'El gasto no existe';
       }
       
@@ -253,51 +261,65 @@ class GastosServicio {
       final monto = (gastoData['monto'] as num).toDouble();
       final cuentaAsociada = gastoData['cuentaAsociada'] as String?;
       
+      print('🔍 Gasto encontrado: monto: $monto, cuenta: $cuentaAsociada');
+      
       // Usar transacción para garantizar consistencia
       await _firestore.runTransaction((transaction) async {
-        // 1. Marcar gasto como inactivo (soft delete)
-        transaction.update(_gastosRef().doc(gastoId), {
-          'activo': false,
-          'fechaEliminacion': FieldValue.serverTimestamp(),
-          'fechaModificacion': FieldValue.serverTimestamp(),
-        });
+        // IMPORTANTE: Hacer todas las LECTURAS primero
+        DocumentSnapshot? cuentaDoc;
+        final cuentaRef = cuentaAsociada != null && cuentaAsociada != 'ninguna' && cuentaAsociada.isNotEmpty
+            ? _firestore.collection('usuarios').doc(_userId).collection('cuentas').doc(cuentaAsociada)
+            : null;
+        
+        if (cuentaRef != null) {
+          print('🔍 Leyendo cuenta asociada para devolver el dinero');
+          cuentaDoc = await transaction.get(cuentaRef);
+        }
+        
+        // Ahora hacer todas las ESCRITURAS
+        print('🔍 Eliminando gasto completamente de la base de datos');
+        
+        // 1. Eliminar el documento del gasto completamente
+        transaction.delete(_gastosRef().doc(gastoId));
+        
+        print('✅ Gasto eliminado de la base de datos');
         
         // 2. Si había cuenta asociada, devolver el monto
-        if (cuentaAsociada != null && cuentaAsociada != 'ninguna' && cuentaAsociada.isNotEmpty) {
-          final cuentaRef = _firestore
-              .collection('usuarios')
-              .doc(_userId)
-              .collection('cuentas')
-              .doc(cuentaAsociada);
+        if (cuentaRef != null && cuentaDoc != null && cuentaDoc.exists) {
+          print('🔍 Devolviendo dinero a la cuenta');
+          final cuentaData = cuentaDoc.data()! as Map<String, dynamic>;
+          final saldoActual = (cuentaData['saldo'] as num).toDouble();
+          final nuevoSaldo = saldoActual + monto; // Devolver el dinero
           
-          final cuentaDoc = await transaction.get(cuentaRef);
-          if (cuentaDoc.exists) {
-            final cuentaData = cuentaDoc.data()!;
-            final saldoActual = (cuentaData['saldo'] as num).toDouble();
-            final nuevoSaldo = saldoActual + monto; // Devolver el dinero
-            
-            transaction.update(cuentaRef, {
-              'saldo': nuevoSaldo,
-              'fechaModificacion': FieldValue.serverTimestamp(),
-            });
-            
-            // Registrar movimiento de reversión
-            final movimientoRef = cuentaRef.collection('movimientos').doc();
-            transaction.set(movimientoRef, {
-              'tipo': 'reversa_gasto',
-              'monto': monto,
-              'descripcion': 'Reversión de gasto eliminado',
-              'gastoId': gastoId,
-              'fecha': FieldValue.serverTimestamp(),
-              'fechaCreacion': FieldValue.serverTimestamp(),
-            });
-          }
+          print('🔍 Saldo actual: $saldoActual, Nuevo saldo: $nuevoSaldo');
+          
+          transaction.update(cuentaRef, {
+            'saldo': nuevoSaldo,
+            'fechaModificacion': FieldValue.serverTimestamp(),
+          });
+          
+          print('✅ Saldo actualizado');
+          
+          // Registrar movimiento de reversión
+          final movimientoRef = cuentaRef.collection('movimientos').doc();
+          transaction.set(movimientoRef, {
+            'tipo': 'reversa_gasto',
+            'monto': monto,
+            'descripcion': 'Reversión de gasto eliminado',
+            'gastoId': gastoId,
+            'fecha': FieldValue.serverTimestamp(),
+            'fechaCreacion': FieldValue.serverTimestamp(),
+          });
+          
+          print('✅ Movimiento de reversión registrado');
         }
       });
       
+      print('✅ Gasto eliminado correctamente');
       return null; // Éxito - sin error
       
     } catch (e) {
+      print('❌ Error al eliminar gasto: $e');
       return 'Error al eliminar gasto: $e';
     }
   }

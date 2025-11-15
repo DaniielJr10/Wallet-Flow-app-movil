@@ -874,16 +874,12 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           return _buildEstadoVacio();
         }
         
-        // Convertir documentos de Firebase a lista local y filtrar por activo
+        // Convertir documentos de Firebase a lista local
         final gastosFirebase = <Map<String, dynamic>>[];
         try {
           for (var doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>?;
             if (data != null) {
-              // Filtrar solo gastos activos
-              final activo = data['activo'] as bool? ?? true;
-              if (!activo) continue; // Saltar gastos inactivos
-              
               data['id'] = doc.id;
               
               // Convertir Timestamp a DateTime si es necesario
