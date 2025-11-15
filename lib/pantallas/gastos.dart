@@ -97,6 +97,24 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     });
   }
 
+  /// Compara dos listas de gastos para evitar actualizaciones innecesarias
+  bool _sonListasIguales(List<Map<String, dynamic>> lista1, List<Map<String, dynamic>> lista2) {
+    if (lista1.length != lista2.length) return false;
+    
+    for (int i = 0; i < lista1.length; i++) {
+      final gasto1 = lista1[i];
+      final gasto2 = lista2[i];
+      
+      if (gasto1['id'] != gasto2['id'] || 
+          gasto1['monto'] != gasto2['monto'] ||
+          gasto1['descripcion'] != gasto2['descripcion']) {
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
   /// Filtra los gastos según el modo de búsqueda (categoría o mes)
   void _filtrarGastos(String textoBusqueda) {
     setState(() {
@@ -902,14 +920,17 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           );
         }
         
-        // Actualizar lista local
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            setState(() {
-              _gastos = gastosFirebase;
-            });
-          }
-        });
+        // Actualizar lista local solo si es diferente
+        if (_gastos.length != gastosFirebase.length || 
+            !_sonListasIguales(_gastos, gastosFirebase)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _gastos = gastosFirebase;
+              });
+            }
+          });
+        }
         
         // Aplicar filtros de búsqueda
         List<Map<String, dynamic>> gastosAMostrar = gastosFirebase;
