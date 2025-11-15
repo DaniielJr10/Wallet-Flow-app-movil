@@ -726,22 +726,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                 color: Color(0xFF2ecc71),
               ),
             ),
-            IconButton(
-              onPressed: () => _eliminarIngreso(index),
-              icon: Icon(
-                Icons.delete_outline_rounded,
-                color: Colors.red.shade400,
-                size: 20,
-              ),
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.red.shade50,
-                padding: const EdgeInsets.all(4),
-                minimumSize: const Size(32, 32),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
+              // Icono de borrar eliminado
           ],
         ),
       ),
