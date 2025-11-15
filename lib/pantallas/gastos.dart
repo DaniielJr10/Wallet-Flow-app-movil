@@ -1156,6 +1156,42 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     if (_formKey.currentState!.validate()) {
       final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
 
+      // Para datos de prueba, actualizamos directamente en la lista local
+      final gastoIndex = _gastos.indexWhere((gasto) => gasto['id'] == gastoId);
+      if (gastoIndex != -1) {
+        setState(() {
+          _gastos[gastoIndex] = {
+            'id': gastoId,
+            'monto': monto,
+            'fecha': _fechaSeleccionada ?? DateTime.now(),
+            'descripcion': _descripcionController.text.trim(),
+            'categoria': _categoriaSeleccionada,
+            'metodoPago': _metodoPagoSeleccionado,
+            'cuentaAsociada': _cuentaAsociada != 'ninguna' ? _cuentaAsociada : 'ninguna',
+            'nota': '',
+            'esRecurrente': _esRecurrente,
+            'frecuencia': _esRecurrente ? _frecuenciaRecurrente : null,
+          };
+          _gastosFiltrados = List.from(_gastos);
+        });
+
+        Navigator.pop(context); // Cerrar formulario de edición
+        _limpiarFormulario();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Gasto actualizado correctamente'),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+
+      // TODO: Cuando uses datos reales de Firebase, descomenta esto:
+      /*
       // Mostrar indicador de carga
       showDialog(
         context: context,
@@ -1196,6 +1232,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           _mostrarError('Error inesperado: ${e.toString()}');
         }
       }
+      */
     }
   }
 
@@ -1339,7 +1376,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                   ),
                 ),
                 IconButton(
-                  onPressed: () => _eliminarGasto(_gastosFiltrados[index]['id']),
+                  onPressed: () => _eliminarGasto(gasto['id']),
                   icon: Icon(
                     Icons.delete_outline_rounded,
                     color: Colors.red.shade400,
@@ -1540,6 +1577,32 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     if (_formKey.currentState!.validate()) {
       final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
       
+      // Para datos de prueba, agregamos directamente a la lista local
+      final nuevoId = (_gastos.length + 1).toString();
+      final nuevoGasto = {
+        'id': nuevoId,
+        'monto': monto,
+        'fecha': _fechaSeleccionada ?? DateTime.now(),
+        'descripcion': _descripcionController.text.trim(),
+        'categoria': _categoriaSeleccionada,
+        'metodoPago': _metodoPagoSeleccionado,
+        'cuentaAsociada': _cuentaAsociada != 'ninguna' ? _cuentaAsociada : 'ninguna',
+        'nota': '',
+        'esRecurrente': _esRecurrente,
+        'frecuencia': _esRecurrente ? _frecuenciaRecurrente : null,
+      };
+
+      setState(() {
+        _gastos.add(nuevoGasto);
+        _gastosFiltrados = List.from(_gastos);
+      });
+
+      Navigator.pop(context); // Cerrar formulario
+      _limpiarFormulario();
+      _mostrarMensajeExito();
+
+      // TODO: Cuando uses datos reales de Firebase, descomenta esto:
+      /*
       // Mostrar indicador de carga
       showDialog(
         context: context,
@@ -1585,6 +1648,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           _mostrarError('Error inesperado: ${e.toString()}');
         }
       }
+      */
     }
   }
 
@@ -1622,6 +1686,25 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             onPressed: () async {
               Navigator.pop(context); // Cerrar diálogo
               
+              // Para datos de prueba, eliminamos directamente de la lista local
+              setState(() {
+                _gastos.removeWhere((gasto) => gasto['id'] == gastoId);
+                _gastosFiltrados = List.from(_gastos);
+              });
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Gasto eliminado correctamente'),
+                  backgroundColor: Colors.red.shade600,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              );
+
+              // TODO: Cuando uses datos reales de Firebase, descomenta esto:
+              /*
               // Mostrar indicador de carga
               showDialog(
                 context: context,
@@ -1662,6 +1745,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                   _mostrarError('Error inesperado: ${e.toString()}');
                 }
               }
+              */
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade600,
