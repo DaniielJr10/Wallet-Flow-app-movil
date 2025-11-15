@@ -27,7 +27,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
   late Animation<double> _fadeAnimation;
 
   DateTime? _fechaSeleccionada = DateTime.now();
-  String _categoriaSeleccionada = 'trabajo';
+  String _categoriaSeleccionada = 'alimentación';
   String _metodoPagoSeleccionado = 'transferencia';
   String _cuentaAsociada = 'ninguna';
 
@@ -178,11 +178,14 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
   }
 
   final List<String> _categorias = [
-    'trabajo',
-    'freelance',
-    'venta',
-    'inversión',
-    'regalo',
+    'alimentación',
+    'transporte',
+    'entretenimiento',
+    'salud',
+    'educación',
+    'servicios',
+    'compras',
+    'viajes',
     'otro'
   ];
 
