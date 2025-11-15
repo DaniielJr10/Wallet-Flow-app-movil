@@ -36,7 +36,6 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   String _textoBusqueda = '';
 
   List<Map<String, dynamic>> _gastos = [];
-  List<Map<String, dynamic>> _gastosFiltrados = [];
 
   final List<String> _categorias = [
     'alimentación',
@@ -77,7 +76,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     ));
 
     _animationController.forward();
-    _cargarGastosDePrueba();
+    _inicializarGastos();
   }
 
   /// Libera los recursos utilizados por los controladores y animaciones
@@ -91,41 +90,10 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     super.dispose();
   }
 
-  /// Carga datos de gastos reales desde Firebase
-  void _cargarGastosReales() {
-    // Ya no es necesario porque usamos StreamBuilder en la UI
-    // El StreamBuilder se encargará de cargar los datos automáticamente
-  }
-
-  /// Carga datos de prueba para mostrar ejemplos de gastos
-  /// TODO: Eliminar cuando los gastos reales estén funcionando
-  void _cargarGastosDePrueba() {
+  /// Inicializa la lista de gastos vacía para usar datos reales de Firebase
+  void _inicializarGastos() {
     setState(() {
-      _gastos = [
-        {
-          'id': '1',
-          'monto': 45.20,
-          'fecha': DateTime.now().subtract(const Duration(days: 1)),
-          'descripcion': 'Supermercado',
-          'categoria': 'alimentación',
-          'metodoPago': 'efectivo',
-          'cuentaAsociada': 'cuenta corriente',
-          'nota': 'Compras semanales',
-          'esRecurrente': false,
-        },
-        {
-          'id': '2',
-          'monto': 15.50,
-          'fecha': DateTime.now().subtract(const Duration(days: 3)),
-          'descripcion': 'Transporte público',
-          'categoria': 'transporte',
-          'metodoPago': 'efectivo',
-          'cuentaAsociada': 'ninguna',
-          'nota': '',
-          'esRecurrente': true,
-        },
-      ];
-      _gastosFiltrados = List.from(_gastos);
+      _gastos = [];
     });
   }
 
@@ -133,27 +101,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   void _filtrarGastos(String textoBusqueda) {
     setState(() {
       _textoBusqueda = textoBusqueda;
-      if (textoBusqueda.isEmpty) {
-        _gastosFiltrados = List.from(_gastos);
-      } else {
-        _gastosFiltrados = _gastos.where((gasto) {
-          if (_modoBusqueda == 'categoría') {
-            return gasto['categoria']
-                .toString()
-                .toLowerCase()
-                .contains(textoBusqueda.toLowerCase());
-          } else if (_modoBusqueda == 'mes') {
-            final meses = [
-              'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-              'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-            ];
-            final fecha = gasto['fecha'] as DateTime;
-            final mesGasto = meses[fecha.month - 1];
-            return mesGasto.contains(textoBusqueda.toLowerCase());
-          }
-          return false;
-        }).toList();
-      }
+      // El filtrado ahora se hace en el StreamBuilder
     });
   }
 
@@ -812,25 +760,189 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     );
   }
 
-  /// Construye la lista de gastos registrados o muestra estado vacío
+  /// Construye la lista de gastos registrados usando StreamBuilder con Firebase
   Widget _buildListaGastos() {
-    final gastosAMostrar = _textoBusqueda.isEmpty ? _gastos : _gastosFiltrados;
-    
-    if (gastosAMostrar.isEmpty && _textoBusqueda.isNotEmpty) {
-      return _buildEstadoSinResultados();
-    }
-    
-    if (_gastos.isEmpty) {
-      return _buildEstadoVacio();
-    }
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: gastosAMostrar.length,
-      itemBuilder: (context, index) {
-        final gasto = gastosAMostrar[index];
-        return _buildTarjetaGastoSinCategoria(gasto, _gastos.indexOf(gasto));
+    return StreamBuilder<QuerySnapshot>(
+      stream: _gastosServicio.obtenerGastos(),
+      builder: (context, snapshot) {
+        // Mostrar indicador de carga
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.0),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+              ),
+            ),
+          );
+        }
+        
+        // Manejar errores con información detallada
+        if (snapshot.hasError) {
+          print('Error en StreamBuilder: ${snapshot.error}');
+          return Center(
+            child: Column(
+              children: [
+                const SizedBox(height: 40),
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Icon(
+                    Icons.error_outline,
+                    color: Colors.red.shade400,
+                    size: 64,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error al cargar gastos',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Error: ${snapshot.error}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.red.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {});
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                  ),
+                  child: const Text('Reintentar', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          );
+        }
+        
+        // Verificar si no hay datos
+        if (!snapshot.hasData || snapshot.data == null) {
+          return _buildEstadoVacio();
+        }
+        
+        // Convertir documentos de Firebase a lista local y filtrar por activo
+        final gastosFirebase = <Map<String, dynamic>>[];
+        try {
+          for (var doc in snapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>?;
+            if (data != null) {
+              // Filtrar solo gastos activos
+              final activo = data['activo'] as bool? ?? true;
+              if (!activo) continue; // Saltar gastos inactivos
+              
+              data['id'] = doc.id;
+              
+              // Convertir Timestamp a DateTime si es necesario
+              if (data['fecha'] is Timestamp) {
+                data['fecha'] = (data['fecha'] as Timestamp).toDate();
+              }
+              
+              // Asegurar que los campos requeridos existan
+              data['descripcion'] = data['descripcion'] ?? 'Sin descripción';
+              data['monto'] = (data['monto'] as num?)?.toDouble() ?? 0.0;
+              data['categoria'] = data['categoria'] ?? 'otro';
+              data['metodoPago'] = data['metodoPago'] ?? 'efectivo';
+              data['fecha'] = data['fecha'] ?? DateTime.now();
+              
+              gastosFirebase.add(data);
+            }
+          }
+        } catch (e) {
+          print('Error procesando documentos: $e');
+          return Center(
+            child: Column(
+              children: [
+                const SizedBox(height: 40),
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Icon(
+                    Icons.warning_rounded,
+                    color: Colors.orange.shade400,
+                    size: 64,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error procesando datos',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Error: $e',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.orange.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        }
+        
+        // Actualizar lista local
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              _gastos = gastosFirebase;
+            });
+          }
+        });
+        
+        // Aplicar filtros de búsqueda
+        List<Map<String, dynamic>> gastosAMostrar = gastosFirebase;
+        if (_textoBusqueda.isNotEmpty) {
+          gastosAMostrar = gastosFirebase.where((gasto) {
+            final descripcion = (gasto['descripcion'] ?? '').toString().toLowerCase();
+            final categoria = (gasto['categoria'] ?? '').toString().toLowerCase();
+            final busqueda = _textoBusqueda.toLowerCase();
+            
+            return descripcion.contains(busqueda) || categoria.contains(busqueda);
+          }).toList();
+        }
+        
+        // Mostrar estado sin resultados de búsqueda
+        if (gastosAMostrar.isEmpty && _textoBusqueda.isNotEmpty) {
+          return _buildEstadoSinResultados();
+        }
+        
+        // Mostrar estado vacío cuando no hay gastos
+        if (gastosFirebase.isEmpty) {
+          return _buildEstadoVacio();
+        }
+        
+        // Mostrar lista de gastos
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: gastosAMostrar.length,
+          itemBuilder: (context, index) {
+            final gasto = gastosAMostrar[index];
+            return _buildTarjetaGastoSinCategoria(gasto, index);
+          },
+        );
       },
     );
   }
@@ -1156,62 +1268,29 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     if (_formKey.currentState!.validate()) {
       final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
 
-      // Para datos de prueba, actualizamos directamente en la lista local
-      final gastoIndex = _gastos.indexWhere((gasto) => gasto['id'] == gastoId);
-      if (gastoIndex != -1) {
-        setState(() {
-          _gastos[gastoIndex] = {
-            'id': gastoId,
-            'monto': monto,
-            'fecha': _fechaSeleccionada ?? DateTime.now(),
-            'descripcion': _descripcionController.text.trim(),
-            'categoria': _categoriaSeleccionada,
-            'metodoPago': _metodoPagoSeleccionado,
-            'cuentaAsociada': _cuentaAsociada != 'ninguna' ? _cuentaAsociada : 'ninguna',
-            'nota': '',
-            'esRecurrente': _esRecurrente,
-            'frecuencia': _esRecurrente ? _frecuenciaRecurrente : null,
-          };
-          _gastosFiltrados = List.from(_gastos);
-        });
-
-        Navigator.pop(context); // Cerrar formulario de edición
-        _limpiarFormulario();
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Gasto actualizado correctamente'),
-            backgroundColor: Colors.red.shade600,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      }
-
-      // TODO: Cuando uses datos reales de Firebase, descomenta esto:
-      /*
       // Mostrar indicador de carga
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+          ),
         ),
       );
 
       try {
         final error = await _gastosServicio.actualizarGasto(
           gastoId: gastoId,
+          descripcion: _descripcionController.text.trim(),
           monto: monto,
           fecha: _fechaSeleccionada ?? DateTime.now(),
-          descripcion: _descripcionController.text.trim(),
           categoria: _categoriaSeleccionada,
           metodoPago: _metodoPagoSeleccionado,
           cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
           esRecurrente: _esRecurrente,
           frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
+          notas: '', // Puedes agregar campo de notas si lo necesitas
         );
 
         if (mounted) {
@@ -1222,8 +1301,16 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             _mostrarError(error);
           } else {
             _limpiarFormulario();
-            _mostrarMensajeExito();
-            _cargarGastosDePrueba(); // Recargar lista (puedes cambiar por gastos reales)
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Gasto actualizado correctamente'),
+                backgroundColor: Color(0xFF10B981),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            );
           }
         }
       } catch (e) {
@@ -1232,7 +1319,6 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           _mostrarError('Error inesperado: ${e.toString()}');
         }
       }
-      */
     }
   }
 
@@ -1577,52 +1663,29 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     if (_formKey.currentState!.validate()) {
       final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
       
-      // Para datos de prueba, agregamos directamente a la lista local
-      final nuevoId = (_gastos.length + 1).toString();
-      final nuevoGasto = {
-        'id': nuevoId,
-        'monto': monto,
-        'fecha': _fechaSeleccionada ?? DateTime.now(),
-        'descripcion': _descripcionController.text.trim(),
-        'categoria': _categoriaSeleccionada,
-        'metodoPago': _metodoPagoSeleccionado,
-        'cuentaAsociada': _cuentaAsociada != 'ninguna' ? _cuentaAsociada : 'ninguna',
-        'nota': '',
-        'esRecurrente': _esRecurrente,
-        'frecuencia': _esRecurrente ? _frecuenciaRecurrente : null,
-      };
-
-      setState(() {
-        _gastos.add(nuevoGasto);
-        _gastosFiltrados = List.from(_gastos);
-      });
-
-      Navigator.pop(context); // Cerrar formulario
-      _limpiarFormulario();
-      _mostrarMensajeExito();
-
-      // TODO: Cuando uses datos reales de Firebase, descomenta esto:
-      /*
       // Mostrar indicador de carga
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+          ),
         ),
       );
 
       try {
-        // Registrar el gasto usando el servicio
-        final error = await _gastosServicio.registrarGasto(
+        // Registrar el gasto usando el servicio real
+        final error = await _gastosServicio.crearGasto(
+          descripcion: _descripcionController.text.trim(),
           monto: monto,
           fecha: _fechaSeleccionada ?? DateTime.now(),
-          descripcion: _descripcionController.text.trim(),
           categoria: _categoriaSeleccionada,
           metodoPago: _metodoPagoSeleccionado,
           cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
           esRecurrente: _esRecurrente,
           frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
+          notas: '', // Puedes agregar un campo de notas si lo necesitas
         );
 
         if (mounted) {
@@ -1637,9 +1700,6 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             Navigator.pop(context); // Cerrar formulario
             _limpiarFormulario();
             _mostrarMensajeExito();
-            
-            // Recargar los gastos si es necesario
-            _cargarGastosDePrueba(); // Puedes cambiar esto por cargar gastos reales
           }
         }
       } catch (e) {
@@ -1648,7 +1708,6 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           _mostrarError('Error inesperado: ${e.toString()}');
         }
       }
-      */
     }
   }
 
@@ -1686,31 +1745,14 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             onPressed: () async {
               Navigator.pop(context); // Cerrar diálogo
               
-              // Para datos de prueba, eliminamos directamente de la lista local
-              setState(() {
-                _gastos.removeWhere((gasto) => gasto['id'] == gastoId);
-                _gastosFiltrados = List.from(_gastos);
-              });
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Gasto eliminado correctamente'),
-                  backgroundColor: Colors.red.shade600,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              );
-
-              // TODO: Cuando uses datos reales de Firebase, descomenta esto:
-              /*
               // Mostrar indicador de carga
               showDialog(
                 context: context,
                 barrierDismissible: false,
                 builder: (context) => const Center(
-                  child: CircularProgressIndicator(),
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+                  ),
                 ),
               );
 
@@ -1734,9 +1776,6 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                         ),
                       ),
                     );
-                    
-                    // Recargar los gastos
-                    _cargarGastosDePrueba(); // Puedes cambiar esto por cargar gastos reales
                   }
                 }
               } catch (e) {
@@ -1745,7 +1784,6 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                   _mostrarError('Error inesperado: ${e.toString()}');
                 }
               }
-              */
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade600,

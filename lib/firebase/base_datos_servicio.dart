@@ -97,16 +97,14 @@ class BaseDatosServicio {
     if (_userId == null) {
       return const Stream.empty();
     }
-    
+
     return _firestore
         .collection('usuarios')
         .doc(_userId)
         .collection('gastos')
-        .orderBy('fecha', descending: true)
+        .orderBy('fechaCreacion', descending: true)
         .snapshots();
-  }
-  
-  /// CUENTAS BANCARIAS - Crear nueva cuenta
+  }  /// CUENTAS BANCARIAS - Crear nueva cuenta
   Future<String?> crearCuentaBancaria({
     required String nombreBanco,
     required String numeroCuenta,

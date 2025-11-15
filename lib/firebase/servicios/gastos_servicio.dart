@@ -1,131 +1,111 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'cuentas_servicio.dart';
 
-/// Servicio para gestionar gastos en Firebase
+/// Servicio especializado para gestión de gastos
+/// Maneja todas las operaciones CRUD específicas de gastos
+/// Estructura: usuarios/{uid}/gastos
 class GastosServicio {
-  /// Actualiza los datos de un gasto existente
-  Future<String?> actualizarGasto({
-    required String gastoId,
-    required double monto,
-    required DateTime fecha,
-    required String descripcion,
-    required String categoria,
-    required String metodoPago,
-    String? cuentaAsociada,
-    bool esRecurrente = false,
-    String? frecuencia,
-  }) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) {
-        return 'Usuario no autenticado';
-      }
-
-      final gastoRef = _firestore
-          .collection('usuarios')
-          .doc(user.uid)
-          .collection('gastos')
-          .doc(gastoId);
-
-      final gastoData = {
-        'monto': monto,
-        'fecha': Timestamp.fromDate(fecha),
-        'descripcion': descripcion,
-        'categoria': categoria,
-        'metodoPago': metodoPago,
-        'cuentaAsociada': cuentaAsociada,
-        'esRecurrente': esRecurrente,
-        'frecuencia': frecuencia,
-        'fechaActualizacion': FieldValue.serverTimestamp(),
-      };
-
-      await gastoRef.update(gastoData);
-      return null;
-    } catch (e) {
-      print('Error al actualizar gasto: $e');
-      return 'Error al actualizar el gasto: ${e.toString()}';
-    }
-  }
+  // Instancias de Firebase
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  /// Registra un nuevo gasto y actualiza el saldo de la cuenta si es necesario
-  Future<String?> registrarGasto({
+  
+  // Nombre de la colección en Firestore
+  static const String _coleccionGastos = 'gastos';
+  
+  /// ID del usuario actual
+  String? get _userId => _auth.currentUser?.uid;
+  
+  /// Referencia a la subcolección de gastos del usuario autenticado
+  /// Estructura: usuarios/{uid}/gastos
+  CollectionReference<Map<String, dynamic>> _gastosRef() {
+    if (_userId == null) {
+      // Se usa una referencia a una colección ficticia cuando no hay usuario
+      return _firestore.collection('usuarios/__no_user__/$_coleccionGastos');
+    }
+    return _firestore
+      .collection('usuarios')
+      .doc(_userId)
+      .collection(_coleccionGastos);
+  }
+  
+  /// CREAR nuevo gasto
+  Future<String?> crearGasto({
+    required String descripcion,
     required double monto,
     required DateTime fecha,
-    required String descripcion,
     required String categoria,
     required String metodoPago,
     String? cuentaAsociada,
     bool esRecurrente = false,
     String? frecuencia,
+    String? notas,
   }) async {
     try {
-      final user = _auth.currentUser;
-      if (user == null) {
-        return 'Usuario no autenticado';
-      }
-
-      // Validar que si se especifica cuenta asociada, esta exista
-      if (cuentaAsociada != null && cuentaAsociada != 'ninguna') {
+      if (_userId == null) return 'Usuario no autenticado';
+      
+      // Validaciones básicas
+      if (descripcion.trim().isEmpty) return 'La descripción es requerida';
+      if (monto <= 0) return 'El monto debe ser mayor a 0';
+      if (categoria.trim().isEmpty) return 'La categoría es requerida';
+      if (metodoPago.trim().isEmpty) return 'El método de pago es requerido';
+      
+      // Verificar si la cuenta asociada existe (si se especificó una)
+      if (cuentaAsociada != null && cuentaAsociada != 'ninguna' && cuentaAsociada.isNotEmpty) {
         final cuentaExiste = await _verificarCuentaExiste(cuentaAsociada);
         if (!cuentaExiste) {
           return 'La cuenta asociada no existe';
         }
-
-        // Verificar que la cuenta tenga saldo suficiente
+        
+        // Verificar saldo suficiente
         final saldoSuficiente = await _verificarSaldoSuficiente(cuentaAsociada, monto);
         if (!saldoSuficiente) {
           return 'Saldo insuficiente en la cuenta';
         }
       }
-
+      
       // Usar transacción para garantizar consistencia
       await _firestore.runTransaction((transaction) async {
-        // 1. Crear el documento del gasto
-        final gastoRef = _firestore
-            .collection('usuarios')
-            .doc(user.uid)
-            .collection('gastos')
-            .doc();
-
+        // 1. Crear documento del gasto en la subcolección del usuario
+        final gastoRef = _gastosRef().doc();
+        
         final gastoData = {
+          'descripcion': descripcion.trim(),
           'monto': monto,
           'fecha': Timestamp.fromDate(fecha),
-          'descripcion': descripcion,
-          'categoria': categoria,
-          'metodoPago': metodoPago,
+          'categoria': categoria.trim(),
+          'metodoPago': metodoPago.trim(),
           'cuentaAsociada': cuentaAsociada,
           'esRecurrente': esRecurrente,
-          'frecuencia': frecuencia,
+          'frecuencia': frecuencia?.trim(),
+          'notas': notas?.trim(),
+          'usuarioId': _userId, // Para auditoría
           'fechaCreacion': FieldValue.serverTimestamp(),
+          'fechaModificacion': FieldValue.serverTimestamp(),
+          'activo': true,
         };
-
+        
         transaction.set(gastoRef, gastoData);
-
-        // 2. Si hay cuenta asociada, descontar el monto del saldo
-        if (cuentaAsociada != null && cuentaAsociada != 'ninguna') {
+        
+        // 2. Si hay cuenta asociada, actualizar saldo
+        if (cuentaAsociada != null && cuentaAsociada != 'ninguna' && cuentaAsociada.isNotEmpty) {
           final cuentaRef = _firestore
               .collection('usuarios')
-              .doc(user.uid)
+              .doc(_userId)
               .collection('cuentas')
               .doc(cuentaAsociada);
-
-          // Obtener el documento de la cuenta
+          
           final cuentaDoc = await transaction.get(cuentaRef);
           if (cuentaDoc.exists) {
             final cuentaData = cuentaDoc.data()!;
             final saldoActual = (cuentaData['saldo'] as num).toDouble();
             final nuevoSaldo = saldoActual - monto;
-
-            // Actualizar el saldo
+            
             transaction.update(cuentaRef, {
               'saldo': nuevoSaldo,
-              'ultimaActualizacion': FieldValue.serverTimestamp(),
+              'fechaModificacion': FieldValue.serverTimestamp(),
             });
-
-            // Registrar el movimiento en el historial de la cuenta
+            
+            // Registrar movimiento en historial de la cuenta
             final movimientoRef = cuentaRef.collection('movimientos').doc();
             transaction.set(movimientoRef, {
               'tipo': 'gasto',
@@ -139,130 +119,127 @@ class GastosServicio {
           }
         }
       });
-
-      return null; // Sin error
+      
+      return null; // Éxito - sin error
+      
     } catch (e) {
-      print('Error al registrar gasto: $e');
-      return 'Error al registrar el gasto: ${e.toString()}';
+      return 'Error al crear gasto: $e';
     }
   }
-
-  /// Verifica si una cuenta existe
-  Future<bool> _verificarCuentaExiste(String cuentaId) async {
+  
+  /// OBTENER todos los gastos del usuario
+  Stream<QuerySnapshot> obtenerGastos() {
+    if (_userId == null) {
+      return const Stream.empty();
+    }
+    
     try {
-      final user = _auth.currentUser;
-      if (user == null) return false;
-
-      final doc = await _firestore
-          .collection('usuarios')
-          .doc(user.uid)
-          .collection('cuentas')
-          .doc(cuentaId)
-          .get();
-
-      return doc.exists;
+      // Simplificamos la consulta para evitar índices compuestos
+      // Solo ordenamos por fecha de creación, el filtro 'activo' lo haremos en el cliente
+      return _gastosRef()
+          .orderBy('fechaCreacion', descending: true)
+          .snapshots();
     } catch (e) {
-      print('Error al verificar cuenta: $e');
-      return false;
+      return const Stream.empty();
     }
   }
-
-  /// Verifica si una cuenta tiene saldo suficiente
-  Future<bool> _verificarSaldoSuficiente(String cuentaId, double monto) async {
+  
+  /// ACTUALIZAR gasto existente
+  Future<String?> actualizarGasto({
+    required String gastoId,
+    required String descripcion,
+    required double monto,
+    required DateTime fecha,
+    required String categoria,
+    required String metodoPago,
+    String? cuentaAsociada,
+    bool esRecurrente = false,
+    String? frecuencia,
+    String? notas,
+  }) async {
     try {
-      final user = _auth.currentUser;
-      if (user == null) return false;
-
-      final doc = await _firestore
-          .collection('usuarios')
-          .doc(user.uid)
-          .collection('cuentas')
-          .doc(cuentaId)
-          .get();
-
-      if (!doc.exists) return false;
-
-      final saldo = (doc.data()!['saldo'] as num).toDouble();
-      return saldo >= monto;
+      if (_userId == null) return 'Usuario no autenticado';
+      
+      // Validaciones básicas
+      if (gastoId.trim().isEmpty) return 'ID del gasto requerido';
+      if (descripcion.trim().isEmpty) return 'La descripción es requerida';
+      if (monto <= 0) return 'El monto debe ser mayor a 0';
+      if (categoria.trim().isEmpty) return 'La categoría es requerida';
+      if (metodoPago.trim().isEmpty) return 'El método de pago es requerido';
+      
+      // Verificar que el gasto existe
+      final gastoDoc = await _gastosRef().doc(gastoId).get();
+      if (!gastoDoc.exists) {
+        return 'El gasto no existe';
+      }
+      
+      // TODO: Implementar lógica compleja de actualización con cambios en cuentas
+      // Por ahora, actualización simple sin cambios de cuenta
+      await _gastosRef().doc(gastoId).update({
+        'descripcion': descripcion.trim(),
+        'monto': monto,
+        'fecha': Timestamp.fromDate(fecha),
+        'categoria': categoria.trim(),
+        'metodoPago': metodoPago.trim(),
+        'cuentaAsociada': cuentaAsociada,
+        'esRecurrente': esRecurrente,
+        'frecuencia': frecuencia?.trim(),
+        'notas': notas?.trim(),
+        'fechaModificacion': FieldValue.serverTimestamp(),
+      });
+      
+      return null; // Éxito - sin error
+      
     } catch (e) {
-      print('Error al verificar saldo: $e');
-      return false;
+      return 'Error al actualizar gasto: $e';
     }
   }
-
-  /// Obtiene todos los gastos del usuario
-  Stream<List<Map<String, dynamic>>> obtenerGastos() {
-    final user = _auth.currentUser;
-    if (user == null) {
-      return Stream.value([]);
-    }
-
-    return _firestore
-        .collection('usuarios')
-        .doc(user.uid)
-        .collection('gastos')
-        .orderBy('fecha', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
-        
-        // Convertir Timestamp a DateTime
-        if (data['fecha'] is Timestamp) {
-          data['fecha'] = (data['fecha'] as Timestamp).toDate();
-        }
-        
-        return data;
-      }).toList();
-    });
-  }
-
-  /// Elimina un gasto y revierte el cambio en la cuenta si es necesario
+  
+  /// ELIMINAR gasto (soft delete)
   Future<String?> eliminarGasto(String gastoId) async {
     try {
-      final user = _auth.currentUser;
-      if (user == null) {
-        return 'Usuario no autenticado';
+      if (_userId == null) return 'Usuario no autenticado';
+      if (gastoId.trim().isEmpty) return 'ID del gasto requerido';
+      
+      // Verificar que el gasto existe
+      final gastoDoc = await _gastosRef().doc(gastoId).get();
+      if (!gastoDoc.exists) {
+        return 'El gasto no existe';
       }
-
+      
+      final gastoData = gastoDoc.data()!;
+      final monto = (gastoData['monto'] as num).toDouble();
+      final cuentaAsociada = gastoData['cuentaAsociada'] as String?;
+      
+      // Usar transacción para garantizar consistencia
       await _firestore.runTransaction((transaction) async {
-        // 1. Obtener el gasto
-        final gastoRef = _firestore
-            .collection('usuarios')
-            .doc(user.uid)
-            .collection('gastos')
-            .doc(gastoId);
-
-        final gastoDoc = await transaction.get(gastoRef);
-        if (!gastoDoc.exists) {
-          throw Exception('El gasto no existe');
-        }
-
-        final gastoData = gastoDoc.data()!;
-        final monto = (gastoData['monto'] as num).toDouble();
-        final cuentaAsociada = gastoData['cuentaAsociada'] as String?;
-
+        // 1. Marcar gasto como inactivo (soft delete)
+        transaction.update(_gastosRef().doc(gastoId), {
+          'activo': false,
+          'fechaEliminacion': FieldValue.serverTimestamp(),
+          'fechaModificacion': FieldValue.serverTimestamp(),
+        });
+        
         // 2. Si había cuenta asociada, devolver el monto
-        if (cuentaAsociada != null && cuentaAsociada != 'ninguna') {
+        if (cuentaAsociada != null && cuentaAsociada != 'ninguna' && cuentaAsociada.isNotEmpty) {
           final cuentaRef = _firestore
               .collection('usuarios')
-              .doc(user.uid)
+              .doc(_userId)
               .collection('cuentas')
               .doc(cuentaAsociada);
-
+          
           final cuentaDoc = await transaction.get(cuentaRef);
           if (cuentaDoc.exists) {
             final cuentaData = cuentaDoc.data()!;
             final saldoActual = (cuentaData['saldo'] as num).toDouble();
-            final nuevoSaldo = saldoActual + monto; // Sumar de vuelta
-
+            final nuevoSaldo = saldoActual + monto; // Devolver el dinero
+            
             transaction.update(cuentaRef, {
               'saldo': nuevoSaldo,
-              'ultimaActualizacion': FieldValue.serverTimestamp(),
+              'fechaModificacion': FieldValue.serverTimestamp(),
             });
-
-            // Registrar el movimiento de reversión
+            
+            // Registrar movimiento de reversión
             final movimientoRef = cuentaRef.collection('movimientos').doc();
             transaction.set(movimientoRef, {
               'tipo': 'reversa_gasto',
@@ -274,15 +251,139 @@ class GastosServicio {
             });
           }
         }
-
-        // 3. Eliminar el gasto
-        transaction.delete(gastoRef);
       });
-
-      return null; // Sin error
+      
+      return null; // Éxito - sin error
+      
     } catch (e) {
-      print('Error al eliminar gasto: $e');
-      return 'Error al eliminar el gasto: ${e.toString()}';
+      return 'Error al eliminar gasto: $e';
+    }
+  }
+  
+  /// OBTENER un gasto específico por ID
+  Future<DocumentSnapshot?> obtenerGasto(String gastoId) async {
+    try {
+      if (_userId == null) return null;
+      if (gastoId.trim().isEmpty) return null;
+      
+      return await _gastosRef().doc(gastoId).get();
+      
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  /// OBTENER gastos por categoría
+  Stream<QuerySnapshot> obtenerGastosPorCategoria(String categoria) {
+    if (_userId == null) {
+      return const Stream.empty();
+    }
+    
+    // Simplificamos para evitar índice compuesto
+    // Filtraremos 'activo' en el cliente
+    return _gastosRef()
+        .where('categoria', isEqualTo: categoria)
+        .orderBy('fechaCreacion', descending: true)
+        .snapshots();
+  }
+  
+  /// OBTENER gastos por rango de fechas
+  Stream<QuerySnapshot> obtenerGastosPorFechas({
+    required DateTime fechaInicio,
+    required DateTime fechaFin,
+  }) {
+    if (_userId == null) {
+      return const Stream.empty();
+    }
+    
+    // Simplificamos para evitar índice compuesto
+    // Filtraremos 'activo' en el cliente
+    return _gastosRef()
+        .where('fechaCreacion', isGreaterThanOrEqualTo: Timestamp.fromDate(fechaInicio))
+        .where('fechaCreacion', isLessThanOrEqualTo: Timestamp.fromDate(fechaFin))
+        .orderBy('fechaCreacion', descending: true)
+        .snapshots();
+  }
+  
+  /// OBTENER total de gastos por período
+  Future<double> obtenerTotalGastos({
+    DateTime? fechaInicio,
+    DateTime? fechaFin,
+    String? categoria,
+  }) async {
+    try {
+      if (_userId == null) return 0.0;
+      
+      Query<Map<String, dynamic>> query = _gastosRef()
+          .where('activo', isEqualTo: true);
+      
+      if (fechaInicio != null) {
+        query = query.where('fecha', isGreaterThanOrEqualTo: Timestamp.fromDate(fechaInicio));
+      }
+      
+      if (fechaFin != null) {
+        query = query.where('fecha', isLessThanOrEqualTo: Timestamp.fromDate(fechaFin));
+      }
+      
+      if (categoria != null && categoria.isNotEmpty) {
+        query = query.where('categoria', isEqualTo: categoria);
+      }
+      
+      final snapshot = await query.get();
+      double total = 0.0;
+      
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final monto = (data['monto'] as num?)?.toDouble() ?? 0.0;
+        total += monto;
+      }
+      
+      return total;
+      
+    } catch (e) {
+      return 0.0;
+    }
+  }
+  
+  // ====== MÉTODOS PRIVADOS DE VALIDACIÓN ======
+  
+  /// Verifica si una cuenta existe
+  Future<bool> _verificarCuentaExiste(String cuentaId) async {
+    try {
+      if (_userId == null) return false;
+      
+      final doc = await _firestore
+          .collection('usuarios')
+          .doc(_userId)
+          .collection('cuentas')
+          .doc(cuentaId)
+          .get();
+      
+      return doc.exists;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  /// Verifica si una cuenta tiene saldo suficiente
+  Future<bool> _verificarSaldoSuficiente(String cuentaId, double monto) async {
+    try {
+      if (_userId == null) return false;
+      
+      final doc = await _firestore
+          .collection('usuarios')
+          .doc(_userId)
+          .collection('cuentas')
+          .doc(cuentaId)
+          .get();
+      
+      if (!doc.exists) return false;
+      
+      final saldo = (doc.data()!['saldo'] as num).toDouble();
+      return saldo >= monto;
+      
+    } catch (e) {
+      return false;
     }
   }
 }
