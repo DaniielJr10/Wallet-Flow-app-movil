@@ -521,7 +521,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                     if (!activa) continue;
                     
                     final banco = cuenta['banco']?.toString() ?? 'Banco';
-                    final numero = cuenta['numeroCuenta']?.toString() ?? '****';
+                    final numero = cuenta['numeroCuenta']?.toString() ?? 'Sin número';
                     final alias = cuenta['alias']?.toString();
                     final cuentaId = doc.id;
                     
@@ -529,7 +529,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                     if (alias != null && alias.isNotEmpty) {
                       displayName = '$alias ($banco)';
                     } else {
-                      displayName = '$banco - ***${numero.length > 4 ? numero.substring(numero.length - 4) : numero}';
+                      displayName = '$banco - $numero';
                     }
                     
                     items.add(DropdownMenuItem(
