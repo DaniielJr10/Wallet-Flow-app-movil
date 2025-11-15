@@ -15,7 +15,6 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
   // === SERVICIOS ===
   final IngresosServicio _ingresosServicio = IngresosServicio();
   final CuentasServicio _cuentasServicio = CuentasServicio();
-  
   // Filtros adicionales
   String _modoBusqueda = 'categoría'; // 'categoría' o 'mes'
 
@@ -28,7 +27,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
 
   DateTime? _fechaSeleccionada = DateTime.now();
   String _categoriaSeleccionada = 'alimentación';
-  String _metodoPagoSeleccionado = 'transferencia';
+  String _metodoPagoSeleccionado = 'Efectivo';
   String _cuentaAsociada = 'ninguna';
 
   List<Map<String, dynamic>> _ingresos = [];
@@ -55,127 +54,6 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     }).toList();
   }
 
-  /// Muestra el modal de filtros
-  void _mostrarModalFiltros() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: false,
-      builder: (context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
-                offset: Offset(0, -2),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 32,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  Icon(Icons.filter_alt_rounded, color: Color(0xFF2ecc71), size: 20),
-                  const SizedBox(width: 8),
-                  const Text('Buscar por:', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _modoBusqueda = 'categoría');
-                        Navigator.pop(context);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        curve: Curves.easeInOut,
-                        padding: const EdgeInsets.symmetric(vertical: 7),
-                        decoration: BoxDecoration(
-                          color: _modoBusqueda == 'categoría' ? const Color(0xFF2ecc71) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Categoría',
-                            style: TextStyle(
-                              color: _modoBusqueda == 'categoría' ? Colors.white : Colors.grey.shade700,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _modoBusqueda = 'mes');
-                        Navigator.pop(context);
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        curve: Curves.easeInOut,
-                        padding: const EdgeInsets.symmetric(vertical: 7),
-                        decoration: BoxDecoration(
-                          color: _modoBusqueda == 'mes' ? const Color(0xFF2ecc71) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Mes',
-                            style: TextStyle(
-                              color: _modoBusqueda == 'mes' ? Colors.white : Colors.grey.shade700,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.info_outline_rounded, color: Colors.grey.shade400, size: 16),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'Escribe el nombre de la categoría o el mes (ej: "noviembre") en la barra de búsqueda.',
-                      style: TextStyle(fontSize: 12.5, color: Colors.grey),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   final List<String> _categorias = [
     'alimentación',
@@ -190,10 +68,8 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
   ];
 
   final List<String> _metodosPago = [
-    'transferencia',
-    'efectivo',
-    'cheque',
-    'tarjeta'
+  'Efectivo',
+  'Transferencia'
   ];
 
   /// Inicializa el estado del widget y configura las animaciones
@@ -946,54 +822,12 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     _descripcionController.clear();
     setState(() {
       _fechaSeleccionada = DateTime.now();
-      _categoriaSeleccionada = 'trabajo';
-      _metodoPagoSeleccionado = 'transferencia';
+      _categoriaSeleccionada = 'alimentación';
+      _metodoPagoSeleccionado = 'Efectivo';
       _cuentaAsociada = 'ninguna';
     });
   }
 
-  /// Muestra un diálogo de confirmación para eliminar un ingreso
-  void _eliminarIngreso(int index) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Text('Eliminar Ingreso'),
-        content: const Text('¿Estás seguro de que deseas eliminar este ingreso?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _ingresos.removeAt(index);
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Ingreso eliminado correctamente'),
-                  backgroundColor: Colors.red.shade600,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade600,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
-    );
-  }
 
   /// Muestra un mensaje de éxito cuando se registra un ingreso correctamente
   void _mostrarMensajeExito() {
