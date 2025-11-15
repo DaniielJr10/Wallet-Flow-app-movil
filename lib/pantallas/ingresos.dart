@@ -31,7 +31,11 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
   String _cuentaAsociada = 'ninguna';
 
   List<Map<String, dynamic>> _ingresos = [];
+  List<Map<String, dynamic>> _cuentasDisponibles = [];
   String _busqueda = '';
+  bool _editandoIngreso = false;
+  Map<String, dynamic>? _ingresoEnEdicion;
+  
   /// Filtra los ingresos según el texto de búsqueda y los filtros seleccionados
   List<Map<String, dynamic>> get _ingresosFiltrados {
     return _ingresos.where((ingreso) {
@@ -91,6 +95,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
 
     _animationController.forward();
     _cargarIngresosDePrueba();
+    _cargarCuentasDisponibles();
   }
 
   /// Libera los recursos utilizados por los controladores y animaciones
@@ -126,13 +131,76 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     });
   }
 
+  /// Carga las cuentas disponibles del usuario
+  Future<void> _cargarCuentasDisponibles() async {
+    try {
+      final stream = _cuentasServicio.obtenerCuentas();
+      stream.listen((snapshot) {
+        final cuentas = <Map<String, dynamic>>[];
+        
+        // Agregar opción "Ninguna"
+        cuentas.add({
+          'id': 'ninguna',
+          'banco': 'Ninguna',
+          'numeroCuenta': '',
+          'alias': 'Sin cuenta asociada'
+        });
+        
+        // Agregar cuentas del usuario
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          cuentas.add({
+            'id': doc.id,
+            'banco': data['banco'] ?? '',
+            'numeroCuenta': data['numeroCuenta'] ?? '',
+            'alias': data['alias'] ?? data['banco'] ?? ''
+          });
+        }
+        
+        if (mounted) {
+          setState(() {
+            _cuentasDisponibles = cuentas;
+          });
+        }
+      });
+    } catch (e) {
+      print('Error al cargar cuentas: $e');
+    }
+  }
+
   /// Muestra el modal con el formulario para registrar un nuevo ingreso
-  void _mostrarFormularioIngreso() {
+  void _mostrarFormularioIngreso([Map<String, dynamic>? ingresoAEditar]) {
+    _editandoIngreso = ingresoAEditar != null;
+    _ingresoEnEdicion = ingresoAEditar;
+    
+    // Si estamos editando, llenar los campos con los datos existentes
+    if (_editandoIngreso && _ingresoEnEdicion != null) {
+      _montoController.text = FormatoNumeros.formatearParaMostrar(_ingresoEnEdicion!['monto']);
+      _descripcionController.text = _ingresoEnEdicion!['descripcion'];
+      _fechaSeleccionada = _ingresoEnEdicion!['fecha'];
+      _categoriaSeleccionada = _ingresoEnEdicion!['categoria'];
+      _metodoPagoSeleccionado = _ingresoEnEdicion!['metodoPago'];
+      _cuentaAsociada = _ingresoEnEdicion!['cuentaAsociada'] ?? 'ninguna';
+    } else {
+      // Limpiar para nuevo ingreso
+      _limpiarFormulario();
+    }
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _buildFormularioModal(),
+    );
+  }
+
+  /// Muestra el modal con los detalles completos del ingreso
+  void _mostrarDetallesIngreso(Map<String, dynamic> ingreso) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildModalDetalles(ingreso),
     );
   }
 
@@ -173,16 +241,16 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                   size: 28,
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Nuevo Ingreso',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                  Expanded(
+                    child: Text(
+                      _editandoIngreso ? 'Editar Ingreso' : 'Nuevo Ingreso',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(
@@ -216,6 +284,8 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                     _buildSelectorCategoria(),
                     const SizedBox(height: 20),
                     _buildSelectorMetodoPago(),
+                    const SizedBox(height: 20),
+                    _buildSelectorCuentaAsociada(),
                     const SizedBox(height: 32),
                     _buildBotonesAccion(),
                   ],
@@ -227,6 +297,351 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       ),
     );
   }
+
+  /// Construye el modal que muestra los detalles completos del ingreso
+  Widget _buildModalDetalles(Map<String, dynamic> ingreso) {
+    // Encontrar el nombre de la cuenta asociada
+    String cuentaTexto = 'Ninguna cuenta asociada';
+    if (ingreso['cuentaAsociada'] != null && ingreso['cuentaAsociada'] != 'ninguna') {
+      final cuenta = _cuentasDisponibles.firstWhere(
+        (c) => c['id'] == ingreso['cuentaAsociada'],
+        orElse: () => {'banco': 'Cuenta no encontrada', 'numeroCuenta': ''},
+      );
+      cuentaTexto = '${cuenta['banco']} - ${cuenta['numeroCuenta']}';
+    }
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Header del modal
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF2ecc71),
+                  Color(0xFF27ae60),
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    _getIconoCategoria(ingreso['categoria']),
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Detalles del Ingreso',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        ingreso['descripcion'],
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.9),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Contenido de los detalles
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Monto principal
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF2ecc71).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Color(0xFF2ecc71), width: 2),
+                      ),
+                      child: Text(
+                        '\$${FormatoNumeros.formatearParaMostrar(ingreso['monto'])}',
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF2ecc71),
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // Grid de detalles
+                  _buildDetalleItem(
+                    'Descripción',
+                    ingreso['descripcion'],
+                    Icons.description_outlined,
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  _buildDetalleItem(
+                    'Categoría',
+                    '${ingreso['categoria'].toString().substring(0, 1).toUpperCase()}${ingreso['categoria'].toString().substring(1)}',
+                    Icons.category_outlined,
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  _buildDetalleItem(
+                    'Método de Pago',
+                    '${ingreso['metodoPago'].toString().substring(0, 1).toUpperCase()}${ingreso['metodoPago'].toString().substring(1)}',
+                    Icons.payment_outlined,
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  _buildDetalleItem(
+                    'Fecha',
+                    '${ingreso['fecha'].day} de ${_getNombreMes(ingreso['fecha'].month)} de ${ingreso['fecha'].year}',
+                    Icons.calendar_today_outlined,
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  _buildDetalleItem(
+                    'Cuenta Asociada',
+                    cuentaTexto,
+                    Icons.account_balance_outlined,
+                  ),
+                  
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ),
+          
+          // Botones de acción
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(25),
+                bottomRight: Radius.circular(25),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _editarIngreso(ingreso);
+                    },
+                    icon: const Icon(Icons.edit_rounded, size: 20),
+                    label: const Text('Editar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _confirmarEliminarIngreso(ingreso);
+                    },
+                    icon: const Icon(Icons.delete_rounded, size: 20),
+                    label: const Text('Eliminar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Construye un item de detalle con icono, título y valor
+  Widget _buildDetalleItem(String titulo, String valor, IconData icono) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Color(0xFF2ecc71).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icono,
+              color: Color(0xFF2ecc71),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  titulo,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  valor,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1F2937),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Obtiene el nombre del mes en español
+  String _getNombreMes(int mes) {
+    const meses = [
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ];
+    return meses[mes - 1];
+  }
+
+    /// Inicia la edición de un ingreso
+    void _editarIngreso(Map<String, dynamic> ingreso) {
+      _mostrarFormularioIngreso(ingreso);
+    }
+
+    /// Muestra un diálogo de confirmación antes de eliminar
+    void _confirmarEliminarIngreso(Map<String, dynamic> ingreso) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Eliminar ingreso'),
+          content: const Text('¿Estás seguro de que deseas eliminar este ingreso? Esta acción no se puede deshacer.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                Navigator.pop(context);
+                await _eliminarIngreso(ingreso);
+              },
+              child: const Text('Eliminar'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    /// Elimina el ingreso de la lista (simulación, reemplazar por lógica real)
+    Future<void> _eliminarIngreso(Map<String, dynamic> ingreso) async {
+      setState(() {
+        _ingresos.removeWhere((i) => i['id'] == ingreso['id']);
+      });
+      _mostrarMensajeExitoEliminar();
+    }
+
+    /// Muestra mensaje de éxito al eliminar
+    void _mostrarMensajeExitoEliminar() {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Ingreso eliminado correctamente'),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
 
   /// Construye el campo de entrada para el monto del ingreso
   Widget _buildCampoMonto() {
@@ -463,6 +878,57 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     );
   }
 
+  /// Construye el dropdown para seleccionar la cuenta asociada
+  Widget _buildSelectorCuentaAsociada() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Cuenta Asociada',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.grey.shade50,
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _cuentaAsociada,
+              isExpanded: true,
+              items: _cuentasDisponibles.map<DropdownMenuItem<String>>((cuenta) {
+                return DropdownMenuItem<String>(
+                  value: cuenta['id'] as String,
+                  child: Text(
+                    cuenta['id'] == 'ninguna' 
+                        ? cuenta['alias'] as String
+                        : '${cuenta['banco']} - ${cuenta['numeroCuenta']}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _cuentaAsociada = value!;
+                });
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Construye los botones de acción del formulario (Cancelar y Guardar)
   Widget _buildBotonesAccion() {
     return Row(
@@ -550,63 +1016,72 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.green.shade50,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            _getIconoCategoria(ingreso['categoria']),
-            color: Colors.green.shade600,
-            size: 24,
-          ),
-        ),
-        title: Text(
-          ingreso['descripcion'],
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1F2937),
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              '${ingreso['categoria'].toString().substring(0, 1).toUpperCase()}${ingreso['categoria'].toString().substring(1)} • ${ingreso['metodoPago'].toString().substring(0, 1).toUpperCase()}${ingreso['metodoPago'].toString().substring(1)}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => _mostrarDetallesIngreso(ingreso),
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(16),
+          leading: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 4),
-            Text(
-              '${ingreso['fecha'].day}/${ingreso['fecha'].month}/${ingreso['fecha'].year}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade500,
-              ),
+            child: Icon(
+              _getIconoCategoria(ingreso['categoria']),
+              color: Colors.green.shade600,
+              size: 24,
             ),
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '\$${FormatoNumeros.formatearParaMostrar(ingreso['monto'])}',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF2ecc71),
-              ),
+          ),
+          title: Text(
+            ingreso['descripcion'],
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1F2937),
             ),
-              // Icono de borrar eliminado
-          ],
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text(
+                '${ingreso['categoria'].toString().substring(0, 1).toUpperCase()}${ingreso['categoria'].toString().substring(1)} • ${ingreso['metodoPago'].toString().substring(0, 1).toUpperCase()}${ingreso['metodoPago'].toString().substring(1)}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${ingreso['fecha'].day}/${ingreso['fecha'].month}/${ingreso['fecha'].year}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '\$${FormatoNumeros.formatearParaMostrar(ingreso['monto'])}',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF2ecc71),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: Colors.grey.shade400,
+              ),
+            ],
+          ),
         ),
       ),
     );
