@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utilidades/formato_numeros.dart';
 import '../firebase/servicios/ingresos_servicio.dart';
 import '../firebase/servicios/cuentas_servicio.dart';
@@ -30,7 +31,6 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
   String _metodoPagoSeleccionado = 'Efectivo';
   String _cuentaAsociada = 'ninguna';
 
-  List<Map<String, dynamic>> _cuentasDisponibles = [];
   String _busqueda = '';
   bool _editandoIngreso = false;
   Map<String, dynamic>? _ingresoEnEdicion;
@@ -72,7 +72,6 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
 
     _animationController.forward();
     _inicializarIngresos();
-    _cargarCuentasDisponibles();
   }
 
   /// Libera los recursos utilizados por los controladores y animaciones
@@ -89,42 +88,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     // Los ingresos se cargan automáticamente mediante StreamBuilder en la UI
   }
 
-  /// Carga las cuentas disponibles del usuario
-  Future<void> _cargarCuentasDisponibles() async {
-    try {
-      final stream = _cuentasServicio.obtenerCuentas();
-      stream.listen((snapshot) {
-        final cuentas = <Map<String, dynamic>>[];
-        
-        // Agregar opción "Ninguna"
-        cuentas.add({
-          'id': 'ninguna',
-          'banco': 'Ninguna',
-          'numeroCuenta': '',
-          'alias': 'Sin cuenta asociada'
-        });
-        
-        // Agregar cuentas del usuario
-        for (var doc in snapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          cuentas.add({
-            'id': doc.id,
-            'banco': data['banco'] ?? '',
-            'numeroCuenta': data['numeroCuenta'] ?? '',
-            'alias': data['alias'] ?? data['banco'] ?? ''
-          });
-        }
-        
-        if (mounted) {
-          setState(() {
-            _cuentasDisponibles = cuentas;
-          });
-        }
-      });
-    } catch (e) {
-      // Error silencioso
-    }
-  }
+
 
   /// Muestra el modal con el formulario para registrar un nuevo ingreso
   void _mostrarFormularioIngreso([Map<String, dynamic>? ingresoAEditar]) {
@@ -210,7 +174,9 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                     ),
                   ),
                 IconButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    if (mounted) Navigator.pop(context);
+                  },
                   icon: const Icon(
                     Icons.close_rounded,
                     color: Colors.white,
@@ -258,15 +224,6 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
 
   /// Construye el modal que muestra los detalles completos del ingreso
   Widget _buildModalDetalles(Map<String, dynamic> ingreso) {
-    // Encontrar el nombre de la cuenta asociada
-    String cuentaTexto = 'Ninguna cuenta asociada';
-    if (ingreso['cuentaAsociada'] != null && ingreso['cuentaAsociada'] != 'ninguna') {
-      final cuenta = _cuentasDisponibles.firstWhere(
-        (c) => c['id'] == ingreso['cuentaAsociada'],
-        orElse: () => {'banco': 'Cuenta no encontrada', 'numeroCuenta': ''},
-      );
-      cuentaTexto = '${cuenta['banco']} - ${cuenta['numeroCuenta']}';
-    }
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
@@ -415,7 +372,9 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                   
                   _buildDetalleItem(
                     'Cuenta Asociada',
-                    cuentaTexto,
+                    ingreso['cuentaAsociada'] == null || ingreso['cuentaAsociada'] == 'ninguna' 
+                        ? 'Ninguna cuenta asociada' 
+                        : 'Cuenta vinculada',
                     Icons.account_balance_outlined,
                   ),
                   
@@ -762,36 +721,49 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
+        DropdownButtonFormField<String>(
+          value: _categoriaSeleccionada,
+          isExpanded: true,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Color(0xFF2ecc71), width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _categoriaSeleccionada,
-              isExpanded: true,
-              items: _categorias.map((categoria) {
-                return DropdownMenuItem(
-                  value: categoria,
-                  child: Text(
+          items: _categorias.map((categoria) {
+            return DropdownMenuItem(
+              value: categoria,
+              child: Row(
+                children: [
+                  Icon(
+                    _getIconoCategoria(categoria),
+                    color: Color(0xFF2ecc71),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
                     categoria.substring(0, 1).toUpperCase() + categoria.substring(1),
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _categoriaSeleccionada = value!;
-                });
-              },
-            ),
-          ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _categoriaSeleccionada = value!;
+            });
+          },
         ),
       ],
     );
@@ -811,36 +783,49 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
+        DropdownButtonFormField<String>(
+          value: _metodoPagoSeleccionado,
+          isExpanded: true,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Color(0xFF2ecc71), width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _metodoPagoSeleccionado,
-              isExpanded: true,
-              items: _metodosPago.map((metodo) {
-                return DropdownMenuItem(
-                  value: metodo,
-                  child: Text(
-                    metodo.substring(0, 1).toUpperCase() + metodo.substring(1),
+          items: _metodosPago.map((metodo) {
+            return DropdownMenuItem(
+              value: metodo,
+              child: Row(
+                children: [
+                  Icon(
+                    metodo == 'Efectivo' ? Icons.money_rounded : Icons.credit_card_rounded,
+                    color: Color(0xFF2ecc71),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    metodo,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _metodoPagoSeleccionado = value!;
-                });
-              },
-            ),
-          ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _metodoPagoSeleccionado = value!;
+            });
+          },
         ),
       ],
     );
@@ -860,38 +845,107 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
+        StreamBuilder<QuerySnapshot>(
+          stream: _cuentasServicio.obtenerCuentas(),
+          builder: (context, snapshot) {
+            List<DropdownMenuItem<String>> items = [
+              const DropdownMenuItem(
+                value: 'ninguna',
+                child: Row(
+                  children: [
+                    Icon(Icons.account_balance_wallet_outlined, color: Color(0xFF2ecc71), size: 20),
+                    SizedBox(width: 12),
+                    Text('Ninguna', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+            ];
+            
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              items.add(const DropdownMenuItem(
+                value: 'cargando',
+                child: Text('Cargando cuentas...', style: TextStyle(fontSize: 16, color: Colors.grey)),
+              ));
+            } else if (snapshot.hasError) {
+              items.add(const DropdownMenuItem(
+                value: 'error',
+                child: Text('Error al cargar cuentas', style: TextStyle(fontSize: 16, color: Colors.red)),
+              ));
+            } else if (snapshot.hasData && snapshot.data != null && snapshot.data!.docs.isNotEmpty) {
+              for (var doc in snapshot.data!.docs) {
+                try {
+                  final cuenta = doc.data() as Map<String, dynamic>?;
+                  if (cuenta != null) {
+                    final activa = cuenta['activa'] as bool? ?? true;
+                    if (!activa) continue;
+                    
+                    final banco = cuenta['banco']?.toString() ?? 'Banco';
+                    final numero = cuenta['numeroCuenta']?.toString() ?? 'Sin número';
+                    final alias = cuenta['alias']?.toString();
+                    final cuentaId = doc.id;
+                    
+                    String displayName;
+                    if (alias != null && alias.isNotEmpty) {
+                      displayName = '$alias ($banco)';
+                    } else {
+                      displayName = '$banco - $numero';
+                    }
+                    
+                    items.add(DropdownMenuItem(
+                      value: cuentaId,
+                      child: Row(
+                        children: [
+                          Icon(Icons.account_balance, color: Color(0xFF2ecc71), size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              displayName,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ));
+                  }
+                } catch (e) {
+                  continue;
+                }
+              }
+            }
+            
+            // Verificar que el valor actual sea válido
+            final validValues = items.map((item) => item.value).toSet();
+            if (!validValues.contains(_cuentaAsociada)) {
+              _cuentaAsociada = 'ninguna';
+            }
+            
+            return DropdownButtonFormField<String>(
               value: _cuentaAsociada,
               isExpanded: true,
-              items: _cuentasDisponibles.map<DropdownMenuItem<String>>((cuenta) {
-                return DropdownMenuItem<String>(
-                  value: cuenta['id'] as String,
-                  child: Text(
-                    cuenta['id'] == 'ninguna' 
-                        ? cuenta['alias'] as String
-                        : '${cuenta['banco']} - ${cuenta['numeroCuenta']}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _cuentaAsociada = value!;
-                });
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Color(0xFF2ecc71), width: 2),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+              ),
+              items: items,
+              onChanged: (String? newValue) {
+                if (newValue != null && newValue != _cuentaAsociada && newValue != 'cargando' && newValue != 'error') {
+                  setState(() {
+                    _cuentaAsociada = newValue;
+                  });
+                }
               },
-            ),
-          ),
+            );
+          },
         ),
       ],
     );
@@ -1090,6 +1144,8 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
               fontWeight: FontWeight.w600,
               color: Color(0xFF1F2937),
             ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1101,6 +1157,8 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                   fontSize: 14,
                   color: Colors.grey.shade600,
                 ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
               const SizedBox(height: 4),
               Text(
@@ -1112,25 +1170,30 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
               ),
             ],
           ),
-          trailing: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '\$${FormatoNumeros.formatearParaMostrar(ingreso['monto'])}',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF2ecc71),
+          trailing: SizedBox(
+            width: 120, // Ancho fijo para evitar overflow
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '\$${FormatoNumeros.formatearParaMostrar(ingreso['monto'])}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2ecc71),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: Colors.grey.shade400,
-              ),
-            ],
+                const SizedBox(height: 4),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: Colors.grey.shade400,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1456,7 +1519,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                       Icon(
                         Icons.attach_money_rounded,
                         color: Color(0xFF27ae60),
-                        size: 32,
+                        size: 28,
                         shadows: [
                           Shadow(
                             color: Colors.black12,
@@ -1465,23 +1528,25 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                           ),
                         ],
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'INGRESOS',
-                        style: TextStyle(
-                          fontSize: 27,
-                          fontWeight: FontWeight.w900, // Aún más gruesa
-                          color: Color(0xFF27ae60),
-                          letterSpacing: 2.2,
-                          fontFamily: 'Montserrat',
-                          height: 1.1,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black12,
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          'INGRESOS',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF27ae60),
+                            letterSpacing: 2.2,
+                            fontFamily: 'Montserrat',
+                            height: 1.1,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black12,
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -1622,26 +1687,29 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Historial de Ingresos',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1F2937),
+                  const Expanded(
+                    child: Text(
+                      'Historial de Ingresos',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1F2937),
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   ElevatedButton.icon(
                     onPressed: _mostrarFormularioIngreso,
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('Nuevo Ingreso'),
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: const Text('Nuevo'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF2ecc71),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
                   ),
                 ],
