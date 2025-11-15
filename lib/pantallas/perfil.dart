@@ -30,7 +30,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
     with TickerProviderStateMixin {
 
   // ===== SERVICIOS Y CONTROLADORES =====
-  final AutenticacionServicio _authService = AutenticacionServicio();
+
   final BaseDatosServicio _baseDatosService = BaseDatosServicio();
   final ImagePicker _imagePicker = ImagePicker();
   
