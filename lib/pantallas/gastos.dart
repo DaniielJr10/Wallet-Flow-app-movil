@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../firebase/servicios/cuentas_servicio.dart';
 import '../firebase/servicios/gastos_servicio.dart';
 import '../utilidades/formato_numeros.dart';
@@ -885,13 +884,30 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      isScrollControlled: true,
       builder: (context) {
         return Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Center(
+                child: Text(
+                  'Detalles del gasto',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
               Row(
                 children: [
                   Icon(_getIconoCategoria(gasto['categoria']), color: Colors.red.shade600, size: 32),
@@ -899,76 +915,312 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                   Expanded(
                     child: Text(
                       gasto['descripcion'] ?? '',
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              Text('Monto:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-              Text(
-                '-${FormatoNumeros.formatearParaMostrar(gasto['monto'])}',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.red.shade600),
-              ),
-              const SizedBox(height: 12),
-              Text('Fecha:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-              Text(
-                gasto['fecha'] != null
-                  ? '${gasto['fecha'].day}/${gasto['fecha'].month}/${gasto['fecha'].year}'
-                  : '',
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-              Text('Categoría:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-              Text(
-                gasto['categoria'] ?? '',
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-              Text('Método de pago:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-              Text(
-                gasto['metodoPago'] ?? '',
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-              Text('Cuenta asociada:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-              Text(
-                gasto['cuentaAsociada'] ?? 'Ninguna',
-                style: const TextStyle(fontSize: 16),
-              ),
-              if (gasto['nota'] != null && gasto['nota'].isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text('Nota:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                Text(
-                  gasto['nota'],
-                  style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
-                ),
-              ],
-              if (gasto['esRecurrente'] == true) ...[
-                const SizedBox(height: 12),
-                Text('Recurrente', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Colors.orange)),
-                if (gasto['frecuencia'] != null)
-                  Text('Frecuencia: ${gasto['frecuencia']}', style: const TextStyle(fontSize: 16)),
-              ],
-              const SizedBox(height: 24),
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade600,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              _detalleItem('Monto', '-${FormatoNumeros.formatearParaMostrar(gasto['monto'])}', color: Colors.red.shade600, fontSize: 20),
+              _detalleItem('Fecha', gasto['fecha'] != null ? '${gasto['fecha'].day}/${gasto['fecha'].month}/${gasto['fecha'].year}' : ''),
+              _detalleItem('Categoría', gasto['categoria'] ?? ''),
+              _detalleItem('Método de pago', gasto['metodoPago'] ?? ''),
+              _detalleItem('Cuenta asociada', gasto['cuentaAsociada'] ?? 'Ninguna'),
+              if (gasto['nota'] != null && gasto['nota'].isNotEmpty)
+                _detalleItem('Nota', gasto['nota'], italic: true),
+              if (gasto['esRecurrente'] == true)
+                _detalleItem('Recurrente', gasto['frecuencia'] != null ? 'Frecuencia: ${gasto['frecuencia']}' : 'Sí', color: Colors.orange),
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _mostrarFormularioEdicionGasto(gasto);
+                      },
+                      icon: const Icon(Icons.edit_rounded),
+                      label: const Text('Editar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.red.shade600,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
+                      ),
                     ),
                   ),
-                  child: const Text('Cerrar'),
-                ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _eliminarGasto(gasto['id']);
+                      },
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      label: const Text('Eliminar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade600,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 8),
             ],
           ),
         );
       },
+    );
+  }
+
+  /// Muestra el formulario de edición de gasto con los datos cargados
+  void _mostrarFormularioEdicionGasto(Map<String, dynamic> gasto) {
+    // Cargar los datos en los controladores y variables
+    _montoController.text = gasto['monto'].toString();
+    _descripcionController.text = gasto['descripcion'] ?? '';
+    _fechaSeleccionada = gasto['fecha'] ?? DateTime.now();
+    _categoriaSeleccionada = gasto['categoria'] ?? 'alimentación';
+    _metodoPagoSeleccionado = gasto['metodoPago'] ?? 'efectivo';
+    _cuentaAsociada = gasto['cuentaAsociada'] ?? 'ninguna';
+    _esRecurrente = gasto['esRecurrente'] ?? false;
+    _frecuenciaRecurrente = gasto['frecuencia'] ?? 'mensual';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildFormularioModalEdicion(gasto['id']),
+    );
+  }
+
+  /// Construye el formulario de edición de gasto
+  Widget _buildFormularioModalEdicion(String gastoId) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.red.shade600,
+                  Colors.red.shade700,
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.edit_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Editar Gasto',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCampoMonto(),
+                    const SizedBox(height: 20),
+                    _buildCampoDescripcion(),
+                    const SizedBox(height: 20),
+                    _buildSelectorFecha(),
+                    const SizedBox(height: 20),
+                    _buildSelectorCategoria(),
+                    const SizedBox(height: 20),
+                    _buildSelectorMetodoPago(),
+                    const SizedBox(height: 20),
+                    _buildSelectorCuentaAsociada(),
+                    const SizedBox(height: 20),
+                    // ...eliminado campo de nota opcional...
+                    const SizedBox(height: 20),
+                    // ...eliminado gasto recurrente...
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _limpiarFormulario();
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(color: Colors.grey.shade300),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => _actualizarGasto(gastoId),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade600,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Text(
+                              'Guardar Cambios',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Actualiza el gasto editado
+  Future<void> _actualizarGasto(String gastoId) async {
+    if (_formKey.currentState!.validate()) {
+      final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
+
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      try {
+        final error = await _gastosServicio.actualizarGasto(
+          gastoId: gastoId,
+          monto: monto,
+          fecha: _fechaSeleccionada ?? DateTime.now(),
+          descripcion: _descripcionController.text.trim(),
+          categoria: _categoriaSeleccionada,
+          metodoPago: _metodoPagoSeleccionado,
+          cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+          esRecurrente: _esRecurrente,
+          frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
+        );
+
+        if (mounted) {
+          Navigator.pop(context); // Cerrar indicador de carga
+          Navigator.pop(context); // Cerrar formulario de edición
+
+          if (error != null) {
+            _mostrarError(error);
+          } else {
+            _limpiarFormulario();
+            _mostrarMensajeExito();
+            _cargarGastosDePrueba(); // Recargar lista (puedes cambiar por gastos reales)
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context); // Cerrar indicador de carga
+          _mostrarError('Error inesperado: ${e.toString()}');
+        }
+      }
+    }
+  }
+
+  /// Widget para mostrar un ítem de detalle
+  Widget _detalleItem(String titulo, String valor, {Color? color, bool italic = false, double fontSize = 16}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$titulo:',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
+          Text(
+            valor,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w500,
+              color: color,
+              fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

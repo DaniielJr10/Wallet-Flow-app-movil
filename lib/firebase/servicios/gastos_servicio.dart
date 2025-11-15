@@ -4,6 +4,49 @@ import 'cuentas_servicio.dart';
 
 /// Servicio para gestionar gastos en Firebase
 class GastosServicio {
+  /// Actualiza los datos de un gasto existente
+  Future<String?> actualizarGasto({
+    required String gastoId,
+    required double monto,
+    required DateTime fecha,
+    required String descripcion,
+    required String categoria,
+    required String metodoPago,
+    String? cuentaAsociada,
+    bool esRecurrente = false,
+    String? frecuencia,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        return 'Usuario no autenticado';
+      }
+
+      final gastoRef = _firestore
+          .collection('usuarios')
+          .doc(user.uid)
+          .collection('gastos')
+          .doc(gastoId);
+
+      final gastoData = {
+        'monto': monto,
+        'fecha': Timestamp.fromDate(fecha),
+        'descripcion': descripcion,
+        'categoria': categoria,
+        'metodoPago': metodoPago,
+        'cuentaAsociada': cuentaAsociada,
+        'esRecurrente': esRecurrente,
+        'frecuencia': frecuencia,
+        'fechaActualizacion': FieldValue.serverTimestamp(),
+      };
+
+      await gastoRef.update(gastoData);
+      return null;
+    } catch (e) {
+      print('Error al actualizar gasto: $e');
+      return 'Error al actualizar el gasto: ${e.toString()}';
+    }
+  }
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
