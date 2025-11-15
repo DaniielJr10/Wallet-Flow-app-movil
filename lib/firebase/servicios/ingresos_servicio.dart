@@ -69,71 +69,75 @@ class IngresosServicio {
         return 'La descripción es requerida';
       }
 
-      // Validar cuenta asociada si se especifica
-      if (cuentaAsociada != null && cuentaAsociada.isNotEmpty) {
-        final cuentaExiste = await _verificarCuentaExiste(cuentaAsociada);
-        if (!cuentaExiste) {
-          return 'La cuenta asociada no existe';
-        }
-      }
-
       // Usar transacción para garantizar consistencia de datos
+      // IMPORTANTE: Todas las lecturas deben ir ANTES que las escrituras
       await _firestore.runTransaction((transaction) async {
+        
+        // === FASE DE LECTURAS (primero) ===
+        DocumentSnapshot<Map<String, dynamic>>? cuentaDoc;
+        
+        // Si hay cuenta asociada, leer su información primero
+        if (cuentaAsociada != null && cuentaAsociada.isNotEmpty && cuentaAsociada != 'ninguna') {
+          final cuentaRef = _firestore
+              .collection('usuarios')
+              .doc(_userId)
+              .collection('cuentas')
+              .doc(cuentaAsociada);
+          
+          cuentaDoc = await transaction.get(cuentaRef);
+          
+          // Validar que la cuenta existe
+          if (!cuentaDoc.exists) {
+            throw Exception('La cuenta asociada no existe');
+          }
+        }
+        
+        // === FASE DE ESCRITURAS (después de todas las lecturas) ===
+        
         // 1. Crear el documento del ingreso
         final ingresoRef = _ingresosRef().doc();
-
+        
         final ingresoData = {
           'monto': monto,
           'fecha': Timestamp.fromDate(fecha),
           'descripcion': descripcion.trim(),
           'categoria': categoria,
           'metodoPago': metodoPago,
-          'cuentaAsociada': cuentaAsociada,
+          'cuentaAsociada': cuentaAsociada != 'ninguna' ? cuentaAsociada : null,
           'fechaCreacion': FieldValue.serverTimestamp(),
-          'activo': true, // Para permitir filtros futuros
+          'activo': true,
         };
 
         transaction.set(ingresoRef, ingresoData);
 
-        // 2. Si hay cuenta asociada, sumar el monto al saldo
-        if (cuentaAsociada != null && cuentaAsociada.isNotEmpty) {
-          final cuentaRef = _firestore
-              .collection('usuarios')
-              .doc(_userId)
-              .collection('cuentas')
-              .doc(cuentaAsociada);
+        // 2. Si hay cuenta asociada válida, actualizar su saldo
+        if (cuentaDoc != null && cuentaDoc.exists) {
+          final cuentaData = cuentaDoc.data()!;
+          final saldoActual = (cuentaData['saldo'] as num?)?.toDouble() ?? 0.0;
+          final nuevoSaldo = saldoActual + monto;
 
-          // Obtener el documento de la cuenta
-          final cuentaDoc = await transaction.get(cuentaRef);
-          if (cuentaDoc.exists) {
-            final cuentaData = cuentaDoc.data()!;
-            final saldoActual = (cuentaData['saldo'] as num).toDouble();
-            final nuevoSaldo = saldoActual + monto;
+          // Actualizar el saldo de la cuenta
+          transaction.update(cuentaDoc.reference, {
+            'saldo': nuevoSaldo,
+            'ultimaActualizacion': FieldValue.serverTimestamp(),
+          });
 
-            // Actualizar el saldo de la cuenta
-            transaction.update(cuentaRef, {
-              'saldo': nuevoSaldo,
-              'ultimaActualizacion': FieldValue.serverTimestamp(),
-            });
-
-            // Registrar el movimiento en el historial de la cuenta
-            final movimientoRef = cuentaRef.collection('movimientos').doc();
-            transaction.set(movimientoRef, {
-              'tipo': 'ingreso',
-              'monto': monto,
-              'descripcion': 'Ingreso: $descripcion',
-              'categoria': categoria,
-              'fecha': Timestamp.fromDate(fecha),
-              'ingresoId': ingresoRef.id,
-              'fechaCreacion': FieldValue.serverTimestamp(),
-            });
-          }
+          // Registrar el movimiento en el historial de la cuenta
+          final movimientoRef = cuentaDoc.reference.collection('movimientos').doc();
+          transaction.set(movimientoRef, {
+            'tipo': 'ingreso',
+            'monto': monto,
+            'descripcion': 'Ingreso: $descripcion',
+            'categoria': categoria,
+            'fecha': Timestamp.fromDate(fecha),
+            'ingresoId': ingresoRef.id,
+            'fechaCreacion': FieldValue.serverTimestamp(),
+          });
         }
       });
 
       return null; // Éxito
     } catch (e) {
-      print('Error al registrar ingreso: $e');
       return 'Error al registrar el ingreso: ${e.toString()}';
     }
   }
@@ -147,23 +151,220 @@ class IngresosServicio {
       return Stream.value([]);
     }
 
-    return _ingresosRef()
-        .where('activo', isEqualTo: true)
-        .orderBy('fecha', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id;
+    try {
+      // Consulta simple sin índices compuestos - Apta para producción
+      return _ingresosRef().snapshots().map((snapshot) {
+        final ingresos = snapshot.docs.map((doc) {
+          final data = doc.data();
+          data['id'] = doc.id;
 
-        // Convertir Timestamp a DateTime para facilitar el uso
-        if (data['fecha'] is Timestamp) {
-          data['fecha'] = (data['fecha'] as Timestamp).toDate();
+          // Convertir Timestamp a DateTime
+          if (data['fecha'] is Timestamp) {
+            data['fecha'] = (data['fecha'] as Timestamp).toDate();
+          }
+
+          return data;
+        })
+        .where((ingreso) {
+          // Filtrar ingresos activos en el cliente
+          return ingreso['activo'] == true;
+        })
+        .toList();
+        
+        // Ordenar por fecha descendente en el cliente
+        ingresos.sort((a, b) {
+          final fechaA = a['fecha'] as DateTime;
+          final fechaB = b['fecha'] as DateTime;
+          return fechaB.compareTo(fechaA);
+        });
+        
+        return ingresos;
+      });
+      
+    } catch (e) {
+      return Stream.error(e);
+    }
+  }
+
+  /// === OBTENER INGRESO POR ID ===
+  /// 
+  /// Obtiene un ingreso específico por su ID
+  /// Útil para operaciones de edición o visualización de detalles
+  Future<Map<String, dynamic>?> obtenerIngresoPorId(String ingresoId) async {
+    try {
+      if (_userId == null) return null;
+
+      final doc = await _ingresosRef().doc(ingresoId).get();
+      
+      if (!doc.exists) return null;
+
+      final data = doc.data()!;
+      data['id'] = doc.id;
+
+      // Convertir Timestamp a DateTime
+      if (data['fecha'] is Timestamp) {
+        data['fecha'] = (data['fecha'] as Timestamp).toDate();
+      }
+
+      return data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// === ACTUALIZAR INGRESO ===
+  /// 
+  /// Actualiza un ingreso existente y maneja cambios en cuentas asociadas
+  /// 
+  /// [ingresoId] - ID del ingreso a actualizar
+  /// [monto] - Nuevo monto del ingreso
+  /// [fecha] - Nueva fecha del ingreso
+  /// [descripcion] - Nueva descripción
+  /// [categoria] - Nueva categoría
+  /// [metodoPago] - Nuevo método de pago
+  /// [cuentaAsociada] - Nueva cuenta asociada (puede ser diferente a la anterior)
+  /// 
+  /// Retorna null si es exitoso, o un mensaje de error si falla
+  Future<String?> actualizarIngreso({
+    required String ingresoId,
+    required double monto,
+    required DateTime fecha,
+    required String descripcion,
+    required String categoria,
+    required String metodoPago,
+    String? cuentaAsociada,
+  }) async {
+    try {
+      // Validar autenticación
+      if (_userId == null) {
+        return 'Usuario no autenticado';
+      }
+
+      // Validaciones básicas
+      if (monto <= 0) {
+        return 'El monto debe ser mayor a 0';
+      }
+
+      if (descripcion.trim().isEmpty) {
+        return 'La descripción es requerida';
+      }
+
+      // Usar transacción para garantizar consistencia
+      // IMPORTANTE: Todas las lecturas primero, luego las escrituras
+      await _firestore.runTransaction((transaction) async {
+        
+        // === FASE DE LECTURAS (todas las lecturas primero) ===
+        
+        // 1. Obtener el ingreso actual
+        final ingresoRef = _ingresosRef().doc(ingresoId);
+        final ingresoDoc = await transaction.get(ingresoRef);
+
+        if (!ingresoDoc.exists) {
+          throw Exception('El ingreso no existe');
         }
 
-        return data;
-      }).toList();
-    });
+        final datosActuales = ingresoDoc.data()!;
+        final montoAnterior = (datosActuales['monto'] as num).toDouble();
+        final cuentaAnterior = datosActuales['cuentaAsociada'] as String?;
+
+        // 2. Leer cuenta anterior si existe
+        DocumentSnapshot<Map<String, dynamic>>? cuentaAntDoc;
+        if (cuentaAnterior != null && cuentaAnterior.isNotEmpty && cuentaAnterior != 'ninguna') {
+          final cuentaAntRef = _firestore
+              .collection('usuarios')
+              .doc(_userId)
+              .collection('cuentas')
+              .doc(cuentaAnterior);
+          cuentaAntDoc = await transaction.get(cuentaAntRef);
+        }
+
+        // 3. Leer nueva cuenta si existe y es diferente a la anterior
+        DocumentSnapshot<Map<String, dynamic>>? cuentaNuevaDoc;
+        if (cuentaAsociada != null && cuentaAsociada.isNotEmpty && cuentaAsociada != 'ninguna') {
+          final cuentaNuevaRef = _firestore
+              .collection('usuarios')
+              .doc(_userId)
+              .collection('cuentas')
+              .doc(cuentaAsociada);
+          
+          // Solo leer si es diferente a la cuenta anterior
+          if (cuentaAsociada != cuentaAnterior) {
+            cuentaNuevaDoc = await transaction.get(cuentaNuevaRef);
+          } else {
+            cuentaNuevaDoc = cuentaAntDoc; // Usar la misma referencia
+          }
+          
+          // Validar que la nueva cuenta existe
+          if (cuentaNuevaDoc != null && !cuentaNuevaDoc.exists) {
+            throw Exception('La cuenta asociada no existe');
+          }
+        }
+        
+        // === FASE DE ESCRITURAS (después de todas las lecturas) ===
+
+        // 4. Actualizar los datos del ingreso
+        final nuevosdatos = {
+          'monto': monto,
+          'fecha': Timestamp.fromDate(fecha),
+          'descripcion': descripcion.trim(),
+          'categoria': categoria,
+          'metodoPago': metodoPago,
+          'cuentaAsociada': cuentaAsociada != 'ninguna' ? cuentaAsociada : null,
+          'fechaModificacion': FieldValue.serverTimestamp(),
+        };
+
+        transaction.update(ingresoRef, nuevosdatos);
+
+        // 5. Manejar cambios en cuentas asociadas
+        // Si la cuenta cambió, restar de la anterior y sumar a la nueva
+        if (cuentaAnterior != cuentaAsociada) {
+          // Restar de cuenta anterior
+          if (cuentaAntDoc != null && cuentaAntDoc.exists) {
+            final saldoAnterior = (cuentaAntDoc.data()!['saldo'] as num?)?.toDouble() ?? 0.0;
+            transaction.update(cuentaAntDoc.reference, {
+              'saldo': saldoAnterior - montoAnterior,
+              'ultimaActualizacion': FieldValue.serverTimestamp(),
+            });
+          }
+
+          // Sumar a cuenta nueva
+          if (cuentaNuevaDoc != null && cuentaNuevaDoc.exists) {
+            final saldoNuevo = (cuentaNuevaDoc.data()!['saldo'] as num?)?.toDouble() ?? 0.0;
+            transaction.update(cuentaNuevaDoc.reference, {
+              'saldo': saldoNuevo + monto,
+              'ultimaActualizacion': FieldValue.serverTimestamp(),
+            });
+
+            // Registrar movimiento en la nueva cuenta
+            final movimientoRef = cuentaNuevaDoc.reference.collection('movimientos').doc();
+            transaction.set(movimientoRef, {
+              'tipo': 'ingreso_actualizado',
+              'monto': monto,
+              'descripcion': 'Ingreso actualizado: $descripcion',
+              'categoria': categoria,
+              'fecha': Timestamp.fromDate(fecha),
+              'ingresoId': ingresoId,
+              'fechaCreacion': FieldValue.serverTimestamp(),
+            });
+          }
+        } else if (cuentaAsociada != null && cuentaAsociada != 'ninguna') {
+          // Misma cuenta, solo actualizar la diferencia de monto
+          if (cuentaAntDoc != null && cuentaAntDoc.exists) {
+            final saldoActual = (cuentaAntDoc.data()!['saldo'] as num?)?.toDouble() ?? 0.0;
+            final diferencia = monto - montoAnterior;
+            
+            transaction.update(cuentaAntDoc.reference, {
+              'saldo': saldoActual + diferencia,
+              'ultimaActualizacion': FieldValue.serverTimestamp(),
+            });
+          }
+        }
+      });
+
+      return null; // Éxito
+    } catch (e) {
+      return 'Error al actualizar el ingreso: ${e.toString()}';
+    }
   }
 
   /// === ELIMINAR INGRESO ===
@@ -179,7 +380,11 @@ class IngresosServicio {
         return 'Usuario no autenticado';
       }
 
+      // Usar transacción con lecturas antes de escrituras
       await _firestore.runTransaction((transaction) async {
+        
+        // === FASE DE LECTURAS ===
+        
         // 1. Obtener el ingreso a eliminar
         final ingresoRef = _ingresosRef().doc(ingresoId);
         final ingresoDoc = await transaction.get(ingresoRef);
@@ -192,50 +397,107 @@ class IngresosServicio {
         final monto = (ingresoData['monto'] as num).toDouble();
         final cuentaAsociada = ingresoData['cuentaAsociada'] as String?;
 
-        // 2. Si había cuenta asociada, restar el monto del saldo
+        // 2. Leer cuenta asociada si existe
+        DocumentSnapshot<Map<String, dynamic>>? cuentaDoc;
         if (cuentaAsociada != null && cuentaAsociada.isNotEmpty) {
           final cuentaRef = _firestore
               .collection('usuarios')
               .doc(_userId)
               .collection('cuentas')
               .doc(cuentaAsociada);
-
-          final cuentaDoc = await transaction.get(cuentaRef);
-          if (cuentaDoc.exists) {
-            final cuentaData = cuentaDoc.data()!;
-            final saldoActual = (cuentaData['saldo'] as num).toDouble();
-            final nuevoSaldo = saldoActual - monto;
-
-            // Actualizar el saldo
-            transaction.update(cuentaRef, {
-              'saldo': nuevoSaldo,
-              'ultimaActualizacion': FieldValue.serverTimestamp(),
-            });
-
-            // Registrar el movimiento de reversión
-            final movimientoRef = cuentaRef.collection('movimientos').doc();
-            transaction.set(movimientoRef, {
-              'tipo': 'reversa_ingreso',
-              'monto': -monto,
-              'descripcion': 'Reversión de ingreso eliminado',
-              'ingresoId': ingresoId,
-              'fecha': FieldValue.serverTimestamp(),
-              'fechaCreacion': FieldValue.serverTimestamp(),
-            });
-          }
+          cuentaDoc = await transaction.get(cuentaRef);
         }
+
+        // === FASE DE ESCRITURAS ===
 
         // 3. Marcar el ingreso como inactivo (soft delete)
         transaction.update(ingresoRef, {
           'activo': false,
           'fechaEliminacion': FieldValue.serverTimestamp(),
         });
+
+        // 4. Si había cuenta asociada, restar el monto del saldo
+        if (cuentaDoc != null && cuentaDoc.exists) {
+          final cuentaData = cuentaDoc.data()!;
+          final saldoActual = (cuentaData['saldo'] as num?)?.toDouble() ?? 0.0;
+          final nuevoSaldo = saldoActual - monto;
+
+          // Actualizar el saldo
+          transaction.update(cuentaDoc.reference, {
+            'saldo': nuevoSaldo,
+            'ultimaActualizacion': FieldValue.serverTimestamp(),
+          });
+
+          // Registrar el movimiento de reversión
+          final movimientoRef = cuentaDoc.reference.collection('movimientos').doc();
+          transaction.set(movimientoRef, {
+            'tipo': 'reversa_ingreso',
+            'monto': -monto,
+            'descripcion': 'Reversión de ingreso eliminado',
+            'ingresoId': ingresoId,
+            'fecha': FieldValue.serverTimestamp(),
+            'fechaCreacion': FieldValue.serverTimestamp(),
+          });
+        }
       });
 
       return null; // Éxito
     } catch (e) {
-      print('Error al eliminar ingreso: $e');
       return 'Error al eliminar el ingreso: ${e.toString()}';
+    }
+  }
+
+  /// === OBTENER INGRESOS COMO STREAM DE QUERYSNAPSHOT ===
+  /// 
+  /// Similar al patrón usado en gastos - retorna QuerySnapshot para compatibilidad
+  Stream<QuerySnapshot> obtenerIngresosStream() {
+    if (_userId == null) {
+      return const Stream.empty();
+    }
+
+    return _ingresosRef()
+        .where('activo', isEqualTo: true)
+        .orderBy('fecha', descending: true)
+        .snapshots();
+  }
+
+  /// === OBTENER TOTAL DE INGRESOS ===
+  /// 
+  /// Calcula el total de ingresos en un período específico
+  Future<double> obtenerTotalIngresos({
+    DateTime? fechaInicio,
+    DateTime? fechaFin,
+    String? categoria,
+  }) async {
+    try {
+      if (_userId == null) return 0.0;
+
+      var query = _ingresosRef().where('activo', isEqualTo: true);
+
+      // Filtrar por fechas si se especifican
+      if (fechaInicio != null) {
+        query = query.where('fecha', isGreaterThanOrEqualTo: Timestamp.fromDate(fechaInicio));
+      }
+      if (fechaFin != null) {
+        query = query.where('fecha', isLessThanOrEqualTo: Timestamp.fromDate(fechaFin));
+      }
+      
+      // Filtrar por categoría si se especifica
+      if (categoria != null && categoria.isNotEmpty) {
+        query = query.where('categoria', isEqualTo: categoria);
+      }
+
+      final snapshot = await query.get();
+      double total = 0.0;
+
+      for (var doc in snapshot.docs) {
+        final monto = (doc.data()['monto'] as num).toDouble();
+        total += monto;
+      }
+
+      return total;
+    } catch (e) {
+      return 0.0;
     }
   }
 
@@ -283,29 +545,10 @@ class IngresosServicio {
       };
 
     } catch (e) {
-      print('Error al obtener estadísticas: $e');
       return {'error': e.toString()};
     }
   }
 
-  /// === MÉTODOS AUXILIARES ===
 
-  /// Verifica si una cuenta existe en la base de datos
-  Future<bool> _verificarCuentaExiste(String cuentaId) async {
-    try {
-      if (_userId == null) return false;
 
-      final doc = await _firestore
-          .collection('usuarios')
-          .doc(_userId)
-          .collection('cuentas')
-          .doc(cuentaId)
-          .get();
-
-      return doc.exists && (doc.data()?['activa'] ?? false);
-    } catch (e) {
-      print('Error al verificar cuenta: $e');
-      return false;
-    }
-  }
 }

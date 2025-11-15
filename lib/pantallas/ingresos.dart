@@ -26,48 +26,25 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
   late Animation<double> _fadeAnimation;
 
   DateTime? _fechaSeleccionada = DateTime.now();
-  String _categoriaSeleccionada = 'alimentación';
+  String _categoriaSeleccionada = 'trabajo';
   String _metodoPagoSeleccionado = 'Efectivo';
   String _cuentaAsociada = 'ninguna';
 
-  List<Map<String, dynamic>> _ingresos = [];
   List<Map<String, dynamic>> _cuentasDisponibles = [];
   String _busqueda = '';
   bool _editandoIngreso = false;
   Map<String, dynamic>? _ingresoEnEdicion;
-  
-  /// Filtra los ingresos según el texto de búsqueda y los filtros seleccionados
-  List<Map<String, dynamic>> get _ingresosFiltrados {
-    return _ingresos.where((ingreso) {
-      bool coincideBusqueda = true;
-      if (_busqueda.isNotEmpty) {
-        if (_modoBusqueda == 'categoría') {
-          coincideBusqueda = ingreso['categoria'].toString().toLowerCase().contains(_busqueda.toLowerCase());
-        } else if (_modoBusqueda == 'mes') {
-          // Buscar por mes escrito (ej: "noviembre")
-          final meses = [
-            'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-            'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-          ];
-          final fecha = ingreso['fecha'] as DateTime;
-          final mesIngreso = meses[fecha.month - 1];
-          coincideBusqueda = mesIngreso.contains(_busqueda.toLowerCase());
-        }
-      }
-      return coincideBusqueda;
-    }).toList();
-  }
 
 
   final List<String> _categorias = [
-    'alimentación',
-    'transporte',
-    'entretenimiento',
-    'salud',
-    'educación',
-    'servicios',
-    'compras',
-    'viajes',
+    'trabajo',
+    'negocio',
+    'freelance',
+    'inversiones',
+    'regalo',
+    'ventas',
+    'renta',
+    'bonificacion',
     'otro'
   ];
 
@@ -94,7 +71,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     ));
 
     _animationController.forward();
-    _cargarIngresosDePrueba();
+    _inicializarIngresos();
     _cargarCuentasDisponibles();
   }
 
@@ -107,28 +84,9 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     super.dispose();
   }
 
-  /// Carga datos de prueba para mostrar ejemplos de ingresos
-  void _cargarIngresosDePrueba() {
-    setState(() {
-      _ingresos = [
-        {
-          'id': '1',
-          'monto': 2500.00,
-          'fecha': DateTime.now().subtract(const Duration(days: 2)),
-          'descripcion': 'Salario mensual',
-          'categoria': 'trabajo',
-          'metodoPago': 'transferencia',
-        },
-        {
-          'id': '2',
-          'monto': 500.00,
-          'fecha': DateTime.now().subtract(const Duration(days: 5)),
-          'descripcion': 'Proyecto freelance',
-          'categoria': 'freelance',
-          'metodoPago': 'transferencia',
-        },
-      ];
-    });
+  /// Inicializa la carga de ingresos desde Firebase
+  void _inicializarIngresos() {
+    // Los ingresos se cargan automáticamente mediante StreamBuilder en la UI
   }
 
   /// Carga las cuentas disponibles del usuario
@@ -164,7 +122,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
         }
       });
     } catch (e) {
-      print('Error al cargar cuentas: $e');
+      // Error silencioso
     }
   }
 
@@ -621,12 +579,22 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       );
     }
 
-    /// Elimina el ingreso de la lista (simulación, reemplazar por lógica real)
+    /// Elimina el ingreso usando Firebase
     Future<void> _eliminarIngreso(Map<String, dynamic> ingreso) async {
-      setState(() {
-        _ingresos.removeWhere((i) => i['id'] == ingreso['id']);
-      });
-      _mostrarMensajeExitoEliminar();
+      try {
+        final ingresoId = ingreso['id'] as String;
+        final resultado = await _ingresosServicio.eliminarIngreso(ingresoId);
+        
+        if (resultado == null) {
+          // Éxito
+          _mostrarMensajeExitoEliminar();
+        } else {
+          // Error
+          _mostrarError('Error al eliminar: $resultado');
+        }
+      } catch (e) {
+        _mostrarError('Error inesperado: $e');
+      }
     }
 
     /// Muestra mensaje de éxito al eliminar
@@ -969,9 +937,9 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
               ),
               elevation: 0,
             ),
-            child: const Text(
-              'Guardar',
-              style: TextStyle(
+            child: Text(
+              _editandoIngreso ? 'Actualizar' : 'Guardar',
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -982,23 +950,105 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     );
   }
 
-  /// Construye la lista de ingresos registrados o muestra estado vacío
+  /// Construye la lista de ingresos registrados usando StreamBuilder con Firebase
   Widget _buildListaIngresos() {
-    final lista = _ingresosFiltrados;
-    if (lista.isEmpty) {
-      return _buildEstadoVacio();
-    }
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: lista.length,
-      itemBuilder: (context, index) {
-        final ingreso = lista[index];
-        // Buscar el índice real en la lista original para eliminar correctamente
-        final realIndex = _ingresos.indexOf(ingreso);
-        return _buildTarjetaIngreso(ingreso, realIndex);
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _ingresosServicio.obtenerIngresos(),
+      builder: (context, snapshot) {
+        // Estados de carga y error
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.red,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error al cargar ingresos',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Por favor, inténtalo de nuevo',
+                  style: TextStyle(color: Colors.grey[600]),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      // Forzar reconstrucción
+                    });
+                  },
+                  child: const Text('Reintentar'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Obtener datos de ingresos
+        final ingresos = snapshot.data ?? [];
+        
+        // Aplicar filtros locales
+        final ingresosFiltrados = _aplicarFiltros(ingresos);
+
+        // Estado vacío
+        if (ingresosFiltrados.isEmpty) {
+          return _buildEstadoVacio();
+        }
+
+        // Lista con datos
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: ingresosFiltrados.length,
+          itemBuilder: (context, index) {
+            final ingreso = ingresosFiltrados[index];
+            return _buildTarjetaIngreso(ingreso, index);
+          },
+        );
       },
     );
+  }
+
+  /// Aplica filtros de búsqueda a la lista de ingresos
+  List<Map<String, dynamic>> _aplicarFiltros(List<Map<String, dynamic>> ingresos) {
+    if (_busqueda.isEmpty) return ingresos;
+
+    return ingresos.where((ingreso) {
+      bool coincideBusqueda = true;
+      
+      if (_modoBusqueda == 'categoría') {
+        final categoria = ingreso['categoria']?.toString().toLowerCase() ?? '';
+        coincideBusqueda = categoria.contains(_busqueda.toLowerCase());
+      } else if (_modoBusqueda == 'mes') {
+        // Buscar por mes escrito (ej: "noviembre")
+        final meses = [
+          'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+          'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+        ];
+        final fecha = ingreso['fecha'] as DateTime;
+        final mesIngreso = meses[fecha.month - 1];
+        coincideBusqueda = mesIngreso.contains(_busqueda.toLowerCase());
+      }
+      
+      return coincideBusqueda;
+    }).toList();
   }
 
   /// Construye una tarjeta individual para mostrar un ingreso
@@ -1128,83 +1178,83 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     );
   }
 
-  /// Construye la tarjeta de resumen con el total de ingresos
+  /// Construye la tarjeta de resumen con el total de ingresos usando StreamBuilder
   Widget _buildResumenIngresos() {
-    final totalIngresos = _ingresos.fold<double>(
-      0.0,
-      (sum, ingreso) => sum + ingreso['monto'],
-    );
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _ingresosServicio.obtenerIngresos(),
+      builder: (context, snapshot) {
+        // Calcular totales con los datos del snapshot
+        final ingresos = snapshot.data ?? [];
+        final totalIngresos = ingresos.fold<double>(
+          0.0,
+          (sum, ingreso) => sum + (ingreso['monto'] as num).toDouble(),
+        );
 
-    final ingresosPorCategoria = <String, double>{};
-    for (final ingreso in _ingresos) {
-      final categoria = ingreso['categoria'] as String;
-      ingresosPorCategoria[categoria] = 
-          (ingresosPorCategoria[categoria] ?? 0.0) + ingreso['monto'];
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Color(0xFF2ecc71),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0xFF2ecc71).withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Color(0xFF2ecc71),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF2ecc71).withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Total de Ingresos',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Total de Ingresos',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${ingresos.length} registros',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                FormatoNumeros.formatearParaMostrar(totalIngresos),
+                style: const TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w800,
                   color: Colors.white,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${_ingresos.length} registros',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+              const SizedBox(height: 8),
+              Text(
+                'Actualizado hace unos minutos',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.8),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            '\$${totalIngresos.toStringAsFixed(2)}',
-            style: const TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Actualizado hace unos minutos',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.8),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1213,14 +1263,22 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     switch (categoria) {
       case 'trabajo':
         return Icons.work_rounded;
+      case 'negocio':
+        return Icons.business_rounded;
       case 'freelance':
         return Icons.laptop_rounded;
-      case 'venta':
-        return Icons.sell_rounded;
-      case 'inversión':
+      case 'inversiones':
         return Icons.trending_up_rounded;
       case 'regalo':
         return Icons.card_giftcard_rounded;
+      case 'ventas':
+        return Icons.sell_rounded;
+      case 'renta':
+        return Icons.house_rounded;
+      case 'bonificacion':
+        return Icons.star_rounded;
+      case 'otro':
+        return Icons.attach_money_rounded;
       default:
         return Icons.attach_money_rounded;
     }
@@ -1243,7 +1301,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     }
   }
 
-  /// Valida y guarda un nuevo ingreso
+  /// Valida y guarda un nuevo ingreso o actualiza uno existente
   Future<void> _guardarIngreso() async {
     if (_formKey.currentState!.validate()) {
       final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
@@ -1258,15 +1316,30 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       );
 
       try {
-        // Registrar el ingreso usando el servicio
-        final error = await _ingresosServicio.registrarIngreso(
-          monto: monto,
-          fecha: _fechaSeleccionada ?? DateTime.now(),
-          descripcion: _descripcionController.text.trim(),
-          categoria: _categoriaSeleccionada,
-          metodoPago: _metodoPagoSeleccionado,
-          cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
-        );
+        String? error;
+        
+        if (_editandoIngreso && _ingresoEnEdicion != null) {
+          // === ACTUALIZAR INGRESO EXISTENTE ===
+          error = await _ingresosServicio.actualizarIngreso(
+            ingresoId: _ingresoEnEdicion!['id'],
+            monto: monto,
+            fecha: _fechaSeleccionada ?? DateTime.now(),
+            descripcion: _descripcionController.text.trim(),
+            categoria: _categoriaSeleccionada,
+            metodoPago: _metodoPagoSeleccionado,
+            cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+          );
+        } else {
+          // === CREAR NUEVO INGRESO ===
+          error = await _ingresosServicio.registrarIngreso(
+            monto: monto,
+            fecha: _fechaSeleccionada ?? DateTime.now(),
+            descripcion: _descripcionController.text.trim(),
+            categoria: _categoriaSeleccionada,
+            metodoPago: _metodoPagoSeleccionado,
+            cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+          );
+        }
 
         if (mounted) {
           // Cerrar indicador de carga
@@ -1279,7 +1352,12 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
             // Éxito
             Navigator.pop(context); // Cerrar formulario
             _limpiarFormulario();
-            _mostrarMensajeExito();
+            
+            if (_editandoIngreso) {
+              _mostrarMensajeActualizacion();
+            } else {
+              _mostrarMensajeExito();
+            }
           }
         }
       } catch (e) {
@@ -1297,9 +1375,11 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     _descripcionController.clear();
     setState(() {
       _fechaSeleccionada = DateTime.now();
-      _categoriaSeleccionada = 'alimentación';
+      _categoriaSeleccionada = 'trabajo';
       _metodoPagoSeleccionado = 'Efectivo';
       _cuentaAsociada = 'ninguna';
+      _editandoIngreso = false;
+      _ingresoEnEdicion = null;
     });
   }
 
@@ -1310,6 +1390,20 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       SnackBar(
         content: const Text('Ingreso registrado correctamente'),
         backgroundColor: Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  /// Muestra un mensaje de éxito cuando se actualiza un ingreso correctamente
+  void _mostrarMensajeActualizacion() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Ingreso actualizado correctamente'),
+        backgroundColor: Colors.blue.shade600,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
