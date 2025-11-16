@@ -34,6 +34,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
   String _busqueda = '';
   bool _editandoIngreso = false;
   Map<String, dynamic>? _ingresoEnEdicion;
+  StateSetter? _setModalState;
 
 
   final List<String> _categorias = [
@@ -112,7 +113,11 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _buildFormularioModal(),
+      builder: (context) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          return _buildFormularioModalConEstado(setModalState);
+        },
+      ),
     );
   }
 
@@ -126,8 +131,9 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
     );
   }
 
-  /// Construye el modal que contiene el formulario de nuevo ingreso
-  Widget _buildFormularioModal() {
+  /// Construye el modal que contiene el formulario de nuevo ingreso con estado
+  Widget _buildFormularioModalConEstado(StateSetter setModalState) {
+    _setModalState = setModalState;
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
@@ -1353,7 +1359,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       context: context,
       initialDate: _fechaSeleccionada ?? DateTime.now(),
       firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
+      lastDate: DateTime(2030), // Permitir fechas hasta el año 2030
       locale: const Locale('es', 'ES'),
     );
 
@@ -1361,6 +1367,13 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       setState(() {
         _fechaSeleccionada = fecha;
       });
+      
+      // Actualizar también el estado del modal si está disponible
+      if (_setModalState != null) {
+        _setModalState!(() {
+          _fechaSeleccionada = fecha;
+        });
+      }
     }
   }
 
