@@ -34,6 +34,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   bool _esRecurrente = false;
   String _frecuenciaRecurrente = 'mensual';
   String _textoBusqueda = '';
+  StateSetter? _setModalState;
 
   List<Map<String, dynamic>> _gastos = [];
 
@@ -129,12 +130,17 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _buildFormularioModal(),
+      builder: (context) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          return _buildFormularioModalConEstado(setModalState);
+        },
+      ),
     );
   }
 
-  /// Construye el modal que contiene el formulario de nuevo gasto
-  Widget _buildFormularioModal() {
+  /// Construye el modal que contiene el formulario de nuevo gasto con estado
+  Widget _buildFormularioModalConEstado(StateSetter setModalState) {
+    _setModalState = setModalState;
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
@@ -1152,12 +1158,17 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _buildFormularioModalEdicion(gasto['id']),
+      builder: (context) => StatefulBuilder(
+        builder: (BuildContext context, StateSetter setModalState) {
+          return _buildFormularioModalEdicionConEstado(gasto['id'], setModalState);
+        },
+      ),
     );
   }
 
-  /// Construye el formulario de edición de gasto
-  Widget _buildFormularioModalEdicion(String gastoId) {
+  /// Construye el formulario de edición de gasto con estado
+  Widget _buildFormularioModalEdicionConEstado(String gastoId, StateSetter setModalState) {
+    _setModalState = setModalState;
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
@@ -1686,14 +1697,21 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
       context: context,
       initialDate: _fechaSeleccionada ?? DateTime.now(),
       firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      // locale eliminado para compatibilidad
+      lastDate: DateTime(2030), // Permitir fechas hasta el año 2030
+      locale: const Locale('es', 'ES'),
     );
 
     if (fecha != null) {
       setState(() {
         _fechaSeleccionada = fecha;
       });
+      
+      // Actualizar también el estado del modal si está disponible
+      if (_setModalState != null) {
+        _setModalState!(() {
+          _fechaSeleccionada = fecha;
+        });
+      }
     }
   }
 
