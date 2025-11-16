@@ -105,7 +105,6 @@ class IngresosServicio {
           'metodoPago': metodoPago,
           'cuentaAsociada': cuentaAsociada != 'ninguna' ? cuentaAsociada : null,
           'fechaCreacion': FieldValue.serverTimestamp(),
-          'activo': true,
         };
 
         transaction.set(ingresoRef, ingresoData);
@@ -165,10 +164,7 @@ class IngresosServicio {
 
           return data;
         })
-        .where((ingreso) {
-          // Filtrar ingresos activos en el cliente
-          return ingreso['activo'] == true;
-        })
+
         .toList();
         
         // Ordenar por fecha descendente en el cliente
@@ -369,7 +365,7 @@ class IngresosServicio {
 
   /// === ELIMINAR INGRESO ===
   /// 
-  /// Elimina un ingreso y revierte los cambios en la cuenta asociada
+  /// Elimina completamente un ingreso de la base de datos y revierte los cambios en la cuenta asociada
   /// 
   /// [ingresoId] - ID del ingreso a eliminar
   /// 
@@ -399,7 +395,7 @@ class IngresosServicio {
 
         // 2. Leer cuenta asociada si existe
         DocumentSnapshot<Map<String, dynamic>>? cuentaDoc;
-        if (cuentaAsociada != null && cuentaAsociada.isNotEmpty) {
+        if (cuentaAsociada != null && cuentaAsociada.isNotEmpty && cuentaAsociada != 'ninguna') {
           final cuentaRef = _firestore
               .collection('usuarios')
               .doc(_userId)
@@ -410,13 +406,7 @@ class IngresosServicio {
 
         // === FASE DE ESCRITURAS ===
 
-        // 3. Marcar el ingreso como inactivo (soft delete)
-        transaction.update(ingresoRef, {
-          'activo': false,
-          'fechaEliminacion': FieldValue.serverTimestamp(),
-        });
-
-        // 4. Si había cuenta asociada, restar el monto del saldo
+        // 3. Si había cuenta asociada, restar el monto del saldo
         if (cuentaDoc != null && cuentaDoc.exists) {
           final cuentaData = cuentaDoc.data()!;
           final saldoActual = (cuentaData['saldo'] as num?)?.toDouble() ?? 0.0;
@@ -439,6 +429,9 @@ class IngresosServicio {
             'fechaCreacion': FieldValue.serverTimestamp(),
           });
         }
+
+        // 4. Eliminar completamente el ingreso de la base de datos (hard delete)
+        transaction.delete(ingresoRef);
       });
 
       return null; // Éxito
@@ -456,7 +449,6 @@ class IngresosServicio {
     }
 
     return _ingresosRef()
-        .where('activo', isEqualTo: true)
         .orderBy('fecha', descending: true)
         .snapshots();
   }
@@ -472,7 +464,7 @@ class IngresosServicio {
     try {
       if (_userId == null) return 0.0;
 
-      var query = _ingresosRef().where('activo', isEqualTo: true);
+      Query<Map<String, dynamic>> query = _ingresosRef();
 
       // Filtrar por fechas si se especifican
       if (fechaInicio != null) {
@@ -518,7 +510,6 @@ class IngresosServicio {
       fechaInicio ??= DateTime(fechaFin.year, fechaFin.month - 1, fechaFin.day);
 
       final query = _ingresosRef()
-          .where('activo', isEqualTo: true)
           .where('fecha', isGreaterThanOrEqualTo: Timestamp.fromDate(fechaInicio))
           .where('fecha', isLessThanOrEqualTo: Timestamp.fromDate(fechaFin));
 
