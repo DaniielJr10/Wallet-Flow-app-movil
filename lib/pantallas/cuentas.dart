@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../firebase/servicios/cuentas_servicio.dart';
+import '../utilidades/formato_numeros.dart';
 
 class PantallaCuentas extends StatefulWidget {
   const PantallaCuentas({super.key});
 
-  @override
+  // const Divider(), // Eliminado para quitar la línea gris debajo del fondo azul
   State<PantallaCuentas> createState() => _PantallaCuentasState();
 }
 
@@ -59,17 +60,14 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                   suffixIcon: _busquedaController.text.isNotEmpty
                       ? IconButton(
                           onPressed: () {
-                            _busquedaController.clear();
                             setState(() {
-                              if (_modoFiltro == 'buscar') {
-                                _busquedaNumero = '';
-                              } else {
-                                _busquedaCuenta = '';
-                              }
+                              _busquedaController.clear();
+                              _busquedaCuenta = '';
+                              _busquedaNumero = '';
                             });
                           },
                           icon: Icon(
-                            Icons.clear_rounded,
+                            Icons.clear,
                             color: Colors.grey.shade400,
                             size: 20,
                           ),
@@ -213,8 +211,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
   String _busquedaCuenta = '';
   String _busquedaNumero = '';
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final CuentasServicio _cuentasServicio = CuentasServicio();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -244,6 +241,12 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
     ));
 
     _animationController.forward();
+
+    // Intentar migrar datos existentes desde la colección raíz a
+    // usuarios/{uid}/cuentas. Es idempotente y solo afectará si hay datos
+    // antiguos. No bloquea la UI.
+    // Ignorar el resultado; sirve como paso de transición.
+    _cuentasServicio.migrarCuentasDesdeColeccionRaiz();
   }
 
   @override
@@ -260,39 +263,43 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-         title: Column(
-           mainAxisSize: MainAxisSize.min,
-           crossAxisAlignment: CrossAxisAlignment.center,
-           children: [
-             Row(
-               mainAxisSize: MainAxisSize.min,
-               children: const [
-                 Icon(
-                   Icons.account_balance_rounded,
-                   color: Color(0xFF007bff),
-                   size: 28,
-                 ),
-                 SizedBox(width: 8),
-                 Text(
-                   'CUENTAS',
-                   style: TextStyle(
-                     fontSize: 24,
-                     fontWeight: FontWeight.bold,
+        toolbarHeight: 120,
+         title: Padding(
+           padding: const EdgeInsets.only(top: 20),
+           child: Column(
+             mainAxisSize: MainAxisSize.min,
+             crossAxisAlignment: CrossAxisAlignment.center,
+             children: [
+               Row(
+                 mainAxisSize: MainAxisSize.min,
+                 children: const [
+                   Icon(
+                     Icons.account_balance_rounded,
                      color: Color(0xFF007bff),
+                     size: 28,
                    ),
-                 ),
-               ],
-             ),
-             const SizedBox(height: 2),
-             Text(
-               'Administra y visualiza todas tus cuentas bancarias',
-               style: TextStyle(
-                 fontSize: 14,
-                 color: Colors.grey,
-                 fontWeight: FontWeight.w500,
+                   SizedBox(width: 8),
+                   Text(
+                     'CUENTAS',
+                     style: TextStyle(
+                       fontSize: 24,
+                       fontWeight: FontWeight.bold,
+                       color: Color(0xFF007bff),
+                     ),
+                   ),
+                 ],
                ),
-             ),
-           ],
+               const SizedBox(height: 2),
+               Text(
+                 'Administra y visualiza todas tus cuentas bancarias',
+                 style: TextStyle(
+                   fontSize: 14,
+                   color: Colors.grey,
+                   fontWeight: FontWeight.w500,
+                 ),
+               ),
+             ],
+           ),
          ),
         centerTitle: true,
       ),
@@ -364,20 +371,42 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
 
   Widget _construirResumenFinanciero() {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore
-          .collection('cuentas')
-          .where('usuarioId', isEqualTo: _auth.currentUser?.uid)
-          .snapshots(),
+      stream: _cuentasServicio.obtenerCuentas(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const SizedBox(height: 120);
+        // Manejo de estado de conexión
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
+            height: 120,
+            decoration: BoxDecoration(
+              color: Color(0xFF007bff),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            ),
+          );
         }
 
-        double totalBalance = 0;
-        int totalCuentas = snapshot.data!.docs.length;
+        // Si hay error, mostrar resumen con valores por defecto
+        if (snapshot.hasError) {
+          print('Error en resumen financiero: ${snapshot.error}');
+        }
 
-        for (var doc in snapshot.data!.docs) {
-          totalBalance += (doc.data() as Map<String, dynamic>)['saldo'] ?? 0.0;
+        // Procesar datos (incluso si hay error, mostrar lo que se pueda)
+        double totalBalance = 0;
+        int totalCuentas = 0;
+        
+        if (snapshot.hasData && snapshot.data != null) {
+          totalCuentas = snapshot.data!.docs.length;
+          for (var doc in snapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>?;
+            if (data != null && data['saldo'] != null) {
+              totalBalance += (data['saldo'] as num).toDouble();
+            }
+          }
         }
 
         return Container(
@@ -446,11 +475,19 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
 
   Widget _construirListaCuentas() {
     return StreamBuilder<QuerySnapshot>(
-      stream: _firestore
-          .collection('cuentas')
-          .where('usuarioId', isEqualTo: _auth.currentUser?.uid)
-          .snapshots(),
+      stream: _cuentasServicio.obtenerCuentas(),
       builder: (context, snapshot) {
+        print('🔍 Estado del snapshot: ${snapshot.connectionState}');
+        print('🔍 Tiene datos: ${snapshot.hasData}');
+        print('🔍 Tiene error: ${snapshot.hasError}');
+        if (snapshot.hasError) {
+          print('🚨 Error específico: ${snapshot.error}');
+          print('🚨 Stack trace: ${snapshot.stackTrace}');
+        }
+        if (snapshot.hasData) {
+          print('📊 Número de documentos: ${snapshot.data!.docs.length}');
+        }
+        
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(
@@ -459,8 +496,13 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
           );
         }
 
+        // Manejo de errores más específico
         if (snapshot.hasError) {
-          return _construirEstadoError();
+          print('Error en lista de cuentas: ${snapshot.error}');
+          // Si hay datos a pesar del error, intentamos mostrarlos
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return _construirEstadoError();
+          }
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -472,11 +514,9 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
           final cuenta = doc.data() as Map<String, dynamic>;
           bool match = true;
           if (_busquedaCuenta.isNotEmpty) {
-            final nombre = (cuenta['nombre'] ?? '').toString().toLowerCase();
             final banco = (cuenta['banco'] ?? '').toString().toLowerCase();
             final numero = (cuenta['numeroCuenta'] ?? '').toString().toLowerCase();
-            match = nombre.contains(_busquedaCuenta.toLowerCase()) ||
-                    banco.contains(_busquedaCuenta.toLowerCase()) ||
+            match = banco.contains(_busquedaCuenta.toLowerCase()) ||
                     numero.contains(_busquedaCuenta.toLowerCase());
           }
           if (_modoFiltro == 'buscar' && _busquedaNumero.isNotEmpty) {
@@ -562,7 +602,6 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
 
   Widget _construirTarjetaCuenta(String id, Map<String, dynamic> cuenta, int index) {
     final tipoCuenta = cuenta['tipo'] ?? 'ahorros';
-    final nombreCuenta = cuenta['nombre'] ?? 'Cuenta sin nombre';
     final saldo = (cuenta['saldo'] ?? 0.0).toDouble();
     final numeroCuenta = cuenta['numeroCuenta'] ?? '****';
     final banco = cuenta['banco'] ?? 'Banco';
@@ -614,7 +653,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            nombreCuenta,
+                            banco,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -623,42 +662,33 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                           ),
                           const SizedBox(height: 4),
                           Text(
-                              '$banco • $numeroCuenta',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
+                              numeroCuenta,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A1D29),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    PopupMenuButton<String>(
-                      onSelected: (value) => _manejarAccionCuenta(value, id, cuenta),
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'editar',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit, size: 20),
-                              SizedBox(width: 12),
-                              Text('Editar'),
-                            ],
-                          ),
+                    Container(
+                      margin: const EdgeInsets.only(top: 40),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _obtenerColorTipoCuenta(tipoCuenta).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _obtenerNombreTipoCuenta(tipoCuenta),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _obtenerColorTipoCuenta(tipoCuenta),
                         ),
-                        const PopupMenuItem(
-                          value: 'eliminar',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, size: 20, color: Colors.red),
-                              SizedBox(width: 12),
-                              Text('Eliminar', style: TextStyle(color: Colors.red)),
-                            ],
-                          ),
-                        ),
-                      ],
-                      child: Icon(
-                        Icons.more_vert,
-                        color: Colors.grey[600],
                       ),
                     ),
                   ],
@@ -687,24 +717,6 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
                           ),
                         ),
                       ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _obtenerColorTipoCuenta(tipoCuenta).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _obtenerNombreTipoCuenta(tipoCuenta),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _obtenerColorTipoCuenta(tipoCuenta),
-                        ),
-                      ),
                     ),
                   ],
                 ),
@@ -754,22 +766,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
             ),
           ),
           const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: _mostrarDialogoAgregarCuenta,
-            icon: const Icon(Icons.add),
-            label: const Text('Agregar Cuenta'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF007bff),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
+          // Botón 'Agregar Cuenta' eliminado según solicitud
         ],
       ),
     );
@@ -812,10 +809,17 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _DialogoAgregarCuenta(
-        onCuentaAgregada: () {
-          setState(() {});
-        },
+      enableDrag: true,
+      useSafeArea: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: _DialogoAgregarCuenta(
+          onCuentaAgregada: () {
+            setState(() {});
+          },
+        ),
       ),
     );
   }
@@ -828,19 +832,10 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
       builder: (context) => _DetallesCuenta(
         cuentaId: id,
         cuenta: cuenta,
+        onEditar: () => _mostrarDialogoEditarCuenta(id, cuenta),
+        onEliminar: () => _confirmarEliminarCuenta(id, 'esta cuenta'),
       ),
     );
-  }
-
-  void _manejarAccionCuenta(String accion, String id, Map<String, dynamic> cuenta) {
-    switch (accion) {
-      case 'editar':
-        _mostrarDialogoEditarCuenta(id, cuenta);
-        break;
-      case 'eliminar':
-        _confirmarEliminarCuenta(id, cuenta['nombre'] ?? 'esta cuenta');
-        break;
-    }
   }
 
   void _mostrarDialogoEditarCuenta(String id, Map<String, dynamic> cuenta) {
@@ -848,12 +843,19 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _DialogoAgregarCuenta(
-        cuentaId: id,
-        cuentaExistente: cuenta,
-        onCuentaAgregada: () {
-          setState(() {});
-        },
+      enableDrag: true,
+      useSafeArea: true,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: _DialogoAgregarCuenta(
+          cuentaId: id,
+          cuentaExistente: cuenta,
+          onCuentaAgregada: () {
+            setState(() {});
+          },
+        ),
       ),
     );
   }
@@ -889,15 +891,25 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
 
     if (confirmacion == true) {
       try {
-        await _firestore.collection('cuentas').doc(id).delete();
+        final error = await _cuentasServicio.eliminarCuentaPermanente(id);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$nombre eliminada correctamente'),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          if (error == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('$nombre eliminada correctamente'),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: $error'),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
         }
       } catch (e) {
         if (mounted) {
@@ -949,23 +961,13 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
         return 'Ahorros';
       case 'corriente':
         return 'Corriente';
-      case 'credito':
-        return 'Crédito';
-      case 'inversion':
-        return 'Inversión';
       default:
         return 'Cuenta';
     }
   }
 
   String _formatearMoneda(double cantidad) {
-    if (cantidad >= 1000000) {
-      return '${(cantidad / 1000000).toStringAsFixed(1)}M';
-    } else if (cantidad >= 1000) {
-      return '${(cantidad / 1000).toStringAsFixed(1)}K';
-    } else {
-      return cantidad.toStringAsFixed(0);
-    }
+    return FormatoNumeros.formatearParaMostrar(cantidad);
   }
 }
 
@@ -986,7 +988,6 @@ class _DialogoAgregarCuenta extends StatefulWidget {
 
 class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
   final _formKey = GlobalKey<FormState>();
-  final _nombreController = TextEditingController();
   final _bancoController = TextEditingController();
   final _numeroController = TextEditingController();
   final _saldoController = TextEditingController();
@@ -999,25 +1000,13 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
       'valor': 'ahorros',
       'nombre': 'Cuenta de Ahorros',
       'icono': Icons.savings_outlined,
-      'color': Color(0xFF3B82F6),
+      'color': Color(0xFF007bff),
     },
     {
       'valor': 'corriente',
       'nombre': 'Cuenta Corriente',
       'icono': Icons.account_balance_outlined,
-      'color': Color(0xFF3B82F6),
-    },
-    {
-      'valor': 'credito',
-      'nombre': 'Tarjeta de Crédito',
-      'icono': Icons.credit_card_outlined,
-      'color': Color(0xFF3B82F6),
-    },
-    {
-      'valor': 'inversion',
-      'nombre': 'Cuenta de Inversión',
-      'icono': Icons.trending_up_outlined,
-      'color': Color(0xFF3B82F6),
+      'color': Color(0xFF007bff),
     },
   ];
 
@@ -1031,78 +1020,98 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
 
   void _cargarDatosCuenta() {
     final cuenta = widget.cuentaExistente!;
-    _nombreController.text = cuenta['nombre'] ?? '';
     _bancoController.text = cuenta['banco'] ?? '';
     _numeroController.text = cuenta['numeroCuenta'] ?? '';
-    _saldoController.text = (cuenta['saldo'] ?? 0.0).toString();
+    _saldoController.text = FormatoNumeros.formatearNumero(cuenta['saldo'] ?? 0.0);
     _tipoSeleccionado = cuenta['tipo'] ?? 'ahorros';
   }
 
   @override
   Widget build(BuildContext context) {
     final esEdicion = widget.cuentaExistente != null;
+    final maxHeight = MediaQuery.of(context).size.height * 0.77;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final availableHeight = maxHeight - keyboardHeight;
     
     return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
+      height: keyboardHeight > 0 ? availableHeight : maxHeight,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
-          // Handle bar
+          // Header y handle bar con fondo azul
           Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Color(0xFF007bff),
+              // Sin borderRadius para el header azul
             ),
-          ),
-          
-          // Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
+            child: Column(
               children: [
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                ),
-                Expanded(
-                  child: Text(
-                    esEdicion ? 'Editar Cuenta' : 'Agregar Cuenta',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                const SizedBox(width: 48),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                    ),
+                    Expanded(
+                      child: Text(
+                        esEdicion ? 'Editar Cuenta' : 'Agregar Cuenta',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 48),
+                  ],
+                ),
               ],
             ),
           ),
           
-          const Divider(),
+          // const Divider(), // Eliminado para quitar la línea gris entre el header azul y el formulario
           
           // Form
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Tipo de cuenta
-                    const Text(
-                      'Tipo de cuenta',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.category_outlined,
+                          color: Color(0xFF007bff),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Tipo de cuenta',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
                     GridView.builder(
@@ -1171,27 +1180,6 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                       },
                     ),
                     
-                    const SizedBox(height: 24),
-                    
-                    // Nombre de la cuenta
-                    TextFormField(
-                      controller: _nombreController,
-                      decoration: InputDecoration(
-                        labelText: 'Nombre de la cuenta',
-                        hintText: 'Ej: Mi cuenta principal',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        prefixIcon: const Icon(Icons.label_outline),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'El nombre es requerido';
-                        }
-                        return null;
-                      },
-                    ),
-                    
                     const SizedBox(height: 16),
                     
                     // Banco
@@ -1202,8 +1190,28 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                         hintText: 'Ej: Banco Nacional',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
-                        prefixIcon: const Icon(Icons.account_balance),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF007bff), width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red, width: 2),
+                        ),
+                        prefixIcon: const Icon(Icons.account_balance, color: Color(0xFF007bff)),
+                        labelStyle: const TextStyle(color: Colors.black87),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -1213,7 +1221,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                       },
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
                     // Número de cuenta
                     TextFormField(
@@ -1223,8 +1231,28 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                         hintText: 'Número completo de la cuenta',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
-                        prefixIcon: const Icon(Icons.credit_card),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF007bff), width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red, width: 2),
+                        ),
+                        prefixIcon: const Icon(Icons.credit_card, color: Color(0xFF007bff)),
+                        labelStyle: const TextStyle(color: Colors.black87),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
@@ -1238,7 +1266,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                       },
                     ),
                     
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
                     // Saldo
                     TextFormField(
@@ -1248,18 +1276,39 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                         hintText: '0.00',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
-                        prefixIcon: const Icon(Icons.attach_money),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF007bff), width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red, width: 2),
+                        ),
+                        prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF007bff)),
+                        labelStyle: const TextStyle(color: Colors.black87),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
                       ),
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: TextInputType.numberWithOptions(decimal: false),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                        FormateadorNumeros(),
                       ],
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'El saldo es requerido';
                         }
-                        if (double.tryParse(value) == null) {
+                        final saldo = FormatoNumeros.convertirANumero(value);
+                        if (saldo == null) {
                           return 'Ingresa un saldo válido';
                         }
                         return null;
@@ -1270,12 +1319,21 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
               ),
             ),
           ),
-          
           // Botón guardar
           Padding(
-            padding: const EdgeInsets.all(20),
-            child: SizedBox(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            child: Container(
               width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF007bff).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: ElevatedButton(
                 onPressed: _cargando ? null : _guardarCuenta,
                 style: ElevatedButton.styleFrom(
@@ -1285,6 +1343,7 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  elevation: 0,
                 ),
                 child: _cargando
                   ? const SizedBox(
@@ -1295,12 +1354,22 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : Text(
-                      esEdicion ? 'Actualizar Cuenta' : 'Crear Cuenta',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          esEdicion ? Icons.update : Icons.save,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          esEdicion ? 'Actualizar Cuenta' : 'Crear Cuenta',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
               ),
             ),
@@ -1318,44 +1387,52 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
     });
 
     try {
-      final datosCuenta = {
-        'nombre': _nombreController.text.trim(),
-        'banco': _bancoController.text.trim(),
-        'numeroCuenta': _numeroController.text.trim(),
-        'saldo': double.parse(_saldoController.text),
-        'tipo': _tipoSeleccionado,
-        'usuarioId': FirebaseAuth.instance.currentUser?.uid,
-        'fechaModificacion': FieldValue.serverTimestamp(),
-      };
-
+      final cuentasServicio = CuentasServicio();
+      String? error;
+      
       if (widget.cuentaId != null) {
         // Actualizar cuenta existente
-        await FirebaseFirestore.instance
-            .collection('cuentas')
-            .doc(widget.cuentaId)
-            .update(datosCuenta);
+        error = await cuentasServicio.actualizarCuenta(
+          cuentaId: widget.cuentaId!,
+          banco: _bancoController.text.trim(),
+          numeroCuenta: _numeroController.text.trim(),
+          tipo: _tipoSeleccionado,
+          saldo: FormatoNumeros.convertirANumero(_saldoController.text) ?? 0,
+        );
       } else {
         // Crear nueva cuenta
-        datosCuenta['fechaCreacion'] = FieldValue.serverTimestamp();
-        await FirebaseFirestore.instance
-            .collection('cuentas')
-            .add(datosCuenta);
+        error = await cuentasServicio.crearCuenta(
+          banco: _bancoController.text.trim(),
+          numeroCuenta: _numeroController.text.trim(),
+          tipo: _tipoSeleccionado,
+          saldo: FormatoNumeros.convertirANumero(_saldoController.text) ?? 0,
+        );
       }
 
       if (mounted) {
-        Navigator.pop(context);
-        widget.onCuentaAgregada();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.cuentaId != null 
-                ? 'Cuenta actualizada correctamente'
-                : 'Cuenta creada correctamente'
+        if (error == null) {
+          Navigator.pop(context);
+          widget.onCuentaAgregada();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                widget.cuentaId != null 
+                  ? 'Cuenta actualizada correctamente'
+                  : 'Cuenta creada correctamente'
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
             ),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $error'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -1378,7 +1455,6 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
 
   @override
   void dispose() {
-    _nombreController.dispose();
     _bancoController.dispose();
     _numeroController.dispose();
     _saldoController.dispose();
@@ -1389,10 +1465,14 @@ class _DialogoAgregarCuentaState extends State<_DialogoAgregarCuenta> {
 class _DetallesCuenta extends StatelessWidget {
   final String cuentaId;
   final Map<String, dynamic> cuenta;
+  final VoidCallback onEditar;
+  final VoidCallback onEliminar;
 
   const _DetallesCuenta({
     required this.cuentaId,
     required this.cuenta,
+    required this.onEditar,
+    required this.onEliminar,
   });
 
   @override
@@ -1440,7 +1520,7 @@ class _DetallesCuenta extends StatelessWidget {
             ),
           ),
           
-          const Divider(),
+          // const Divider(), // Eliminado para quitar la línea gris debajo del header
           
           // Contenido
           Expanded(
@@ -1451,62 +1531,71 @@ class _DetallesCuenta extends StatelessWidget {
                 children: [
                   // Información básica
                   _construirItemDetalle(
-                    'Nombre',
-                    cuenta['nombre'] ?? 'Sin nombre',
-                    Icons.label_outline,
-                  ),
-                  _construirItemDetalle(
                     'Banco',
                     cuenta['banco'] ?? 'Sin banco',
                     Icons.account_balance,
                   ),
                   _construirItemDetalle(
                     'Número de cuenta',
-                    '**** ${cuenta['numeroCuenta'] ?? '****'}',
+                    cuenta['numeroCuenta'] ?? '****',
                     Icons.credit_card,
                   ),
                   _construirItemDetalle(
                     'Tipo',
-                    _obtenerNombreTipo(cuenta['tipo'] ?? 'ahorros'),
-                    _obtenerIconoTipo(cuenta['tipo'] ?? 'ahorros'),
+                    _obtenerNombreTipoLocal(cuenta['tipo'] ?? 'ahorros'),
+                    _obtenerIconoTipoLocal(cuenta['tipo'] ?? 'ahorros'),
                   ),
                   _construirItemDetalle(
                     'Saldo actual',
-                    '\$${(cuenta['saldo'] ?? 0.0).toStringAsFixed(2)}',
+                    '\$${FormatoNumeros.formatearParaMostrar(cuenta['saldo'] ?? 0.0)}',
                     Icons.attach_money,
                     destacado: true,
                   ),
                   
-                  const Spacer(),
+                  const SizedBox(height: 20),
                   
                   // Botones de acción
                   Row(
                     children: [
                       Expanded(
-                        child: OutlinedButton.icon(
+                        child: ElevatedButton.icon(
                           onPressed: () {
-                            // TODO: Implementar transferencia
+                            Navigator.pop(context);
+                            onEditar();
                           },
-                          icon: const Icon(Icons.send),
-                          label: const Text('Transferir'),
+                          icon: const Icon(Icons.edit, color: Colors.white),
+                          label: const Text('Editar', style: TextStyle(color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF007bff),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            // TODO: Implementar historial
+                            Navigator.pop(context);
+                            onEliminar();
                           },
-                          icon: const Icon(Icons.history),
-                          label: const Text('Historial'),
+                          icon: const Icon(Icons.delete, color: Colors.white),
+                          label: const Text('Eliminar', style: TextStyle(color: Colors.white)),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF007bff),
-                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
+                  
+                  // Botones eliminados para evitar desbordamiento.
                 ],
               ),
             ),
@@ -1574,31 +1663,23 @@ class _DetallesCuenta extends StatelessWidget {
     );
   }
 
-  String _obtenerNombreTipo(String tipo) {
+  String _obtenerNombreTipoLocal(String tipo) {
     switch (tipo) {
       case 'ahorros':
         return 'Cuenta de Ahorros';
       case 'corriente':
         return 'Cuenta Corriente';
-      case 'credito':
-        return 'Tarjeta de Crédito';
-      case 'inversion':
-        return 'Cuenta de Inversión';
       default:
         return 'Cuenta';
     }
   }
 
-  IconData _obtenerIconoTipo(String tipo) {
+  IconData _obtenerIconoTipoLocal(String tipo) {
     switch (tipo) {
       case 'ahorros':
         return Icons.savings_outlined;
       case 'corriente':
         return Icons.account_balance_outlined;
-      case 'credito':
-        return Icons.credit_card_outlined;
-      case 'inversion':
-        return Icons.trending_up_outlined;
       default:
         return Icons.account_balance_wallet_outlined;
     }

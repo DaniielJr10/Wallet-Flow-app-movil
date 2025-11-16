@@ -30,7 +30,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
     with TickerProviderStateMixin {
 
   // ===== SERVICIOS Y CONTROLADORES =====
-  final AutenticacionServicio _authService = AutenticacionServicio();
+
   final BaseDatosServicio _baseDatosService = BaseDatosServicio();
   final ImagePicker _imagePicker = ImagePicker();
   
@@ -94,9 +94,6 @@ class _PantallaPerfilState extends State<PantallaPerfil>
   // ===== PREFERENCIAS FINANCIERAS =====
   /// Límite de gasto mensual del usuario
   double _limiteGastoMensual = 0.0;
-  
-  /// Objetivo de ahorro mensual
-  double _objetivoAhorroMensual = 0.0;
   
   /// Categoría de gasto principal del usuario
   String _categoriaFavorita = 'General';
@@ -241,7 +238,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
     await Future.delayed(const Duration(milliseconds: 200));
     
     _limiteGastoMensual = 800000.0;
-    _objetivoAhorroMensual = 200000.0;
+
     _categoriaFavorita = 'Alimentación';
   }
 
@@ -335,7 +332,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
           'telefono': _telefonoController.text,
           'biografia': _biografiaController.text,
           'limiteGastoMensual': _limiteGastoMensual,
-          'objetivoAhorroMensual': _objetivoAhorroMensual,
+
           'categoriaFavorita': _categoriaFavorita,
           'fechaActualizacion': DateTime.now(),
         };
@@ -1362,16 +1359,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
             onTap: _modoEdicion ? () => _editarLimiteGasto() : null,
           ),
 
-          const SizedBox(height: 16),
 
-          // Objetivo de ahorro
-          _buildPreferenciaItem(
-            titulo: 'Objetivo de Ahorro Mensual',
-            valor: _formatearMoneda(_objetivoAhorroMensual),
-            icono: Icons.savings,
-            color: const Color(0xFF10B981),
-            onTap: _modoEdicion ? () => _editarObjetivoAhorro() : null,
-          ),
 
           const SizedBox(height: 16),
 
@@ -1474,18 +1462,6 @@ class _PantallaPerfilState extends State<PantallaPerfil>
     );
   }
 
-  /// Permite editar el objetivo de ahorro mensual
-  void _editarObjetivoAhorro() {
-    _mostrarDialogoNumerico(
-      titulo: 'Objetivo de Ahorro Mensual',
-      valorActual: _objetivoAhorroMensual,
-      onGuardar: (nuevoValor) {
-        setState(() {
-          _objetivoAhorroMensual = nuevoValor;
-        });
-      },
-    );
-  }
 
   /// Permite editar la categoría favorita
   void _editarCategoriaFavorita() {

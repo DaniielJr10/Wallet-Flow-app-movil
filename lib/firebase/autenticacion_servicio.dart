@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'base_datos_servicio.dart';
+import 'servicios/usuarios_servicio.dart';
 
 /// Servicio que maneja toda la autenticación de usuarios
 /// Incluye: login, registro, cerrar sesión, recuperar contraseña
@@ -63,27 +63,18 @@ class AutenticacionServicio {
     required String email,
     required String password,
     required String nombre,
-    required String apellido,
   }) async {
     try {
       // Crear nueva cuenta
-      UserCredential resultado = await _auth.createUserWithEmailAndPassword(
+      await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password,
       );
       
-      // Actualizar el perfil del usuario con su nombre
-      await resultado.user?.updateDisplayName('$nombre $apellido');
-      
-      // Guardar perfil completo en Firestore
-      final BaseDatosServicio baseDatos = BaseDatosServicio();
-      final errorPerfil = await baseDatos.guardarPerfilUsuario(
+      // Guardar perfil básico en Firestore usando el servicio de usuarios
+      final UsuariosServicio usuariosServicio = UsuariosServicio();
+      final errorPerfil = await usuariosServicio.crearPerfilUsuario(
         nombre: nombre,
-        apellido: apellido,
-        identificacion: '', // Se puede completar después
-        telefono: '', // Se puede completar después
-        fechaNacimiento: DateTime.now(), // Se puede completar después
-        nombreUsuario: email.split('@')[0], // Usar la parte del email como username por defecto
       );
       
       if (errorPerfil != null) {

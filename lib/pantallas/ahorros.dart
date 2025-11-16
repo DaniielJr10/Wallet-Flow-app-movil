@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../firebase/base_datos_servicio.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../utilidades/formato_numeros.dart';
 
+/// Pantalla de gestión de metas de ahorro
+/// 
+/// Esta pantalla permite al usuario:
+/// - Ver el resumen de sus ahorros totales
+/// - Listar todas sus metas de ahorro
+/// - Filtrar y buscar metas específicas
+/// - Crear nuevas metas de ahorro
+/// - Gestionar metas existentes (editar, eliminar, agregar dinero)
 class PantallaAhorros extends StatefulWidget {
   const PantallaAhorros({super.key});
 
@@ -9,69 +19,86 @@ class PantallaAhorros extends StatefulWidget {
   State<PantallaAhorros> createState() => _PantallaAhorrosState();
 }
 
-class _PantallaAhorrosState extends State<PantallaAhorros>
-    with TickerProviderStateMixin {
-  final BaseDatosServicio _baseDatosService = BaseDatosServicio();
+class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderStateMixin {
   
+  // === CONTROLADORES Y SERVICIOS FIREBASE ===
+  final TextEditingController _busquedaController = TextEditingController();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  
+  // === ANIMACIONES ===
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   
-  List<Map<String, dynamic>> _metas = [];
-  bool _isLoading = true;
-  double _totalAhorrado = 0.0;
-  double _totalMetas = 0.0;
+  // === ESTADO DE LA APLICACIÓN ===
+  String _modoFiltro = 'todas'; // 'todas', 'activas', 'completadas'
+  String _busquedaMeta = '';
 
-  // Categorías de ahorro disponibles
+  // === CATEGORÍAS DE AHORRO ===
+  /// Categorías disponibles para metas de ahorro con colores específicos en tonos verdes
   final List<Map<String, dynamic>> _categorias = [
     {
+      'valor': 'vacaciones',
       'nombre': 'Vacaciones',
-      'icono': Icons.flight_takeoff,
-      'color': const Color(0xFF3B82F6),
-      'gradiente': [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)]
+      'icono': Icons.flight_takeoff_rounded,
+      'color': const Color(0xFF16A085), // Verde azulado para ahorros
     },
     {
+      'valor': 'casa',
       'nombre': 'Casa',
-      'icono': Icons.home,
-      'color': const Color(0xFF10B981),
-      'gradiente': [const Color(0xFF10B981), const Color(0xFF059669)]
+      'icono': Icons.home_rounded,
+      'color': const Color(0xFF2ECC71), // Verde principal para ahorros
     },
     {
+      'valor': 'auto',
       'nombre': 'Auto',
-      'icono': Icons.directions_car,
-      'color': const Color(0xFFF59E0B),
-      'gradiente': [const Color(0xFFF59E0B), const Color(0xFFD97706)]
+      'icono': Icons.directions_car_rounded,
+      'color': const Color(0xFF27AE60), // Verde oscuro
     },
     {
+      'valor': 'emergencia',
       'nombre': 'Emergencia',
-      'icono': Icons.security,
-      'color': const Color(0xFFEF4444),
-      'gradiente': [const Color(0xFFEF4444), const Color(0xFFDC2626)]
+      'icono': Icons.security_rounded,
+      'color': const Color(0xFF229954), // Verde seguridad
     },
     {
+      'valor': 'educacion',
       'nombre': 'Educación',
-      'icono': Icons.school,
-      'color': const Color(0xFF8B5CF6),
-      'gradiente': [const Color(0xFF8B5CF6), const Color(0xFF7C3AED)]
+      'icono': Icons.school_rounded,
+      'color': const Color(0xFF1ABC9C), // Verde educación
     },
     {
+      'valor': 'inversion',
       'nombre': 'Inversión',
-      'icono': Icons.trending_up,
-      'color': const Color(0xFF06B6D4),
-      'gradiente': [const Color(0xFF06B6D4), const Color(0xFF0891B2)]
+      'icono': Icons.trending_up_rounded,
+      'color': const Color(0xFF138D75), // Verde inversión
+    },
+    {
+      'valor': 'salud',
+      'nombre': 'Salud',
+      'icono': Icons.health_and_safety_rounded,
+      'color': const Color(0xFF117A65), // Verde salud
+    },
+    {
+      'valor': 'otros',
+      'nombre': 'Otros',
+      'icono': Icons.more_horiz_rounded,
+      'color': const Color(0xFF0E6B5E), // Verde otros
     },
   ];
 
+  // === INICIALIZACIÓN ===
   @override
   void initState() {
     super.initState();
     _initializeAnimations();
-    _cargarMetas();
   }
 
+  /// Inicializa las animaciones de la pantalla
   void _initializeAnimations() {
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
@@ -80,7 +107,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      curve: Curves.easeInOut,
     ));
 
     _slideAnimation = Tween<Offset>(
@@ -88,709 +115,1035 @@ class _PantallaAhorrosState extends State<PantallaAhorros>
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
+      curve: Curves.easeOutCubic,
     ));
 
     _animationController.forward();
   }
 
-  Future<void> _cargarMetas() async {
-    try {
-      // TODO: Implementar carga desde Firebase
-      // Por ahora usamos datos de ejemplo
-      await Future.delayed(const Duration(milliseconds: 800));
-      
-      setState(() {
-        _metas = [
-          {
-            'id': '1',
-            'nombre': 'Vacaciones en Europa',
-            'categoria': 'Vacaciones',
-            'montoObjetivo': 5000.0,
-            'montoActual': 2800.0,
-            'fechaObjetivo': DateTime.now().add(const Duration(days: 180)),
-            'descripcion': 'Viaje de 15 días por Europa visitando París, Roma y Barcelona',
-          },
-          {
-            'id': '2',
-            'nombre': 'Fondo de Emergencia',
-            'categoria': 'Emergencia',
-            'montoObjetivo': 10000.0,
-            'montoActual': 6500.0,
-            'fechaObjetivo': DateTime.now().add(const Duration(days: 365)),
-            'descripcion': 'Fondo para gastos inesperados equivalente a 6 meses de gastos',
-          },
-          {
-            'id': '3',
-            'nombre': 'Auto Nuevo',
-            'categoria': 'Auto',
-            'montoObjetivo': 25000.0,
-            'montoActual': 8200.0,
-            'fechaObjetivo': DateTime.now().add(const Duration(days: 730)),
-            'descripcion': 'Ahorro para la cuota inicial de un auto híbrido',
-          },
-        ];
-        
-        _calcularTotales();
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _calcularTotales() {
-    _totalAhorrado = _metas.fold(0.0, (sum, meta) => sum + (meta['montoActual'] ?? 0.0));
-    _totalMetas = _metas.fold(0.0, (sum, meta) => sum + (meta['montoObjetivo'] ?? 0.0));
-  }
-
   @override
   void dispose() {
     _animationController.dispose();
+    _busquedaController.dispose();
     super.dispose();
   }
 
+  // === INTERFAZ PRINCIPAL ===
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: _isLoading ? _buildLoadingScreen() : _buildMainContent(),
-      floatingActionButton: _buildFloatingActionButton(),
+      backgroundColor: const Color(0xFFF8FAFB),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        toolbarHeight: 120,
+        title: Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(
+                    Icons.savings_rounded,
+                    color: Color(0xFF2ECC71), // Verde principal para ahorros
+                    size: 28,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'AHORROS',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2ECC71),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Gestiona y alcanza tus metas de ahorro',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: Column(
+            children: [
+              _construirResumenFinanciero(),
+              const SizedBox(height: 24),
+              _construirBarraBusqueda(),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Metas de ahorro',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _mostrarDialogoAgregarMeta,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2ECC71), // Verde principal
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.add,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Nueva meta',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: _construirListaMetas(),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildLoadingScreen() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  // === COMPONENTES DE LA INTERFAZ ===
+  
+  /// Construye la barra de búsqueda y filtros
+  Widget _construirBarraBusqueda() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
         children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Cargando tus metas de ahorro...',
-            style: TextStyle(
-              fontSize: 16,
-              color: Color(0xFF6B7280),
-              fontWeight: FontWeight.w500,
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _busquedaController,
+                onChanged: (value) {
+                  setState(() {
+                    _busquedaMeta = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Buscar por nombre de meta...',
+                  hintStyle: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade500,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  prefixIcon: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: Icon(
+                      Icons.search_rounded,
+                      color: Colors.grey.shade400,
+                      size: 24,
+                    ),
+                  ),
+                  suffixIcon: _busquedaController.text.isNotEmpty
+                      ? IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _busquedaController.clear();
+                              _busquedaMeta = '';
+                            });
+                          },
+                          icon: Icon(
+                            Icons.clear,
+                            color: Colors.grey.shade400,
+                            size: 20,
+                          ),
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Color(0xFF2ECC71).withOpacity(0.5),
+                      width: 2,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                ),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1F2937),
+                ),
+              ),
             ),
           ),
+          const SizedBox(width: 8),
+          _construirBotonFiltros(),
         ],
       ),
     );
   }
 
-  Widget _buildMainContent() {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            _buildAppBar(),
-            SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  _buildResumenCard(),
-                  const SizedBox(height: 24),
-                  _buildSeccionMetas(),
-                ]),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppBar() {
-    return SliverAppBar(
-      expandedHeight: 120,
-      floating: false,
-      pinned: true,
-      backgroundColor: const Color(0xFF10B981),
-      elevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        title: const Text(
-          'Mis Ahorros',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+  /// Construye el botón de filtros desplegable
+  Widget _construirBotonFiltros() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
           ),
+        ],
+      ),
+      child: PopupMenuButton<String>(
+        icon: Icon(Icons.filter_alt_rounded, color: Color(0xFF2ECC71)),
+        color: Colors.white,
+        elevation: 8,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF2ECC71), width: 0.7),
         ),
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF10B981),
-                Color(0xFF059669),
+        padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            enabled: false,
+            padding: const EdgeInsets.only(left: 12, right: 12, top: 10, bottom: 6),
+            child: Row(
+              children: [
+                Icon(Icons.tune_rounded, color: Color(0xFF2ECC71), size: 18),
+                const SizedBox(width: 8),
+                Text('Filtros de metas', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF2ECC71))),
               ],
             ),
           ),
-        ),
+          const PopupMenuDivider(height: 1),
+          _crearItemFiltro('todas', 'Todas las metas', Icons.list_rounded),
+          _crearItemFiltro('activas', 'Metas activas', Icons.play_circle_outline_rounded),
+          _crearItemFiltro('completadas', 'Metas completadas', Icons.check_circle_rounded),
+        ],
+        onSelected: (value) {
+          setState(() {
+            _modoFiltro = value;
+            _busquedaController.text = '';
+            _busquedaMeta = '';
+          });
+        },
       ),
-      actions: [
-        IconButton(
-          onPressed: _cargarMetas,
-          icon: const Icon(Icons.refresh, color: Colors.white),
-        ),
-      ],
     );
   }
 
-  Widget _buildResumenCard() {
-    final double progresoPorcentaje = _totalMetas > 0 ? (_totalAhorrado / _totalMetas) * 100 : 0;
-    
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1E293B),
-            Color(0xFF334155),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1E293B).withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
+  /// Crea un item del menú de filtros
+  PopupMenuItem<String> _crearItemFiltro(String valor, String texto, IconData icono) {
+    return PopupMenuItem(
+      value: valor,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          Icon(icono, color: _modoFiltro == valor ? Color(0xFF2ECC71) : Colors.grey, size: 20),
+          const SizedBox(width: 10),
+          Text(texto, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+          if (_modoFiltro == valor) ...[
+            const SizedBox(width: 8),
+            Icon(Icons.check_circle_rounded, color: Color(0xFF2ECC71), size: 18),
+          ]
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.savings,
-                  color: Color(0xFF10B981),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Text(
-                  'Resumen de Ahorros',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  'Total Ahorrado',
-                  '\$${_totalAhorrado.toStringAsFixed(0)}',
-                  Icons.account_balance_wallet,
-                  const Color(0xFF10B981),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatCard(
-                  'Meta Total',
-                  '\$${_totalMetas.toStringAsFixed(0)}',
-                  Icons.flag,
-                  const Color(0xFF3B82F6),
-                ),
+    );
+  }
+
+  /// Construye el resumen financiero de ahorros
+  Widget _construirResumenFinanciero() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore
+          .collection('ahorros')
+          .where('usuarioId', isEqualTo: _auth.currentUser?.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox(height: 120);
+        }
+
+        double totalAhorrado = 0;
+        double totalMetas = 0;
+        int totalMetasCount = snapshot.data!.docs.length;
+        int metasCompletadas = 0;
+
+        for (var doc in snapshot.data!.docs) {
+          final meta = doc.data() as Map<String, dynamic>;
+          final montoActual = (meta['montoActual'] ?? 0.0).toDouble();
+          final montoObjetivo = (meta['montoObjetivo'] ?? 0.0).toDouble();
+          
+          totalAhorrado += montoActual;
+          totalMetas += montoObjetivo;
+          
+          // Verificar si la meta está completada
+          if (montoActual >= montoObjetivo) {
+            metasCompletadas++;
+          }
+        }
+
+        final double progresoPorcentaje = totalMetas > 0 ? (totalAhorrado / totalMetas) * 100 : 0;
+
+        return Container(
+          margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Color(0xFF2ECC71), // Verde principal para ahorros
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2ECC71).withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Progreso General',
+                    'Total Ahorrado',
                     style: TextStyle(
                       color: Colors.white70,
-                      fontSize: 14,
+                      fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  Text(
-                    '${progresoPorcentaje.toStringAsFixed(1)}%',
-                    style: const TextStyle(
-                      color: Color(0xFF10B981),
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '$totalMetasCount meta${totalMetasCount != 1 ? 's' : ''}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: progresoPorcentaje / 100,
-                  backgroundColor: Colors.white10,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
-                  minHeight: 8,
+              Text(
+                '\$${_formatearMoneda(totalAhorrado)}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String titulo, String valor, IconData icono, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            icono,
-            color: color,
-            size: 20,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            titulo,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            valor,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSeccionMetas() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Text(
-            'Mis Metas de Ahorro',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1F2937),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        if (_metas.isEmpty)
-          _buildEstadoVacio()
-        else
-          ..._metas.asMap().entries.map((entry) {
-            final index = entry.key;
-            final meta = entry.value;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _buildMetaCard(meta, index),
-            );
-          }),
-      ],
-    );
-  }
-
-  Widget _buildEstadoVacio() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF10B981).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(50),
-            ),
-            child: const Icon(
-              Icons.savings_outlined,
-              size: 48,
-              color: Color(0xFF10B981),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'No tienes metas de ahorro',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1F2937),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Crea tu primera meta de ahorro y comienza a construir tu futuro financiero',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => _mostrarDialogoNuevaMeta(),
-            icon: const Icon(Icons.add),
-            label: const Text('Crear Meta'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF10B981),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetaCard(Map<String, dynamic> meta, int index) {
-    final categoria = _categorias.firstWhere(
-      (cat) => cat['nombre'] == meta['categoria'],
-      orElse: () => _categorias[0],
-    );
-    
-    final double progreso = (meta['montoActual'] ?? 0.0) / (meta['montoObjetivo'] ?? 1.0);
-    final DateTime fechaObjetivo = meta['fechaObjetivo'] ?? DateTime.now();
-    final int diasRestantes = fechaObjetivo.difference(DateTime.now()).inDays;
-    
-    return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 800 + (index * 200)),
-      tween: Tween(begin: 0.0, end: 1.0),
-      builder: (context, animation, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - animation)),
-          child: Opacity(
-            opacity: animation,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: categoria['gradiente'],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: categoria['color'].withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _mostrarDetallesMeta(meta),
-                  borderRadius: BorderRadius.circular(20),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                categoria['icono'],
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    meta['nombre'] ?? 'Meta sin nombre',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    meta['categoria'] ?? 'Sin categoría',
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.8),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            PopupMenuButton<String>(
-                              icon: const Icon(Icons.more_vert, color: Colors.white),
-                              onSelected: (value) {
-                                switch (value) {
-                                  case 'agregar':
-                                    _mostrarDialogoAgregarMonto(meta);
-                                    break;
-                                  case 'editar':
-                                    _mostrarDialogoEditarMeta(meta);
-                                    break;
-                                  case 'eliminar':
-                                    _confirmarEliminarMeta(meta);
-                                    break;
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'agregar',
-                                  child: ListTile(
-                                    leading: Icon(Icons.add_circle),
-                                    title: Text('Agregar dinero'),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'editar',
-                                  child: ListTile(
-                                    leading: Icon(Icons.edit),
-                                    title: Text('Editar meta'),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'eliminar',
-                                  child: ListTile(
-                                    leading: Icon(Icons.delete, color: Colors.red),
-                                    title: Text('Eliminar', style: TextStyle(color: Colors.red)),
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        Text(
+                          'Meta Total',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '\$${(meta['montoActual'] ?? 0.0).toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'de \$${(meta['montoObjetivo'] ?? 0.0).toStringAsFixed(0)}',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Progreso',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  '${(progreso * 100).toStringAsFixed(1)}%',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: TweenAnimationBuilder<double>(
-                                duration: Duration(milliseconds: 1000 + (index * 200)),
-                                tween: Tween(begin: 0.0, end: progreso),
-                                builder: (context, animatedProgress, child) {
-                                  return LinearProgressIndicator(
-                                    value: animatedProgress,
-                                    backgroundColor: Colors.white.withOpacity(0.3),
-                                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                                    minHeight: 8,
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today,
-                              color: Colors.white.withOpacity(0.8),
-                              size: 16,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              diasRestantes > 0 
-                                ? '$diasRestantes días restantes'
-                                : diasRestantes == 0 
-                                  ? '¡Hoy es el día!'
-                                  : '${-diasRestantes} días de retraso',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.8),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: 4),
+                        Text(
+                          '\$${_formatearMoneda(totalMetas)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Progreso',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${progresoPorcentaje.toStringAsFixed(1)}%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Completadas',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$metasCompletadas/$totalMetasCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton.extended(
-      onPressed: () => _mostrarDialogoNuevaMeta(),
-      backgroundColor: const Color(0xFF10B981),
-      foregroundColor: Colors.white,
-      elevation: 8,
-      icon: const Icon(Icons.add),
-      label: const Text(
-        'Nueva Meta',
-        style: TextStyle(fontWeight: FontWeight.bold),
+  /// Construye la lista de metas de ahorro
+  Widget _construirListaMetas() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore
+          .collection('ahorros')
+          .where('usuarioId', isEqualTo: _auth.currentUser?.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2ECC71)),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return _construirEstadoError();
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return _construirEstadoVacio();
+        }
+
+        // Filtrado por búsqueda y estado
+        var docs = _filtrarMetas(snapshot.data!.docs);
+
+        if (docs.isEmpty) {
+          return _construirEstadoSinResultados();
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: docs.length,
+          itemBuilder: (context, index) {
+            final doc = docs[index];
+            final meta = doc.data() as Map<String, dynamic>;
+            return _construirTarjetaMeta(doc.id, meta, index);
+          },
+        );
+      },
+    );
+  }
+
+  /// Filtra las metas según los criterios de búsqueda y filtros
+  List<QueryDocumentSnapshot> _filtrarMetas(List<QueryDocumentSnapshot> docs) {
+    var filteredDocs = docs.where((doc) {
+      final meta = doc.data() as Map<String, dynamic>;
+      bool match = true;
+      
+      // Filtro por búsqueda
+      if (_busquedaMeta.isNotEmpty) {
+        final nombre = (meta['nombre'] ?? '').toString().toLowerCase();
+        final categoria = (meta['categoria'] ?? '').toString().toLowerCase();
+        match = nombre.contains(_busquedaMeta.toLowerCase()) ||
+                categoria.contains(_busquedaMeta.toLowerCase());
+      }
+      
+      // Filtro por estado
+      if (_modoFiltro == 'activas') {
+        final montoActual = (meta['montoActual'] ?? 0.0).toDouble();
+        final montoObjetivo = (meta['montoObjetivo'] ?? 0.0).toDouble();
+        match = match && (montoActual < montoObjetivo);
+      } else if (_modoFiltro == 'completadas') {
+        final montoActual = (meta['montoActual'] ?? 0.0).toDouble();
+        final montoObjetivo = (meta['montoObjetivo'] ?? 0.0).toDouble();
+        match = match && (montoActual >= montoObjetivo);
+      }
+      
+      return match;
+    }).toList();
+
+    // Ordenamiento por fecha de creación (más recientes primero)
+    filteredDocs.sort((a, b) {
+      final fechaA = (a.data() as Map<String, dynamic>)['fechaCreacion'] as Timestamp?;
+      final fechaB = (b.data() as Map<String, dynamic>)['fechaCreacion'] as Timestamp?;
+      if (fechaA == null && fechaB == null) return 0;
+      if (fechaA == null) return 1;
+      if (fechaB == null) return -1;
+      return fechaB.compareTo(fechaA);
+    });
+
+    return filteredDocs;
+  }
+
+  // === MÉTODOS AUXILIARES ===
+  
+  /// Construye el estado vacío cuando no hay metas
+  Widget _construirEstadoVacio() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: const Color(0xFF2ECC71).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(60),
+            ),
+            child: const Icon(
+              Icons.savings_outlined,
+              size: 60,
+              color: Color(0xFF2ECC71),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'No tienes metas de ahorro',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1D29),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Crea tu primera meta de ahorro para\ncomenzar a construir tu futuro financiero',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+              height: 1.5,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  void _mostrarDialogoNuevaMeta() {
-    // TODO: Implementar diálogo para crear nueva meta
+  /// Construye el estado de error
+  Widget _construirEstadoError() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Error al cargar las metas',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Intenta nuevamente más tarde',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Construye el estado cuando no hay resultados de búsqueda
+  Widget _construirEstadoSinResultados() {
+    return Center(
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Icon(
+              Icons.search_off_rounded,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'No se encontraron metas',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Intenta con otro término de búsqueda',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Construye la tarjeta individual de meta de ahorro
+  Widget _construirTarjetaMeta(String id, Map<String, dynamic> meta, int index) {
+    final categoria = meta['categoria'] ?? 'otros';
+    final categoriaInfo = _categorias.firstWhere(
+      (cat) => cat['valor'] == categoria,
+      orElse: () => _categorias.last,
+    );
+    
+    final montoActual = (meta['montoActual'] ?? 0.0).toDouble();
+    final montoObjetivo = (meta['montoObjetivo'] ?? 0.0).toDouble();
+    final progreso = montoObjetivo > 0 ? (montoActual / montoObjetivo) : 0.0;
+    final fechaObjetivo = (meta['fechaObjetivo'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final diasRestantes = fechaObjetivo.difference(DateTime.now()).inDays;
+    final esCompletada = montoActual >= montoObjetivo;
+
+    return Container(
+      margin: EdgeInsets.only(
+        bottom: 16,
+        top: index == 0 ? 8 : 0,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _mostrarDetallesMeta(id, meta),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: esCompletada
+                  ? Border.all(color: Color(0xFF2ECC71), width: 2)
+                  : null,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _construirCabeceraTarjeta(categoriaInfo, meta, esCompletada, id),
+                const SizedBox(height: 16),
+                _construirProgresoDinero(montoActual, montoObjetivo, diasRestantes),
+                const SizedBox(height: 16),
+                _construirBarraProgreso(progreso, categoriaInfo['color'], esCompletada),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Construye la cabecera de la tarjeta de meta
+  Widget _construirCabeceraTarjeta(Map<String, dynamic> categoriaInfo, Map<String, dynamic> meta, bool esCompletada, String id) {
+    return Row(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: categoriaInfo['color'].withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            categoriaInfo['icono'],
+            color: categoriaInfo['color'],
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                meta['nombre'] ?? 'Meta sin nombre',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1D29),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                categoriaInfo['nombre'],
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+        _construirAccionesMeta(esCompletada, id, meta),
+      ],
+    );
+  }
+
+  /// Construye las acciones disponibles para cada meta
+  Widget _construirAccionesMeta(bool esCompletada, String id, Map<String, dynamic> meta) {
+    if (esCompletada) {
+      return Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 8,
+          vertical: 4,
+        ),
+        decoration: BoxDecoration(
+          color: Color(0xFF2ECC71),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          'COMPLETADA',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    return PopupMenuButton<String>(
+      icon: Icon(Icons.more_vert, color: Colors.grey[400]),
+      onSelected: (value) => _manejarAccionMeta(value, id, meta),
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'agregar',
+          child: ListTile(
+            leading: Icon(Icons.add_circle),
+            title: Text('Agregar dinero'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'editar',
+          child: ListTile(
+            leading: Icon(Icons.edit),
+            title: Text('Editar meta'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'eliminar',
+          child: ListTile(
+            leading: Icon(Icons.delete, color: Colors.red),
+            title: Text('Eliminar', style: TextStyle(color: Colors.red)),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Construye la información del progreso monetario
+  Widget _construirProgresoDinero(double montoActual, double montoObjetivo, int diasRestantes) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Progreso actual',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '\$${_formatearMoneda(montoActual)} de \$${_formatearMoneda(montoObjetivo)}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1D29),
+              ),
+            ),
+          ],
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              diasRestantes >= 0 ? 'Días restantes' : 'Días de retraso',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${diasRestantes.abs()}',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: diasRestantes >= 0 ? Color(0xFF2ECC71) : Colors.red,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Construye la barra de progreso visual
+  Widget _construirBarraProgreso(double progreso, Color color, bool esCompletada) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Progreso',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+            Text(
+              '${(progreso * 100).toStringAsFixed(1)}%',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2ECC71),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progreso,
+            backgroundColor: Colors.grey[200],
+            valueColor: AlwaysStoppedAnimation<Color>(
+              esCompletada ? Color(0xFF2ECC71) : color,
+            ),
+            minHeight: 6,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Formatea las cantidades monetarias para mostrar
+  String _formatearMoneda(double cantidad) {
+    return FormatoNumeros.formatearParaMostrar(cantidad);
+  }
+
+  // === MÉTODOS DE ACCIÓN ===
+
+  /// Maneja las acciones del menú contextual de cada meta
+  void _manejarAccionMeta(String accion, String id, Map<String, dynamic> meta) {
+    switch (accion) {
+      case 'agregar':
+        _mostrarDialogoAgregarMonto(id, meta);
+        break;
+      case 'editar':
+        _mostrarDialogoEditarMeta(id, meta);
+        break;
+      case 'eliminar':
+        _confirmarEliminarMeta(id, meta['nombre'] ?? 'esta meta');
+        break;
+    }
+  }
+
+  /// Muestra el diálogo para agregar nueva meta
+  void _mostrarDialogoAgregarMeta() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Próximamente: Crear nueva meta'),
-        backgroundColor: Color(0xFF10B981),
+        content: Text('Funcionalidad de nueva meta en desarrollo'),
+        backgroundColor: Color(0xFF2ECC71),
       ),
     );
   }
 
-  void _mostrarDetallesMeta(Map<String, dynamic> meta) {
-    // TODO: Implementar pantalla de detalles de meta
+  /// Muestra los detalles de una meta
+  void _mostrarDetallesMeta(String metaId, Map<String, dynamic> meta) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Detalles de: ${meta['nombre']}'),
-        backgroundColor: const Color(0xFF10B981),
+        content: Text('Detalles de: ${meta['nombre'] ?? 'Meta sin nombre'}'),
+        backgroundColor: Color(0xFF2ECC71),
       ),
     );
   }
 
-  void _mostrarDialogoAgregarMonto(Map<String, dynamic> meta) {
-    // TODO: Implementar diálogo para agregar monto
+  /// Muestra el diálogo para editar meta
+  void _mostrarDialogoEditarMeta(String metaId, Map<String, dynamic> meta) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Agregar dinero a: ${meta['nombre']}'),
-        backgroundColor: const Color(0xFF10B981),
+        content: Text('Editar: ${meta['nombre'] ?? 'Meta sin nombre'}'),
+        backgroundColor: Color(0xFF2ECC71),
       ),
     );
   }
 
-  void _mostrarDialogoEditarMeta(Map<String, dynamic> meta) {
-    // TODO: Implementar diálogo para editar meta
+  /// Muestra el diálogo para agregar monto a una meta
+  void _mostrarDialogoAgregarMonto(String metaId, Map<String, dynamic> meta) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Editar: ${meta['nombre']}'),
-        backgroundColor: const Color(0xFF10B981),
+        content: Text('Agregar dinero a: ${meta['nombre'] ?? 'Meta sin nombre'}'),
+        backgroundColor: Color(0xFF2ECC71),
       ),
     );
   }
 
-  void _confirmarEliminarMeta(Map<String, dynamic> meta) {
-    // TODO: Implementar confirmación de eliminación
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Eliminar: ${meta['nombre']}'),
-        backgroundColor: Colors.red,
+  /// Confirma la eliminación de una meta
+  Future<void> _confirmarEliminarMeta(String id, String nombre) async {
+    final bool? confirmacion = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text('Eliminar meta'),
+        content: Text('¿Estás seguro de que deseas eliminar la meta "$nombre"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Eliminar'),
+          ),
+        ],
       ),
     );
+
+    if (confirmacion == true) {
+      try {
+        await _firestore.collection('ahorros').doc(id).delete();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Meta "$nombre" eliminada correctamente'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error al eliminar la meta'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
   }
 }

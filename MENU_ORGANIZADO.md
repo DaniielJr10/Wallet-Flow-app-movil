@@ -19,13 +19,13 @@ La pantalla principal ahora cuenta con un **sistema de menús súper organizado*
    - **💰 Nuevo Ingreso** → Navega a Ingresos
    - **💸 Añadir Gasto** → Navega a Gastos  
    - **🏦 Nuevo Ahorro** → Navega a Ahorros
-   - **📈 Ver Inversiones** → Navega a Inversiones
+
 
 3. **🔧 Servicios Financieros** (Grid 3x2)
    - **💳 Deudas** - Gestionar deudas pendientes
-   - **📈 Inversiones** - Portfolio de inversiones
+
    - **🏦 Cuentas** - Cuentas bancarias
-   - **🎯 Objetivos** - Metas financieras
+
    - **🛠️ Herramientas** - Calculadoras
    - **⚙️ Configuración** - Ajustes de la app
 
@@ -38,7 +38,7 @@ La pantalla principal ahora cuenta con un **sistema de menús súper organizado*
    - **💰 Ingresos del Mes** - $4,230.00
    - **🏦 Ahorros Totales** - $5,240.00  
    - **💸 Gastos del Mes** - $1,892.35
-   - **📈 Inversiones** - $8,750.22
+
    - **💳 Deudas Pendientes** - $2,340.80
 
 ---
@@ -71,11 +71,11 @@ La pantalla principal ahora cuenta con un **sistema de menús súper organizado*
 
 #### 💼 **Gestión Financiera**
 - **💳 Deudas** - Con badge "2" (2 pendientes)
-- **📈 Inversiones** - Portfolio completo
+
 - **🏦 Cuentas Bancarias** - Administración
 
 #### 🛠️ **Herramientas**
-- **🎯 Objetivos Financieros** - Metas a largo plazo
+
 - **🧮 Calculadoras** - Herramientas financieras
 - **📤 Exportar Datos** - Backup de información
 

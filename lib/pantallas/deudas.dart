@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../utilidades/formato_numeros.dart';
 
 /// Pantalla de gestión de deudas en Wallet Flow
 /// 
@@ -393,10 +394,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
 
   /// Formatea números como moneda colombiana
   String _formatearMoneda(double valor) {
-    return '\$${valor.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]},',
-    )}';
+    return '\$${FormatoNumeros.formatearParaMostrar(valor)}';
   }
 
   /// Formatea fechas en formato legible
@@ -1214,7 +1212,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                 helperText: 'Mínimo: ${_formatearMoneda(deuda['pagoMinimo'])}',
               ),
               inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
+                FormateadorNumeros(),
               ],
             ),
           ],
@@ -1226,7 +1224,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
           ),
           TextButton(
             onPressed: () {
-              final monto = double.tryParse(controller.text) ?? 0.0;
+              final monto = FormatoNumeros.convertirANumero(controller.text) ?? 0.0;
               if (monto > 0) {
                 Navigator.pop(context);
                 _registrarPago(deuda['id'], monto);

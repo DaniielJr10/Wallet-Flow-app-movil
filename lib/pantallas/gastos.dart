@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../firebase/servicios/cuentas_servicio.dart';
+import '../firebase/servicios/gastos_servicio.dart';
+import '../utilidades/formato_numeros.dart';
 
 class PantallaGastos extends StatefulWidget {
   const PantallaGastos({super.key});
@@ -9,13 +13,15 @@ class PantallaGastos extends StatefulWidget {
 }
 
 class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStateMixin {
+  final CuentasServicio _cuentasServicio = CuentasServicio();
+  final GastosServicio _gastosServicio = GastosServicio();
   // Modo de búsqueda: 'categoría' o 'mes'
   String _modoBusqueda = 'categoría';
 
   final _formKey = GlobalKey<FormState>();
   final _montoController = TextEditingController();
   final _descripcionController = TextEditingController();
-  final _notaController = TextEditingController();
+  // ...eliminado controlador de nota...
   final _busquedaController = TextEditingController();
 
   late AnimationController _animationController;
@@ -30,7 +36,6 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   String _textoBusqueda = '';
 
   List<Map<String, dynamic>> _gastos = [];
-  List<Map<String, dynamic>> _gastosFiltrados = [];
 
   final List<String> _categorias = [
     'alimentación',
@@ -47,21 +52,11 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   final List<String> _metodosPago = [
     'efectivo',
     'transferencia',
-    'cheque'
   ];
 
-  final List<String> _cuentas = [
-    'ninguna',
-    'cuenta corriente',
-    'cuenta ahorros'
-  ];
+  // Eliminado _cuentas, ahora se obtiene de Firestore
 
-  final List<String> _frecuencias = [
-    'diario',
-    'semanal',
-    'mensual',
-    'anual'
-  ];
+  // ...eliminado lista de frecuencias...
 
   /// Inicializa el estado del widget y configura las animaciones
   @override
@@ -81,7 +76,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     ));
 
     _animationController.forward();
-    _cargarGastosDePrueba();
+    _inicializarGastos();
   }
 
   /// Libera los recursos utilizados por los controladores y animaciones
@@ -90,67 +85,41 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     _animationController.dispose();
     _montoController.dispose();
     _descripcionController.dispose();
-    _notaController.dispose();
+    // ...eliminado dispose de notaController...
     _busquedaController.dispose();
     super.dispose();
   }
 
-  /// Carga datos de prueba para mostrar ejemplos de gastos
-  void _cargarGastosDePrueba() {
+  /// Inicializa la lista de gastos vacía para usar datos reales de Firebase
+  void _inicializarGastos() {
     setState(() {
-      _gastos = [
-        {
-          'id': '1',
-          'monto': 45.20,
-          'fecha': DateTime.now().subtract(const Duration(days: 1)),
-          'descripcion': 'Supermercado',
-          'categoria': 'alimentación',
-          'metodoPago': 'efectivo',
-          'cuentaAsociada': 'cuenta corriente',
-          'nota': 'Compras semanales',
-          'esRecurrente': false,
-        },
-        {
-          'id': '2',
-          'monto': 15.50,
-          'fecha': DateTime.now().subtract(const Duration(days: 3)),
-          'descripcion': 'Transporte público',
-          'categoria': 'transporte',
-          'metodoPago': 'efectivo',
-          'cuentaAsociada': 'ninguna',
-          'nota': '',
-          'esRecurrente': true,
-        },
-      ];
-      _gastosFiltrados = List.from(_gastos);
+      _gastos = [];
     });
+  }
+
+  /// Compara dos listas de gastos para evitar actualizaciones innecesarias
+  bool _sonListasIguales(List<Map<String, dynamic>> lista1, List<Map<String, dynamic>> lista2) {
+    if (lista1.length != lista2.length) return false;
+    
+    for (int i = 0; i < lista1.length; i++) {
+      final gasto1 = lista1[i];
+      final gasto2 = lista2[i];
+      
+      if (gasto1['id'] != gasto2['id'] || 
+          gasto1['monto'] != gasto2['monto'] ||
+          gasto1['descripcion'] != gasto2['descripcion']) {
+        return false;
+      }
+    }
+    
+    return true;
   }
 
   /// Filtra los gastos según el modo de búsqueda (categoría o mes)
   void _filtrarGastos(String textoBusqueda) {
     setState(() {
       _textoBusqueda = textoBusqueda;
-      if (textoBusqueda.isEmpty) {
-        _gastosFiltrados = List.from(_gastos);
-      } else {
-        _gastosFiltrados = _gastos.where((gasto) {
-          if (_modoBusqueda == 'categoría') {
-            return gasto['categoria']
-                .toString()
-                .toLowerCase()
-                .contains(textoBusqueda.toLowerCase());
-          } else if (_modoBusqueda == 'mes') {
-            final meses = [
-              'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-              'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-            ];
-            final fecha = gasto['fecha'] as DateTime;
-            final mesGasto = meses[fecha.month - 1];
-            return mesGasto.contains(textoBusqueda.toLowerCase());
-          }
-          return false;
-        }).toList();
-      }
+      // El filtrado ahora se hace en el StreamBuilder
     });
   }
 
@@ -247,13 +216,9 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                     const SizedBox(height: 20),
                     _buildSelectorCuentaAsociada(),
                     const SizedBox(height: 20),
-                    _buildCampoNota(),
+                    // ...eliminado campo de nota opcional...
                     const SizedBox(height: 20),
-                    _buildSwitchRecurrente(),
-                    if (_esRecurrente) ...[
-                      const SizedBox(height: 20),
-                      _buildSelectorFrecuencia(),
-                    ],
+                    // ...eliminado gasto recurrente...
                     const SizedBox(height: 32),
                     _buildBotonesAccion(),
                   ],
@@ -282,15 +247,15 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
         const SizedBox(height: 8),
         TextFormField(
           controller: _montoController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: false),
           inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+            FormateadorNumeros(),
           ],
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Por favor ingresa el monto';
             }
-            final monto = double.tryParse(value);
+            final monto = FormatoNumeros.convertirANumero(value);
             if (monto == null || monto <= 0) {
               return 'Ingresa un monto válido mayor a 0';
             }
@@ -417,46 +382,45 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _categoriaSeleccionada,
-              isExpanded: true,
-              items: _categorias.map((categoria) {
-                return DropdownMenuItem(
-                  value: categoria,
-                  child: Row(
-                    children: [
-                      Icon(
-                        _getIconoCategoria(categoria),
-                        color: Colors.red.shade600,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        categoria.substring(0, 1).toUpperCase() + categoria.substring(1),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _categoriaSeleccionada = value!;
-                });
-              },
+        DropdownButtonFormField<String>(
+          value: _categoriaSeleccionada,
+          isExpanded: true,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
             ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
           ),
+          items: _categorias.map((categoria) {
+            return DropdownMenuItem(
+              value: categoria,
+              child: Row(
+                children: [
+                  Icon(
+                    _getIconoCategoria(categoria),
+                    color: Colors.red.shade600,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    categoria.substring(0, 1).toUpperCase() + categoria.substring(1),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _categoriaSeleccionada = value!;
+            });
+          },
         ),
       ],
     );
@@ -476,36 +440,37 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _metodoPagoSeleccionado,
-              isExpanded: true,
-              items: _metodosPago.map((metodo) {
-                return DropdownMenuItem(
-                  value: metodo,
-                  child: Text(
-                    metodo.substring(0, 1).toUpperCase() + metodo.substring(1),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _metodoPagoSeleccionado = value!;
-                });
-              },
+        DropdownButtonFormField<String>(
+          value: _metodoPagoSeleccionado,
+          isExpanded: true,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
             ),
+            filled: true,
+            fillColor: Colors.grey.shade50,
           ),
+          items: _metodosPago.map((metodo) {
+            return DropdownMenuItem(
+              value: metodo,
+              child: Text(
+                metodo.substring(0, 1).toUpperCase() + metodo.substring(1),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            if (newValue != null && newValue != _metodoPagoSeleccionado) {
+              setState(() {
+                _metodoPagoSeleccionado = newValue;
+              });
+            }
+          },
         ),
       ],
     );
@@ -525,164 +490,105 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
+        StreamBuilder<QuerySnapshot>(
+          stream: _cuentasServicio.obtenerCuentas(),
+          builder: (context, snapshot) {
+            List<DropdownMenuItem<String>> items = [
+              const DropdownMenuItem(
+                value: 'ninguna',
+                child: Text('Ninguna', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              ),
+            ];
+            
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              items.add(const DropdownMenuItem(
+                value: 'cargando',
+                child: Text('Cargando cuentas...', style: TextStyle(fontSize: 16, color: Colors.grey)),
+              ));
+            } else if (snapshot.hasError) {
+              print('Error al cargar cuentas: ${snapshot.error}');
+              items.add(const DropdownMenuItem(
+                value: 'error',
+                child: Text('Error al cargar cuentas', style: TextStyle(fontSize: 16, color: Colors.red)),
+              ));
+            } else if (snapshot.hasData && snapshot.data != null && snapshot.data!.docs.isNotEmpty) {
+              for (var doc in snapshot.data!.docs) {
+                try {
+                  final cuenta = doc.data() as Map<String, dynamic>?;
+                  if (cuenta != null) {
+                    // Verificar que la cuenta esté activa
+                    final activa = cuenta['activa'] as bool? ?? true;
+                    if (!activa) continue;
+                    
+                    final banco = cuenta['banco']?.toString() ?? 'Banco';
+                    final numero = cuenta['numeroCuenta']?.toString() ?? 'Sin número';
+                    final alias = cuenta['alias']?.toString();
+                    final cuentaId = doc.id;
+                    
+                    String displayName;
+                    if (alias != null && alias.isNotEmpty) {
+                      displayName = '$alias ($banco)';
+                    } else {
+                      displayName = '$banco - $numero';
+                    }
+                    
+                    items.add(DropdownMenuItem(
+                      value: cuentaId,
+                      child: Text(
+                        displayName,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ));
+                  }
+                } catch (e) {
+                  print('Error procesando cuenta: $e');
+                  continue;
+                }
+              }
+            }
+            
+            // Verificar que el valor actual sea válido
+            final validValues = items.map((item) => item.value).toSet();
+            if (!validValues.contains(_cuentaAsociada)) {
+              _cuentaAsociada = 'ninguna';
+            }
+            
+            return DropdownButtonFormField<String>(
               value: _cuentaAsociada,
               isExpanded: true,
-              items: _cuentas.map((cuenta) {
-                return DropdownMenuItem(
-                  value: cuenta,
-                  child: Text(
-                    cuenta.substring(0, 1).toUpperCase() + cuenta.substring(1),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _cuentaAsociada = value!;
-                });
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+              ),
+              items: items,
+              onChanged: (String? newValue) {
+                if (newValue != null && newValue != _cuentaAsociada && newValue != 'cargando' && newValue != 'error') {
+                  setState(() {
+                    _cuentaAsociada = newValue;
+                  });
+                }
               },
-            ),
-          ),
+            );
+          },
         ),
       ],
     );
   }
 
   /// Construye el campo opcional para notas adicionales
-  Widget _buildCampoNota() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Nota (opcional)',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _notaController,
-          maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Información adicional sobre el gasto...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
-            ),
-            filled: true,
-            fillColor: Colors.grey.shade50,
-          ),
-        ),
-      ],
-    );
-  }
+  // ...eliminado campo de nota opcional...
 
   /// Construye el switch para marcar el gasto como recurrente
-  Widget _buildSwitchRecurrente() {
-    return Row(
-      children: [
-        Switch(
-          value: _esRecurrente,
-          onChanged: (value) {
-            setState(() {
-              _esRecurrente = value;
-            });
-          },
-          activeColor: Colors.red.shade600,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Gasto Recurrente',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              Text(
-                'Marcar si este gasto se repite regularmente',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  // ...eliminado switch de gasto recurrente...
 
   /// Construye el selector de frecuencia para gastos recurrentes
-  Widget _buildSelectorFrecuencia() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Frecuencia',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.grey.shade50,
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _frecuenciaRecurrente,
-              isExpanded: true,
-              items: _frecuencias.map((frecuencia) {
-                return DropdownMenuItem(
-                  value: frecuencia,
-                  child: Text(
-                    frecuencia.substring(0, 1).toUpperCase() + frecuencia.substring(1),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _frecuenciaRecurrente = value!;
-                });
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  // ...eliminado selector de frecuencia de gasto recurrente...
 
   /// Construye los botones de acción del formulario (Cancelar y Guardar)
   Widget _buildBotonesAccion() {
@@ -894,25 +800,188 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     );
   }
 
-  /// Construye la lista de gastos registrados o muestra estado vacío
+  /// Construye la lista de gastos registrados usando StreamBuilder con Firebase
   Widget _buildListaGastos() {
-    final gastosAMostrar = _textoBusqueda.isEmpty ? _gastos : _gastosFiltrados;
-    
-    if (gastosAMostrar.isEmpty && _textoBusqueda.isNotEmpty) {
-      return _buildEstadoSinResultados();
-    }
-    
-    if (_gastos.isEmpty) {
-      return _buildEstadoVacio();
-    }
-
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: gastosAMostrar.length,
-      itemBuilder: (context, index) {
-        final gasto = gastosAMostrar[index];
-        return _buildTarjetaGastoSinCategoria(gasto, _gastos.indexOf(gasto));
+    return StreamBuilder<QuerySnapshot>(
+      stream: _gastosServicio.obtenerGastos(),
+      builder: (context, snapshot) {
+        // Mostrar indicador de carga
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.0),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+              ),
+            ),
+          );
+        }
+        
+        // Manejar errores con información detallada
+        if (snapshot.hasError) {
+          print('Error en StreamBuilder: ${snapshot.error}');
+          return Center(
+            child: Column(
+              children: [
+                const SizedBox(height: 40),
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Icon(
+                    Icons.error_outline,
+                    color: Colors.red.shade400,
+                    size: 64,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error al cargar gastos',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Error: ${snapshot.error}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.red.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {});
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                  ),
+                  child: const Text('Reintentar', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          );
+        }
+        
+        // Verificar si no hay datos
+        if (!snapshot.hasData || snapshot.data == null) {
+          return _buildEstadoVacio();
+        }
+        
+        // Convertir documentos de Firebase a lista local
+        final gastosFirebase = <Map<String, dynamic>>[];
+        try {
+          for (var doc in snapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>?;
+            if (data != null) {
+              data['id'] = doc.id;
+              
+              // Convertir Timestamp a DateTime si es necesario
+              if (data['fecha'] is Timestamp) {
+                data['fecha'] = (data['fecha'] as Timestamp).toDate();
+              }
+              
+              // Asegurar que los campos requeridos existan
+              data['descripcion'] = data['descripcion'] ?? 'Sin descripción';
+              data['monto'] = (data['monto'] as num?)?.toDouble() ?? 0.0;
+              data['categoria'] = data['categoria'] ?? 'otro';
+              data['metodoPago'] = data['metodoPago'] ?? 'efectivo';
+              data['fecha'] = data['fecha'] ?? DateTime.now();
+              
+              gastosFirebase.add(data);
+            }
+          }
+        } catch (e) {
+          print('Error procesando documentos: $e');
+          return Center(
+            child: Column(
+              children: [
+                const SizedBox(height: 40),
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Icon(
+                    Icons.warning_rounded,
+                    color: Colors.orange.shade400,
+                    size: 64,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error procesando datos',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Error: $e',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.orange.shade600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        }
+        
+        // Actualizar lista local solo si es diferente
+        if (_gastos.length != gastosFirebase.length || 
+            !_sonListasIguales(_gastos, gastosFirebase)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _gastos = gastosFirebase;
+              });
+            }
+          });
+        }
+        
+        // Aplicar filtros de búsqueda
+        List<Map<String, dynamic>> gastosAMostrar = gastosFirebase;
+        if (_textoBusqueda.isNotEmpty) {
+          gastosAMostrar = gastosFirebase.where((gasto) {
+            final descripcion = (gasto['descripcion'] ?? '').toString().toLowerCase();
+            final categoria = (gasto['categoria'] ?? '').toString().toLowerCase();
+            final busqueda = _textoBusqueda.toLowerCase();
+            
+            return descripcion.contains(busqueda) || categoria.contains(busqueda);
+          }).toList();
+        }
+        
+        // Mostrar estado sin resultados de búsqueda
+        if (gastosAMostrar.isEmpty && _textoBusqueda.isNotEmpty) {
+          return _buildEstadoSinResultados();
+        }
+        
+        // Mostrar estado vacío cuando no hay gastos
+        if (gastosFirebase.isEmpty) {
+          return _buildEstadoVacio();
+        }
+        
+        // Mostrar lista de gastos
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: gastosAMostrar.length,
+          itemBuilder: (context, index) {
+            final gasto = gastosAMostrar[index];
+            return _buildTarjetaGastoSinCategoria(gasto, index);
+          },
+        );
       },
     );
   }
@@ -958,112 +1027,496 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     );
   }
 
-  /// Construye una tarjeta individual para mostrar un gasto
-  Widget _buildTarjetaGastoSinCategoria(Map<String, dynamic> gasto, int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+  /// Muestra un modal con los detalles completos del gasto
+  void _mostrarDetalleGasto(Map<String, dynamic> gasto) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                gasto['descripcion'],
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F2937),
-                ),
-              ),
-            ),
-            if (gasto['esRecurrente'])
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
+      isScrollControlled: true,
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
                 child: Text(
-                  'Recurrente',
+                  'Detalles del gasto',
                   style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.orange.shade700,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade600,
                   ),
                 ),
               ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Icon(_getIconoCategoria(gasto['categoria']), color: Colors.red.shade600, size: 32),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      gasto['descripcion'] ?? '',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _detalleItem('Monto', '-${FormatoNumeros.formatearParaMostrar(gasto['monto'])}', color: Colors.red.shade600, fontSize: 20),
+              _detalleItem('Fecha', gasto['fecha'] != null ? '${gasto['fecha'].day}/${gasto['fecha'].month}/${gasto['fecha'].year}' : ''),
+              _detalleItem('Categoría', gasto['categoria'] ?? ''),
+              _detalleItem('Método de pago', gasto['metodoPago'] ?? ''),
+              _detalleItem('Cuenta asociada', gasto['cuentaAsociada'] ?? 'Ninguna'),
+              if (gasto['nota'] != null && gasto['nota'].isNotEmpty)
+                _detalleItem('Nota', gasto['nota'], italic: true),
+              if (gasto['esRecurrente'] == true)
+                _detalleItem('Recurrente', gasto['frecuencia'] != null ? 'Frecuencia: ${gasto['frecuencia']}' : 'Sí', color: Colors.orange),
+              const SizedBox(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _mostrarFormularioEdicionGasto(gasto);
+                      },
+                      icon: const Icon(Icons.edit_rounded),
+                      label: const Text('Editar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.red.shade600,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _eliminarGasto(gasto['id']);
+                      },
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      label: const Text('Eliminar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade600,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Muestra el formulario de edición de gasto con los datos cargados
+  void _mostrarFormularioEdicionGasto(Map<String, dynamic> gasto) {
+    // Cargar los datos en los controladores y variables
+    _montoController.text = gasto['monto'].toString();
+    _descripcionController.text = gasto['descripcion'] ?? '';
+    _fechaSeleccionada = gasto['fecha'] ?? DateTime.now();
+    _categoriaSeleccionada = gasto['categoria'] ?? 'alimentación';
+    _metodoPagoSeleccionado = gasto['metodoPago'] ?? 'efectivo';
+    _cuentaAsociada = gasto['cuentaAsociada'] ?? 'ninguna';
+    _esRecurrente = gasto['esRecurrente'] ?? false;
+    _frecuenciaRecurrente = gasto['frecuencia'] ?? 'mensual';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildFormularioModalEdicion(gasto['id']),
+    );
+  }
+
+  /// Construye el formulario de edición de gasto
+  Widget _buildFormularioModalEdicion(String gastoId) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.red.shade600,
+                  Colors.red.shade700,
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.edit_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Editar Gasto',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCampoMonto(),
+                    const SizedBox(height: 20),
+                    _buildCampoDescripcion(),
+                    const SizedBox(height: 20),
+                    _buildSelectorFecha(),
+                    const SizedBox(height: 20),
+                    _buildSelectorCategoria(),
+                    const SizedBox(height: 20),
+                    _buildSelectorMetodoPago(),
+                    const SizedBox(height: 20),
+                    _buildSelectorCuentaAsociada(),
+                    const SizedBox(height: 20),
+                    // ...eliminado campo de nota opcional...
+                    const SizedBox(height: 20),
+                    // ...eliminado gasto recurrente...
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _limpiarFormulario();
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(color: Colors.grey.shade300),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => _actualizarGasto(gastoId),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade600,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Text(
+                              'Guardar Cambios',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Actualiza el gasto editado
+  Future<void> _actualizarGasto(String gastoId) async {
+    if (_formKey.currentState!.validate()) {
+      final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
+
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+          ),
+        ),
+      );
+
+      try {
+        final error = await _gastosServicio.actualizarGasto(
+          gastoId: gastoId,
+          descripcion: _descripcionController.text.trim(),
+          monto: monto,
+          fecha: _fechaSeleccionada ?? DateTime.now(),
+          categoria: _categoriaSeleccionada,
+          metodoPago: _metodoPagoSeleccionado,
+          cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+          esRecurrente: _esRecurrente,
+          frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
+          notas: '', // Puedes agregar campo de notas si lo necesitas
+        );
+
+        if (mounted) {
+          Navigator.pop(context); // Cerrar indicador de carga
+          Navigator.pop(context); // Cerrar formulario de edición
+
+          if (error != null) {
+            _mostrarError(error);
+          } else {
+            _limpiarFormulario();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Gasto actualizado correctamente'),
+                backgroundColor: Color(0xFF10B981),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context); // Cerrar indicador de carga
+          _mostrarError('Error inesperado: ${e.toString()}');
+        }
+      }
+    }
+  }
+
+  /// Widget para mostrar un ítem de detalle
+  Widget _detalleItem(String titulo, String valor, {Color? color, bool italic = false, double fontSize = 16}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$titulo:',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
+          Text(
+            valor,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w500,
+              color: color,
+              fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Construye una tarjeta individual para mostrar un gasto
+  Widget _buildTarjetaGastoSinCategoria(Map<String, dynamic> gasto, int index) {
+    return GestureDetector(
+      onTap: () => _mostrarDetalleGasto(gasto),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
-        subtitle: Column(
+        padding: const EdgeInsets.all(16),
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
-            Text(
-              '${gasto['metodoPago'].toString().substring(0, 1).toUpperCase()}${gasto['metodoPago'].toString().substring(1)}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          gasto['descripcion'],
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1F2937),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (gasto['esRecurrente'])
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'Recurrente',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.orange.shade700,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${gasto['metodoPago'].toString().substring(0, 1).toUpperCase()}${gasto['metodoPago'].toString().substring(1)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${gasto['fecha'].day}/${gasto['fecha'].month}/${gasto['fecha'].year}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (gasto['nota'] != null && gasto['nota'].isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      gasto['nota'],
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              '${gasto['fecha'].day}/${gasto['fecha'].month}/${gasto['fecha'].year}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade500,
-              ),
-            ),
-            if (gasto['nota'] != null && gasto['nota'].isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                gasto['nota'],
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade500,
-                  fontStyle: FontStyle.italic,
+            const SizedBox(width: 12),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                SizedBox(
+                  width: 80,
+                  child: Text(
+                    '-${FormatoNumeros.formatearParaMostrar(gasto['monto'])}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.red.shade600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                  ),
                 ),
-              ),
-            ],
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              '-${gasto['monto'].toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Colors.red.shade600,
-              ),
-            ),
-            IconButton(
-              onPressed: () => _eliminarGasto(index),
-              icon: Icon(
-                Icons.delete_outline_rounded,
-                color: Colors.red.shade400,
-                size: 20,
-              ),
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.red.shade50,
-                padding: const EdgeInsets.all(4),
-                minimumSize: const Size(32, 32),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                IconButton(
+                  onPressed: () => _eliminarGasto(gasto['id']),
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.red.shade400,
+                    size: 20,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.red.shade50,
+                    padding: const EdgeInsets.all(4),
+                    minimumSize: const Size(32, 32),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),
@@ -1234,7 +1687,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
       initialDate: _fechaSeleccionada ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
-      locale: const Locale('es', 'ES'),
+      // locale eliminado para compatibilidad
     );
 
     if (fecha != null) {
@@ -1244,30 +1697,70 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
     }
   }
 
-  /// Valida y guarda un nuevo gasto en la lista
-  void _guardarGasto() {
+  /// Valida y guarda un nuevo gasto
+  Future<void> _guardarGasto() async {
     if (_formKey.currentState!.validate()) {
-      final nuevoGasto = {
-        'id': DateTime.now().millisecondsSinceEpoch.toString(),
-        'monto': double.parse(_montoController.text),
-        'fecha': _fechaSeleccionada ?? DateTime.now(),
-        'descripcion': _descripcionController.text,
-        'categoria': _categoriaSeleccionada,
-        'metodoPago': _metodoPagoSeleccionado,
-        'cuentaAsociada': _cuentaAsociada,
-        'nota': _notaController.text,
-        'esRecurrente': _esRecurrente,
-        'frecuencia': _esRecurrente ? _frecuenciaRecurrente : null,
-      };
+      final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
+      
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
+          ),
+        ),
+      );
 
-      setState(() {
-        _gastos.insert(0, nuevoGasto);
-        _filtrarGastos(_textoBusqueda); // Actualizar lista filtrada
-      });
+      try {
+        // Debug: Información antes de crear el gasto
+        print('🔍 Debug - Creando gasto:');
+        print('   Descripción: ${_descripcionController.text.trim()}');
+        print('   Monto: $monto');
+        print('   Categoría: $_categoriaSeleccionada');
+        print('   Método de pago: $_metodoPagoSeleccionado');
+        print('   Cuenta asociada: $_cuentaAsociada');
+        print('   Es recurrente: $_esRecurrente');
+        
+        // Registrar el gasto usando el servicio real
+        final error = await _gastosServicio.crearGasto(
+          descripcion: _descripcionController.text.trim(),
+          monto: monto,
+          fecha: _fechaSeleccionada ?? DateTime.now(),
+          categoria: _categoriaSeleccionada,
+          metodoPago: _metodoPagoSeleccionado,
+          cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+          esRecurrente: _esRecurrente,
+          frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
+          notas: '', // Puedes agregar un campo de notas si lo necesitas
+        );
 
-      Navigator.pop(context);
-      _limpiarFormulario();
-      _mostrarMensajeExito();
+        print('🔍 Debug - Resultado del servicio: $error');
+
+        if (mounted) {
+          // Cerrar indicador de carga
+          Navigator.pop(context);
+          
+          if (error != null) {
+            // Mostrar error
+            print('❌ Error al crear gasto: $error');
+            _mostrarError(error);
+          } else {
+            // Éxito
+            print('✅ Gasto creado exitosamente');
+            Navigator.pop(context); // Cerrar formulario
+            _limpiarFormulario();
+            _mostrarMensajeExito();
+          }
+        }
+      } catch (e) {
+        print('❌ Error inesperado: $e');
+        if (mounted) {
+          Navigator.pop(context); // Cerrar indicador de carga
+          _mostrarError('Error inesperado: ${e.toString()}');
+        }
+      }
     }
   }
 
@@ -1275,7 +1768,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   void _limpiarFormulario() {
     _montoController.clear();
     _descripcionController.clear();
-    _notaController.clear();
+    // ...eliminado clear de notaController...
     setState(() {
       _fechaSeleccionada = DateTime.now();
       _categoriaSeleccionada = 'alimentación';
@@ -1287,7 +1780,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
   }
 
   /// Muestra un diálogo de confirmación para eliminar un gasto
-  void _eliminarGasto(int index) {
+  void _eliminarGasto(String gastoId) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1302,22 +1795,48 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _gastos.removeAt(index);
-                _filtrarGastos(_textoBusqueda); // Actualizar lista filtrada
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Gasto eliminado correctamente'),
-                  backgroundColor: Colors.red.shade600,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            onPressed: () async {
+              Navigator.pop(context); // Cerrar diálogo
+              
+              // Mostrar indicador de carga
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
                   ),
                 ),
               );
+
+              try {
+                final error = await _gastosServicio.eliminarGasto(gastoId);
+                
+                if (mounted) {
+                  // Cerrar indicador de carga
+                  Navigator.pop(context);
+                  
+                  if (error != null) {
+                    _mostrarError(error);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Gasto eliminado correctamente'),
+                        backgroundColor: Colors.red.shade600,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context); // Cerrar indicador de carga
+                  _mostrarError('Error inesperado: ${e.toString()}');
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade600,
@@ -1340,6 +1859,21 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+      ),
+    );
+  }
+
+  /// Muestra un mensaje de error
+  void _mostrarError(String mensaje) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensaje),
+        backgroundColor: Colors.red.shade800,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 4),
       ),
     );
   }

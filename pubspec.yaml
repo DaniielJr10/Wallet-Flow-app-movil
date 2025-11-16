@@ -10,6 +10,10 @@ dependencies:
   flutter:
     sdk: flutter
   
+  # Localizaciones de Flutter
+  flutter_localizations:
+    sdk: flutter
+  
   # Firebase Core (requerido para todos los productos Firebase)
   firebase_core: ^3.6.0
   
@@ -33,6 +37,9 @@ dependencies:
   table_calendar: ^3.2.0
   http: ^1.6.0
   shared_preferences: ^2.5.3
+  
+  # Internacionalización y formateo
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

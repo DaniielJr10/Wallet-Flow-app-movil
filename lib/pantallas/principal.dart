@@ -9,8 +9,8 @@ import 'gastos.dart';
 import 'cuentas.dart';
 import 'ahorros.dart';
 import 'deudas.dart';
-import 'objetivos.dart';
-import 'inversiones.dart';
+
+
 import 'configuracion.dart';
 import 'perfil.dart';
 import 'herramientas.dart';
@@ -209,14 +209,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         Container(
           padding: const EdgeInsets.only(top: 8, left: 20, right: 20, bottom: 20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF10B981).withOpacity(0.1),
-                const Color(0xFF059669).withOpacity(0.05),
-              ],
-            ),
+            color: const Color(0xFF2ecc71),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: const Color(0xFF10B981).withOpacity(0.2),
@@ -241,7 +234,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF059669),
+                      color: Colors.white,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -289,8 +282,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                         'Hola, $_nombreUsuario',
                         style: const TextStyle(
                           fontSize: 24,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1F2937),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ],
@@ -382,83 +375,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
     );
   }
 
-  Widget _buildBalanceCard() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2ecc71),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2ecc71).withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Balance Total',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.trending_up_rounded,
-                      color: Colors.white,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '+2.5%',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            '\$12,345.67',
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Actualizado hace unos minutos',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.8),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildFinancialSummary() {
     return Container(
@@ -610,9 +526,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             const SizedBox(height: 45), // Más espacio para bajar la tarjeta de bienvenida
             // Saludo personalizado
             _buildPersonalizedGreeting(),
-            const SizedBox(height: 16), // Espacio entre perfil y balance
-            // Balance total
-            _buildBalanceCard(),
             const SizedBox(height: 20),
             // Resumen financiero compacto
             const Text(
@@ -645,7 +558,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
 
   void _navigateToSection(int index) {
     HapticFeedback.lightImpact();
-    if (index == 9) {
+    if (index == 7) {
       // Navegar a la pantalla de herramientas
       Navigator.push(
         context,
@@ -688,55 +601,41 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
       ),
       child: Column(
         children: [
-          // Primera fila
+          // Primera fila - Ahorros y Deudas
           Row(
             children: [
-                _buildMenuCard(
-                  title: 'Deudas',
-                  icon: Icons.credit_card_rounded,
-                  color: Colors.orange.shade600,
-                  onTap: () => _navigateToSection(5),
-                ),
+              _buildMenuCard(
+                title: 'Ahorros',
+                icon: Icons.savings_rounded,
+                color: const Color(0xFF10B981),
+                onTap: () => _navigateToSection(6),
+              ),
               const SizedBox(width: 12),
-                _buildMenuCard(
-                  title: 'Inversiones',
-                  icon: Icons.trending_up_rounded,
-                  color: Colors.blue.shade600,
-                  onTap: () => _navigateToSection(6),
-                ),
-              const SizedBox(width: 12),
-                _buildMenuCard(
-                  title: 'Ahorros',
-                  icon: Icons.savings_rounded,
-                  color: const Color(0xFF10B981),
-                  onTap: () => _navigateToSection(7),
-                ),
+              _buildMenuCard(
+                title: 'Deudas',
+                icon: Icons.credit_card_rounded,
+                color: Colors.orange.shade600,
+                onTap: () => _navigateToSection(5),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          // Segunda fila
+          // Segunda fila - Herramientas y Configuración
           Row(
             children: [
-                _buildMenuCard(
-                  title: 'Objetivos',
-                  icon: Icons.flag_outlined,
-                  color: Colors.teal.shade600,
-                  onTap: () => _navigateToSection(8),
-                ),
+              _buildMenuCard(
+                title: 'Herramientas',
+                icon: Icons.build_outlined,
+                color: Colors.indigo.shade600,
+                onTap: () => _navigateToSection(7),
+              ),
               const SizedBox(width: 12),
-                _buildMenuCard(
-                  title: 'Herramientas',
-                  icon: Icons.build_outlined,
-                  color: Colors.indigo.shade600,
-                  onTap: () => _navigateToSection(9),
-                ),
-              const SizedBox(width: 12),
-                _buildMenuCard(
-                  title: 'Configuración',
-                  icon: Icons.settings_outlined,
-                  color: Colors.grey.shade700,
-                  onTap: () => _navigateToSection(10),
-                ),
+              _buildMenuCard(
+                title: 'Configuración',
+                icon: Icons.settings_outlined,
+                color: Colors.grey.shade700,
+                onTap: () => _navigateToSection(8),
+              ),
             ],
           ),
         ],
@@ -856,17 +755,15 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          _buildDashboard(),
-          const PantallaIngresos(),
-          const PantallaGastos(),
-          const PantallaCuentas(),
-          const PantallaPerfil(),
-          const PantallaDeudas(),
-          const PantallaInversiones(),
-          const PantallaAhorros(),
-          const PantallaObjetivos(),
-          _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600),
-          const PantallaConfiguracion(),
+          _buildDashboard(),         // 0 - Dashboard
+          const PantallaIngresos(),  // 1 - Ingresos
+          const PantallaGastos(),    // 2 - Gastos
+          const PantallaCuentas(),   // 3 - Cuentas
+          const PantallaPerfil(),    // 4 - Perfil
+          const PantallaDeudas(),    // 5 - Deudas
+          const PantallaAhorros(),   // 6 - Ahorros (antes era 7)
+          _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600), // 7 - Herramientas (antes era 9)
+          const PantallaConfiguracion(), // 8 - Configuración (antes era 10)
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -1093,22 +990,14 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                         _navigateToSection(5);
                       },
                     ),
-                    _buildDrawerMenuItem(
-                      icon: Icons.trending_up_rounded,
-                      title: 'Inversiones',
-                      color: Colors.blue.shade600,
-                      onTap: () {
-                        Navigator.pop(context);
-                        _navigateToSection(6);
-                      },
-                    ),
+
                     _buildDrawerMenuItem(
                       icon: Icons.account_balance_rounded,
                       title: 'Cuentas Bancarias',
                       color: Colors.purple.shade600,
                       onTap: () {
                         Navigator.pop(context);
-                        _navigateToSection(7);
+                        _navigateToSection(3); // Índice correcto para Cuentas
                       },
                     ),
                   ],
@@ -1120,22 +1009,14 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 _buildMenuSection(
                   title: 'Herramientas',
                   items: [
-                    _buildDrawerMenuItem(
-                      icon: Icons.flag_outlined,
-                      title: 'Objetivos Financieros',
-                      color: Colors.teal.shade600,
-                      onTap: () {
-                        Navigator.pop(context);
-                        _navigateToSection(8);
-                      },
-                    ),
+
                     _buildDrawerMenuItem(
                       icon: Icons.build_outlined,
                       title: 'Calculadoras',
                       color: Colors.indigo.shade600,
                       onTap: () {
                         Navigator.pop(context);
-                        _navigateToSection(9);
+                        _navigateToSection(7);
                       },
                     ),
                     _buildDrawerMenuItem(
@@ -1162,7 +1043,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       color: Colors.grey.shade700,
                       onTap: () {
                         Navigator.pop(context);
-                        _navigateToSection(10);
+                        _navigateToSection(8);
                       },
                     ),
                     _buildDrawerMenuItem(

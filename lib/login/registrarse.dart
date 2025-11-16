@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../firebase/autenticacion_servicio.dart';
 import '../pantallas/principal.dart';
 
 /// Pantalla de registro de Wallet Flow
@@ -141,27 +141,31 @@ class _RegistrarseScreenState extends State<RegistrarseScreen> {
     });
 
     try {
-      // Separar nombre y apellido
-      final nombreCompleto = _nameController.text.trim().split(' ');
-      final nombre = nombreCompleto.isNotEmpty ? nombreCompleto[0] : '';
-      final apellido = nombreCompleto.length > 1 
-          ? nombreCompleto.sublist(1).join(' ') 
-          : '';
+      // Obtener el nombre completo del campo
+      final nombreCompleto = _nameController.text.trim();
       
-      print('Iniciando registro para: $nombre $apellido');
+      print('Iniciando registro para: $nombreCompleto');
       
-      // Solo crear el usuario en Firebase Auth (sin Firestore por ahora)
-      final errorAuth = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      // Usar el servicio de autenticación para registrar usuario
+      final AutenticacionServicio authService = AutenticacionServicio();
+      final error = await authService.registrarUsuario(
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        nombre: nombreCompleto,
       );
       
-      print('Usuario creado exitosamente en Firebase Auth');
+      if (error != null) {
+        // Si hay error, mostrarlo
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          _showSnackBar(error, const Color(0xFFEF4444));
+        }
+        return;
+      }
       
-      // Actualizar el display name
-      await errorAuth.user?.updateDisplayName('$nombre $apellido');
-      
-      print('Display name actualizado');
+      print('Usuario creado exitosamente');
       
       if (mounted) {
         setState(() {
@@ -183,29 +187,6 @@ class _RegistrarseScreenState extends State<RegistrarseScreen> {
           );
         }
         return; // Salir aquí para evitar el finally
-      }
-    } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        
-        String errorMessage;
-        switch (e.code) {
-          case 'weak-password':
-            errorMessage = 'La contraseña es muy débil. Debe tener al menos 6 caracteres';
-            break;
-          case 'email-already-in-use':
-            errorMessage = 'Ya existe una cuenta con este correo electrónico';
-            break;
-          case 'invalid-email':
-            errorMessage = 'El formato del correo electrónico es inválido';
-            break;
-          default:
-            errorMessage = 'Error al crear la cuenta. Intenta nuevamente';
-        }
-        
-        _showSnackBar(errorMessage, const Color(0xFFEF4444));
       }
     } catch (e) {
       if (mounted) {

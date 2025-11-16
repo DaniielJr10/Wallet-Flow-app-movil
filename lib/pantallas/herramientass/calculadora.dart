@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import '../../utilidades/formato_numeros.dart';
 
 /// Calculadora profesional y moderna (móvil)
 /// Diseño limpio, sin historial (por petición del usuario).
@@ -516,6 +517,11 @@ class CalculadoraController {
   bool _isOperator(String s) => ['+', '-', '*', '/', '%'].contains(s);
 
   String _format(double v) {
+    // Para números enteros grandes, usar nuestro formato con puntos
+    if (v == v.roundToDouble() && v.abs() >= 1000) {
+      return FormatoNumeros.formatearNumero(v.toInt());
+    }
+    // Para números pequeños o con decimales, usar formato original
     if (v == v.roundToDouble()) return v.toInt().toString();
     return v.toStringAsFixed(8).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
   }
