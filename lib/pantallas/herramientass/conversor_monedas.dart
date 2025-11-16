@@ -142,6 +142,14 @@ class _ConversorMonedasScreenState extends State<ConversorMonedasScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F9F6),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF10B981)),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),

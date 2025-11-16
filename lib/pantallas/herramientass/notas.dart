@@ -224,6 +224,14 @@ class _NotasScreenState extends State<NotasScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6FBF7),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF10B981)),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 18),
