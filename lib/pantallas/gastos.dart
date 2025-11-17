@@ -1084,7 +1084,25 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
               _detalleItem('Fecha', gasto['fecha'] != null ? '${gasto['fecha'].day}/${gasto['fecha'].month}/${gasto['fecha'].year}' : ''),
               _detalleItem('Categoría', gasto['categoria'] ?? ''),
               _detalleItem('Método de pago', gasto['metodoPago'] ?? ''),
-              _detalleItem('Cuenta asociada', gasto['cuentaAsociada'] ?? 'Ninguna'),
+              (gasto['cuentaAsociada'] == null || gasto['cuentaAsociada'] == 'ninguna')
+                  ? _detalleItem('Cuenta asociada', 'Ninguna')
+                  : FutureBuilder(
+                      future: _cuentasServicio.obtenerCuentaPorId(gasto['cuentaAsociada']),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return _detalleItem('Cuenta asociada', 'Cargando...');
+                        }
+                        if (snapshot.hasError || !snapshot.hasData || !(snapshot.data?.exists ?? false)) {
+                          return _detalleItem('Cuenta asociada', 'No se encontró la cuenta');
+                        }
+                        final cuenta = snapshot.data!.data() as Map<String, dynamic>?;
+                        if (cuenta == null) {
+                          return _detalleItem('Cuenta asociada', 'No se encontró la cuenta');
+                        }
+                        String detalles = '${cuenta['banco']} - ${cuenta['numeroCuenta']}';
+                        return _detalleItem('Cuenta asociada', detalles);
+                      },
+                    ),
               if (gasto['nota'] != null && gasto['nota'].isNotEmpty)
                 _detalleItem('Nota', gasto['nota'], italic: true),
               if (gasto['esRecurrente'] == true)
