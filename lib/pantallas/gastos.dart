@@ -272,11 +272,15 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             hintText: '0.00',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
+              borderSide: BorderSide(color: Colors.red.shade700, width: 3),
             ),
             filled: true,
             fillColor: Colors.grey.shade50,
@@ -312,11 +316,15 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             hintText: 'Ej: Supermercado, gasolina, cena...',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
+              borderSide: BorderSide(color: Colors.red.shade700, width: 3),
             ),
             filled: true,
             fillColor: Colors.grey.shade50,
@@ -340,35 +348,47 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
           ),
         ),
         const SizedBox(height: 8),
-        InkWell(
-          onTap: _seleccionarFecha,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.grey.shade50,
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.calendar_today_rounded,
-                  color: Colors.red.shade600,
-                  size: 20,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  _fechaSeleccionada != null
-                      ? '${_fechaSeleccionada!.day}/${_fechaSeleccionada!.month}/${_fechaSeleccionada!.year}'
-                      : 'Seleccionar fecha',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+        StatefulBuilder(
+          builder: (context, setState) {
+            bool isPressed = false;
+            return GestureDetector(
+              onTapDown: (_) => setState(() => isPressed = true),
+              onTapUp: (_) => setState(() => isPressed = false),
+              onTapCancel: () => setState(() => isPressed = false),
+              onTap: _seleccionarFecha,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: isPressed ? Colors.red.shade700 : Colors.red.shade600,
+                    width: isPressed ? 3 : 2,
                   ),
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey.shade50,
                 ),
-              ],
-            ),
-          ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      color: Colors.red.shade600,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      _fechaSeleccionada != null
+                          ? '${_fechaSeleccionada!.day}/${_fechaSeleccionada!.month}/${_fechaSeleccionada!.year}'
+                          : 'Seleccionar fecha',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -395,7 +415,15 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red.shade700, width: 3),
             ),
             filled: true,
             fillColor: Colors.grey.shade50,
@@ -453,7 +481,15 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red.shade600, width: 2),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red.shade700, width: 3),
             ),
             filled: true,
             fillColor: Colors.grey.shade50,
@@ -567,7 +603,15 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                  borderSide: BorderSide(color: Colors.red.shade600, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red.shade600, width: 2),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.red.shade700, width: 3),
                 ),
                 filled: true,
                 fillColor: Colors.grey.shade50,
