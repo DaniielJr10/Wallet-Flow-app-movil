@@ -582,7 +582,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Monto *',
+            'Monto',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -608,7 +608,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
           },
           decoration: InputDecoration(
             prefixText: '\$ ',
-            hintText: '45.789',
+            hintText: '',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey.shade300),
@@ -631,7 +631,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Descripción *',
+            'Descripción',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -648,7 +648,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
             return null;
           },
           decoration: InputDecoration(
-            hintText: 'Ej: Salario mensual, proyecto freelance...',
+            hintText: '',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey.shade300),
