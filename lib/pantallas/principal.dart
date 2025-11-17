@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../firebase/autenticacion_servicio.dart';
 import '../firebase/base_datos_servicio.dart';
+import '../firebase/servicios/principal_servicio.dart';
+import '../utilidades/formato_numeros.dart';
 import '../login/iniciosesion.dart';
 import 'ingresos.dart';
 import 'gastos.dart';
@@ -26,6 +28,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
     with TickerProviderStateMixin {
   final AutenticacionServicio _authService = AutenticacionServicio();
   final BaseDatosServicio _baseDatosService = BaseDatosServicio();
+  final PrincipalServicio _principalServicio = PrincipalServicio();
   int _selectedIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -377,6 +380,101 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
 
 
   Widget _buildFinancialSummary() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _principalServicio.obtenerEstadisticasRapidas(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoadingFinancialSummary();
+        }
+        
+        if (snapshot.hasError) {
+          return _buildErrorFinancialSummary();
+        }
+        
+        final data = snapshot.data ?? {};
+        final totalCuentas = data['totalCuentas'] ?? 0.0;
+        final totalIngresos = data['totalIngresos'] ?? 0.0;
+        final totalGastos = data['totalGastos'] ?? 0.0;
+        final ingresosDelMes = data['ingresosDelMes'] ?? 0.0;
+        final gastosDelMes = data['gastosDelMes'] ?? 0.0;
+        
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Primera fila: Ingresos del mes y Gastos del mes
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Ingresos (mes)',
+                      amount: FormatoNumeros.formatearParaMostrar(ingresosDelMes),
+                      icon: Icons.trending_up_rounded,
+                      color: Colors.green.shade600,
+                      onTap: () => _navigateToSection(1),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Gastos (mes)',
+                      amount: FormatoNumeros.formatearParaMostrar(gastosDelMes),
+                      icon: Icons.trending_down_rounded,
+                      color: Colors.red.shade600,
+                      onTap: () => _navigateToSection(2),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Segunda fila: Total Cuentas y Balance Total
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Total Cuentas',
+                      amount: FormatoNumeros.formatearParaMostrar(totalCuentas),
+                      icon: Icons.account_balance_rounded,
+                      color: Colors.blue.shade600,
+                      onTap: () => _navigateToSection(3),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Balance Total',
+                      amount: FormatoNumeros.formatearParaMostrar(totalIngresos - totalGastos),
+                      icon: totalIngresos >= totalGastos 
+                          ? Icons.trending_up_rounded 
+                          : Icons.trending_down_rounded,
+                      color: totalIngresos >= totalGastos 
+                          ? Colors.green.shade600 
+                          : Colors.red.shade600,
+                      onTap: () {}, // No navega, solo informativo
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Construye el estado de carga del resumen financiero
+  Widget _buildLoadingFinancialSummary() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -394,50 +492,96 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         children: [
           Row(
             children: [
-              Expanded(
-                child: _buildSummaryItem(
-                  title: 'Ingresos',
-                  amount: '\$4,230',
-                  icon: Icons.trending_up_rounded,
-                  color: Colors.green.shade600,
-                  onTap: () => _navigateToSection(1),
-                ),
-              ),
+              Expanded(child: _buildLoadingSummaryItem()),
               const SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryItem(
-                  title: 'Gastos',
-                  amount: '\$1,892',
-                  icon: Icons.trending_down_rounded,
-                  color: Colors.red.shade600,
-                  onTap: () => _navigateToSection(2),
-                ),
-              ),
+              Expanded(child: _buildLoadingSummaryItem()),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-                Expanded(
-                  child: _buildSummaryItem(
-                    title: 'Cuentas',
-                    amount: '\$8,120',
-                    icon: Icons.account_balance_rounded,
-                    color: Colors.purple.shade600,
-                    onTap: () => _navigateToSection(3),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildSummaryItem(
-                    title: 'Deudas',
-                    amount: '\$2,341',
-                    icon: Icons.credit_card_rounded,
-                    color: Colors.orange.shade600,
-                    onTap: () => _navigateToSection(5),
-                  ),
-                ),
+              Expanded(child: _buildLoadingSummaryItem()),
+              const SizedBox(width: 12),
+              Expanded(child: _buildLoadingSummaryItem()),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Construye un elemento de resumen en estado de carga
+  Widget _buildLoadingSummaryItem() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 60,
+            height: 12,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: 80,
+            height: 16,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Construye el estado de error del resumen financiero
+  Widget _buildErrorFinancialSummary() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline_rounded,
+            color: Colors.red.shade400,
+            size: 48,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Error al cargar datos',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Toca para reintentar',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade500,
+            ),
           ),
         ],
       ),
