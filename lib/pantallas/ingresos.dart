@@ -13,6 +13,17 @@ class PantallaIngresos extends StatefulWidget {
 }
 
 class _PantallaIngresosState extends State<PantallaIngresos> with TickerProviderStateMixin {
+  /// Obtiene el nombre y número de la cuenta asociada a partir del ID
+  String _getNombreCuenta(String cuentaId) {
+    // Buscar la cuenta en la lista de cuentas cargadas
+    // Si no se encuentra, mostrar solo el ID
+    // NOTA: Esto es una versión simplificada, para producción se recomienda cachear las cuentas
+    // y/o usar un FutureBuilder si se requiere consulta asíncrona.
+    final cuentasStream = _cuentasServicio.obtenerCuentas();
+    // No se puede acceder directamente aquí, así que se muestra el ID temporalmente
+    // Para una solución completa, se debe guardar las cuentas en memoria al cargar la pantalla
+    return 'Cuenta asociada: $cuentaId';
+  }
   // === SERVICIOS ===
   final IngresosServicio _ingresosServicio = IngresosServicio();
   final CuentasServicio _cuentasServicio = CuentasServicio();
@@ -376,13 +387,45 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                   
                   const SizedBox(height: 20),
                   
-                  _buildDetalleItem(
-                    'Cuenta Asociada',
-                    ingreso['cuentaAsociada'] == null || ingreso['cuentaAsociada'] == 'ninguna' 
-                        ? 'Ninguna cuenta asociada' 
-                        : 'Cuenta vinculada',
-                    Icons.account_balance_outlined,
-                  ),
+                  ingreso['cuentaAsociada'] == null || ingreso['cuentaAsociada'] == 'ninguna'
+                      ? _buildDetalleItem(
+                          'Cuenta Asociada',
+                          'Ninguna cuenta asociada',
+                          Icons.account_balance_outlined,
+                        )
+                      : FutureBuilder(
+                          future: _cuentasServicio.obtenerCuentaPorId(ingreso['cuentaAsociada']),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return _buildDetalleItem(
+                                'Cuenta Asociada',
+                                'Cargando...',
+                                Icons.account_balance_outlined,
+                              );
+                            }
+                            if (snapshot.hasError || !snapshot.hasData || !(snapshot.data?.exists ?? false)) {
+                              return _buildDetalleItem(
+                                'Cuenta Asociada',
+                                'No se encontró la cuenta',
+                                Icons.account_balance_outlined,
+                              );
+                            }
+                            final cuenta = snapshot.data!.data() as Map<String, dynamic>?;
+                            if (cuenta == null) {
+                              return _buildDetalleItem(
+                                'Cuenta Asociada',
+                                'No se encontró la cuenta',
+                                Icons.account_balance_outlined,
+                              );
+                            }
+                            String detalles = '${cuenta['banco']} - ${cuenta['numeroCuenta']}';
+                            return _buildDetalleItem(
+                              'Cuenta Asociada',
+                              detalles,
+                              Icons.account_balance_outlined,
+                            );
+                          },
+                        ),
                   
                   const SizedBox(height: 32),
                 ],
