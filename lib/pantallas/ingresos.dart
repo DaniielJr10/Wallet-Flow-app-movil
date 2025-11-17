@@ -1714,7 +1714,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
                   ElevatedButton.icon(
                     onPressed: _mostrarFormularioIngreso,
                     icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('Nuevo'),
+                    label: const Text('Nuevo ingreso'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF2ecc71),
                       foregroundColor: Colors.white,
