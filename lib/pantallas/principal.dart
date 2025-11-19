@@ -386,18 +386,17 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLoadingFinancialSummary();
         }
-        
         if (snapshot.hasError) {
           return _buildErrorFinancialSummary();
         }
-        
         final data = snapshot.data ?? {};
         final totalCuentas = data['totalCuentas'] ?? 0.0;
         final totalIngresos = data['totalIngresos'] ?? 0.0;
         final totalGastos = data['totalGastos'] ?? 0.0;
         final ingresosDelMes = data['ingresosDelMes'] ?? 0.0;
         final gastosDelMes = data['gastosDelMes'] ?? 0.0;
-        
+        final totalAhorros = data['totalAhorros'] ?? 0.0;
+        final totalDeudas = data['totalDeudas'] ?? 0.0;
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -413,7 +412,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           ),
           child: Column(
             children: [
-              // Primera fila: Ingresos del mes y Gastos del mes
+              // Primera fila: Ingresos y Gastos
               Row(
                 children: [
                   Expanded(
@@ -438,7 +437,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 ],
               ),
               const SizedBox(height: 12),
-              // Segunda fila: Total Cuentas y Balance Total
+              // Segunda fila: Cuentas y Ahorros
               Row(
                 children: [
                   Expanded(
@@ -453,17 +452,30 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildSummaryItem(
-                      title: 'Balance Total',
-                      amount: FormatoNumeros.formatearParaMostrar(totalIngresos - totalGastos),
-                      icon: totalIngresos >= totalGastos 
-                          ? Icons.trending_up_rounded 
-                          : Icons.trending_down_rounded,
-                      color: totalIngresos >= totalGastos 
-                          ? Colors.green.shade600 
-                          : Colors.red.shade600,
-                      onTap: () {}, // No navega, solo informativo
+                      title: 'Ahorros',
+                      amount: FormatoNumeros.formatearParaMostrar(totalAhorros),
+                      icon: Icons.savings_rounded,
+                      color: Colors.teal.shade600,
+                      onTap: () => _navigateToSection(6),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Tercera fila: Deudas
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Deudas',
+                      amount: FormatoNumeros.formatearParaMostrar(totalDeudas),
+                      icon: Icons.credit_card_rounded,
+                      color: Colors.orange.shade600,
+                      onTap: () => _navigateToSection(5),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Container()), // Espacio vacío
                 ],
               ),
             ],
@@ -682,18 +694,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             ),
             const SizedBox(height: 10),
             _buildFinancialSummary(),
-            const SizedBox(height: 20),
-            // Menú de servicios organizados
-            const Text(
-              'Servicios Financieros',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1F2937),
-              ),
-            ),
-            const SizedBox(height: 10),
-            _buildFinancialServicesMenu(),
           ],
         ),
       ),
@@ -888,9 +888,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
     // Colores personalizados para cada ítem
     final List<Color> itemColors = [
       Color(0xFF2563EB), // Inicio - azul
-      Color(0xFF2ECC71), // Ingresos - verde (#2ecc71)
-      Color(0xFFEF4444), // Gastos - rojo
-      Color(0xFF007bff), // Cuentas - azul
+      Colors.indigo.shade600, // Herramientas
+      Colors.grey.shade700, // Configuración
       Color(0xFFF59E42), // Perfil - naranja
     ];
 
@@ -900,19 +899,14 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         index: _selectedIndex,
         children: [
           _buildDashboard(),         // 0 - Dashboard
-          const PantallaIngresos(),  // 1 - Ingresos
-          const PantallaGastos(),    // 2 - Gastos
-          const PantallaCuentas(),   // 3 - Cuentas
-          const PantallaPerfil(),    // 4 - Perfil
-          const PantallaDeudas(),    // 5 - Deudas
-          const PantallaAhorros(),   // 6 - Ahorros (antes era 7)
-          _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600), // 7 - Herramientas (antes era 9)
-          const PantallaConfiguracion(), // 8 - Configuración (antes era 10)
+          _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600), // 1 - Herramientas
+          const PantallaConfiguracion(), // 2 - Configuración
+          const PantallaPerfil(),    // 3 - Perfil
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex <= 4 ? _selectedIndex : 0,
+        currentIndex: _selectedIndex <= 3 ? _selectedIndex : 0,
         onTap: _handleBottomNavigation,
         backgroundColor: Colors.white,
         selectedFontSize: 13,
@@ -925,23 +919,19 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             label: 'Inicio',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.attach_money_outlined, color: _selectedIndex == 1 ? itemColors[1] : Colors.grey.shade400),
-            label: 'Ingresos',
+            icon: Icon(Icons.build_outlined, color: _selectedIndex == 1 ? itemColors[1] : Colors.grey.shade400),
+            label: 'Herramientas',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.payment_outlined, color: _selectedIndex == 2 ? itemColors[2] : Colors.grey.shade400),
-            label: 'Gastos',
+            icon: Icon(Icons.settings_outlined, color: _selectedIndex == 2 ? itemColors[2] : Colors.grey.shade400),
+            label: 'Configuración',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_rounded, color: _selectedIndex == 3 ? itemColors[3] : Colors.grey.shade400),
-            label: 'Cuentas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline_rounded, color: _selectedIndex == 4 ? itemColors[4] : Colors.grey.shade400),
+            icon: Icon(Icons.person_outline_rounded, color: _selectedIndex == 3 ? itemColors[3] : Colors.grey.shade400),
             label: 'Perfil',
           ),
         ],
-        selectedItemColor: itemColors[_selectedIndex <= 4 ? _selectedIndex : 0],
+        selectedItemColor: itemColors[_selectedIndex <= 3 ? _selectedIndex : 0],
         unselectedItemColor: Colors.grey.shade400,
       ),
       drawer: _buildDrawer(),
