@@ -485,7 +485,6 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                 ),
         ),
       ),
-      floatingActionButton: _buildBotonAgregarDeuda(),
     );
   }
 
@@ -1335,25 +1334,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
     );
   }
 
-  /// Construye el botón flotante para agregar nueva deuda
-  Widget _buildBotonAgregarDeuda() {
-    return FloatingActionButton.extended(
-      onPressed: () => _mostrarDialogoNuevaDeuda(),
-      backgroundColor: const Color(0xFFEF4444),
-      foregroundColor: Colors.white,
-      icon: const Icon(Icons.add),
-      label: const Text(
-        'Nueva Deuda',
-        style: TextStyle(fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-
-  /// Muestra el diálogo para agregar una nueva deuda
-  void _mostrarDialogoNuevaDeuda() {
-    // TODO: Implementar formulario completo para nueva deuda
-    _mostrarInfo('Próximamente: Formulario de nueva deuda');
-  }
+  // Note: Floating action button and "nueva deuda" dialog removed per request.
 
   /// Muestra un mensaje informativo
   void _mostrarInfo(String mensaje) {
