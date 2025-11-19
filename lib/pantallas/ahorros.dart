@@ -1083,7 +1083,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
   }
 
   /// Muestra el diálogo para agregar nueva meta
-  void _mostrarDialogoAgregarMeta() {
+  void _mostrarDialogoAgregarMeta({bool esEdicion = false, String? metaId, Map<String, dynamic>? meta}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1556,12 +1556,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
 
   /// Muestra el diálogo para editar meta
   void _mostrarDialogoEditarMeta(String metaId, Map<String, dynamic> meta) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Editar: ${meta['nombre'] ?? 'Meta sin nombre'}'),
-        backgroundColor: Color(0xFF8570FA),
-      ),
-    );
+    _mostrarDialogoAgregarMeta(esEdicion: true, metaId: metaId, meta: meta);
   }
 
   /// Muestra el diálogo para agregar monto a una meta
