@@ -404,7 +404,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
               Expanded(child: Text(mensaje)),
             ],
           ),
-          backgroundColor: const Color(0xFF10B981),
+          backgroundColor: const Color(0xFFF97316),
           duration: const Duration(seconds: 3),
         ),
       );
@@ -514,7 +514,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEF4444)),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF97316)),
           ),
           SizedBox(height: 24),
           Text(
@@ -536,7 +536,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
       expandedHeight: 96,
       floating: false,
       pinned: true,
-      backgroundColor: const Color(0xFFEF4444),
+      backgroundColor: const Color(0xFFF97316),
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
         title: const Text(
@@ -553,8 +553,8 @@ class _PantallaDeudasState extends State<PantallaDeudas>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Color(0xFFEF4444),
-                Color(0xFFDC2626),
+                Color(0xFFF97316),
+                Color(0xFFEA580C),
               ],
             ),
           ),
@@ -569,19 +569,19 @@ class _PantallaDeudasState extends State<PantallaDeudas>
       scale: _scaleAnimation,
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
+          decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFEF4444),
-              Color(0xFFDC2626),
+              Color(0xFFF97316),
+              Color(0xFFEA580C),
             ],
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFEF4444).withOpacity(0.3),
+              color: const Color(0xFFF97316).withOpacity(0.3),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -771,7 +771,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
               ),
               child: IconButton(
                 onPressed: () => _mostrarModalFiltroBusqueda(),
-                icon: const Icon(Icons.filter_alt_rounded, color: Color(0xFF10B981), size: 20),
+                icon: const Icon(Icons.filter_alt_rounded, color: Color(0xFFF97316), size: 20),
               ),
             ),
           ],
@@ -795,8 +795,8 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                   onPressed: () => _mostrarFormularioNuevaDeuda(),
               icon: const Icon(Icons.add, size: 16),
               label: const Text('+ Nueva deuda'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
+                style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF97316),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -989,7 +989,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                       value: 'pagar',
                       child: Row(
                         children: [
-                          Icon(Icons.payment, color: Color(0xFF10B981)),
+                          Icon(Icons.payment, color: Color(0xFFF97316)),
                           SizedBox(width: 8),
                           Text('Registrar Pago'),
                         ],
@@ -1230,13 +1230,13 @@ class _PantallaDeudasState extends State<PantallaDeudas>
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withOpacity(0.1),
+                decoration: BoxDecoration(
+                color: const Color(0xFFF97316).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.payment,
-                color: Color(0xFF10B981),
+                color: Color(0xFFF97316),
               ),
             ),
             const SizedBox(width: 12),
@@ -1289,7 +1289,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
             },
             child: const Text(
               'Registrar Pago',
-              style: TextStyle(color: Color(0xFF10B981)),
+              style: TextStyle(color: Color(0xFFF97316)),
             ),
           ),
         ],
@@ -1325,9 +1325,9 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                     final pago = historial[index];
                     return ListTile(
                       leading: const Icon(
-                        Icons.payment,
-                        color: Color(0xFF10B981),
-                      ),
+                          Icons.payment,
+                          color: Color(0xFFF97316),
+                        ),
                       title: Text(_formatearMoneda(pago['monto'])),
                       subtitle: Text(_formatearFecha(pago['fecha'])),
                     );
@@ -1426,8 +1426,8 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        const Color(0xFFEF4444).withOpacity(0.95),
-                        const Color(0xFFEF7A3A).withOpacity(0.95),
+                        const Color(0xFFF97316).withOpacity(0.95),
+                        const Color(0xFFFB923C).withOpacity(0.95),
                       ],
                     ),
                     borderRadius: const BorderRadius.only(
@@ -1463,7 +1463,19 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                         children: [
                           TextFormField(
                             controller: tituloCtrl,
-                            decoration: const InputDecoration(labelText: 'Título'),
+                            decoration: InputDecoration(
+                              labelText: 'Título',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFF97316)),
+                              ),
+                            ),
                             validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un título' : null,
                           ),
                           const SizedBox(height: 12),
@@ -1477,14 +1489,38 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                               DropdownMenuItem(value: 'Otro', child: Text('Otro')),
                             ],
                             onChanged: (v) => setStateModal(() { tipoSeleccionado = v ?? tipoSeleccionado; }),
-                            decoration: const InputDecoration(labelText: 'Tipo'),
+                            decoration: InputDecoration(
+                              labelText: 'Tipo',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFF97316)),
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: montoCtrl,
                             keyboardType: TextInputType.number,
                             inputFormatters: [FormateadorNumeros()],
-                            decoration: const InputDecoration(labelText: 'Monto'),
+                            decoration: InputDecoration(
+                              labelText: 'Monto',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFF97316)),
+                              ),
+                            ),
                             validator: (v) {
                               final n = FormatoNumeros.convertirANumero(v ?? '');
                               return (n == null || n <= 0) ? 'Ingresa un monto válido' : null;
@@ -1495,7 +1531,19 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                             controller: pagoMinCtrl,
                             keyboardType: TextInputType.number,
                             inputFormatters: [FormateadorNumeros()],
-                            decoration: const InputDecoration(labelText: 'Pago mínimo'),
+                            decoration: InputDecoration(
+                              labelText: 'Pago mínimo',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFF97316)),
+                              ),
+                            ),
                             validator: (v) {
                               final n = FormatoNumeros.convertirANumero(v ?? '');
                               return (n == null || n < 0) ? 'Ingresa un pago mínimo válido' : null;
@@ -1504,15 +1552,27 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: acreedorCtrl,
-                            decoration: const InputDecoration(labelText: 'Acreedor / Banco'),
+                            decoration: InputDecoration(
+                              labelText: 'Acreedor / Banco',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFF97316)),
+                              ),
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Row(
                             children: [
                               const Text('Fecha de vencimiento: '),
                               const SizedBox(width: 8),
-                              TextButton(
-                                onPressed: () async {
+                              GestureDetector(
+                                onTap: () async {
                                   final picked = await showDatePicker(
                                     context: context,
                                     initialDate: fechaVenc,
@@ -1521,7 +1581,21 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                                   );
                                   if (picked != null) setStateModal(() { fechaVenc = picked; });
                                 },
-                                child: Text('${fechaVenc.day}/${fechaVenc.month}/${fechaVenc.year}'),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: const Color(0xFFF97316)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.calendar_today, size: 18, color: Color(0xFFF97316)),
+                                      const SizedBox(width: 8),
+                                      Text('${fechaVenc.day}/${fechaVenc.month}/${fechaVenc.year}'),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -1531,6 +1605,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                             children: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
+                                style: TextButton.styleFrom(foregroundColor: Colors.grey.shade700),
                                 child: const Text('Cancelar'),
                               ),
                               const SizedBox(width: 8),
@@ -1567,7 +1642,10 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                                 },
                                 child: const Text('Crear'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFEF4444),
+                                  backgroundColor: const Color(0xFFF97316),
+                                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  elevation: 2,
                                 ),
                               ),
                             ],
@@ -1647,21 +1725,21 @@ class _PantallaDeudasState extends State<PantallaDeudas>
           enabled: false,
           child: Row(
             children: const [
-              Icon(Icons.tune, color: Color(0xFF10B981)),
-              SizedBox(width: 8),
-              Text('Modo de búsqueda', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w700)),
-            ],
+                  Icon(Icons.tune, color: Color(0xFFF97316)),
+                  SizedBox(width: 8),
+                  Text('Modo de búsqueda', style: TextStyle(color: Color(0xFFF97316), fontWeight: FontWeight.w700)),
+                ],
           ),
         ),
         const PopupMenuDivider(),
         PopupMenuItem<String>(
           value: 'categoría',
           child: Row(
-            children: [
-              const Icon(Icons.category, color: Color(0xFF10B981)),
+              children: [
+              const Icon(Icons.category, color: Color(0xFFF97316)),
               const SizedBox(width: 10),
               const Expanded(child: Text('Por categoría')),
-              if (_modoBusqueda == 'categoría') const Icon(Icons.check_circle, color: Color(0xFF10B981)),
+              if (_modoBusqueda == 'categoría') const Icon(Icons.check_circle, color: Color(0xFFF97316)),
             ],
           ),
         ),
@@ -1672,7 +1750,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
               const Icon(Icons.calendar_month_outlined, color: Color(0xFF64748B)),
               const SizedBox(width: 10),
               const Expanded(child: Text('Por mes')),
-              if (_modoBusqueda == 'mes') const Icon(Icons.check_circle, color: Color(0xFF10B981)),
+              if (_modoBusqueda == 'mes') const Icon(Icons.check_circle, color: Color(0xFFF97316)),
             ],
           ),
         ),

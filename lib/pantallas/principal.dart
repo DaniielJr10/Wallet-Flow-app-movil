@@ -12,6 +12,9 @@ import '../login/iniciosesion.dart';
 import 'configuracion.dart';
 import 'perfil.dart';
 import 'herramientas.dart';
+import 'cuentas.dart';
+import 'deudas.dart';
+import 'ahorros.dart';
 
 class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
@@ -705,16 +708,39 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
 
   void _navigateToSection(int index) {
     HapticFeedback.lightImpact();
-    if (index == 7) {
-      // Navegar a la pantalla de herramientas
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const PantallaHerramientas()),
-      );
-    } else {
+
+    // Keep the IndexedStack for the main tabs (0..2). For other indices,
+    // push the corresponding page to avoid setting an out-of-range index.
+    if (index >= 0 && index <= 2) {
       setState(() {
         _selectedIndex = index;
       });
+      return;
+    }
+
+    // Map other indices to separate pages
+    switch (index) {
+      case 3:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const PantallaCuentas()));
+        break;
+      case 4:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const PantallaPerfil()));
+        break;
+      case 5:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const PantallaDeudas()));
+        break;
+      case 6:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const PantallaAhorros()));
+        break;
+      case 7:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const PantallaHerramientas()));
+        break;
+      case 8:
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const PantallaConfiguracion()));
+        break;
+      default:
+        // Fallback to dashboard
+        setState(() { _selectedIndex = 0; });
     }
   }
 
