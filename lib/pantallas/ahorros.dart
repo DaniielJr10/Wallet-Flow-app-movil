@@ -616,12 +616,16 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
         }
         // Ordenar por fecha de creación (más recientes primero)
         metas.sort((a, b) {
-          final fechaA = a['fechaCreacion'] as DateTime?;
-          final fechaB = b['fechaCreacion'] as DateTime?;
-          if (fechaA == null && fechaB == null) return 0;
-          if (fechaA == null) return 1;
-          if (fechaB == null) return -1;
-          return fechaB.compareTo(fechaA);
+            final fechaA = a['fechaCreacion'] is Timestamp
+              ? (a['fechaCreacion'] as Timestamp).toDate()
+              : a['fechaCreacion'] as DateTime?;
+            final fechaB = b['fechaCreacion'] is Timestamp
+              ? (b['fechaCreacion'] as Timestamp).toDate()
+              : b['fechaCreacion'] as DateTime?;
+            if (fechaA == null && fechaB == null) return 0;
+            if (fechaA == null) return 1;
+            if (fechaB == null) return -1;
+            return fechaB.compareTo(fechaA);
         });
         if (metas.isEmpty) {
           return _construirEstadoSinResultados();
@@ -805,11 +809,11 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
       (cat) => cat['valor'] == categoria,
       orElse: () => _categorias.last,
     );
-    
+
     final montoActual = (meta['montoActual'] ?? 0.0).toDouble();
     final montoObjetivo = (meta['montoObjetivo'] ?? 0.0).toDouble();
     final progreso = montoObjetivo > 0 ? (montoActual / montoObjetivo) : 0.0;
-    final fechaObjetivo = (meta['fechaObjetivo'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final fechaObjetivo = meta['fechaObjetivo'] as DateTime? ?? DateTime.now();
     final diasRestantes = fechaObjetivo.difference(DateTime.now()).inDays;
     final esCompletada = montoActual >= montoObjetivo;
 
