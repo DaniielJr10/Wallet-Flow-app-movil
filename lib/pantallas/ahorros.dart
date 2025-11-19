@@ -1343,40 +1343,31 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
       ),
       child: Column(
         children: [
-          // Header profesional
+          // Header igual al de ingresos
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: categoriaInfo['color'].withOpacity(0.09),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF8570FA),
+                  Color(0xFF8570FA),
+                ],
+              ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(25),
                 topRight: Radius.circular(25),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: categoriaInfo['color'].withOpacity(0.12),
-                  blurRadius: 12,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    color: categoriaInfo['color'].withOpacity(0.18),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    categoriaInfo['icono'],
-                    color: categoriaInfo['color'],
-                    size: 32,
-                  ),
+                const Icon(
+                  Icons.savings_rounded,
+                  color: Colors.white,
+                  size: 28,
                 ),
-                const SizedBox(width: 18),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1386,7 +1377,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1D29),
+                          color: Colors.white,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -1394,47 +1385,60 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                       const SizedBox(height: 6),
                       Text(
                         categoriaInfo['nombre'],
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 15,
-                          color: categoriaInfo['color'],
+                          color: Colors.white,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
                 ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          // Detalles con layout profesional
+          // Detalles igual al de ingresos
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildDetalleItem('Monto actual', _formatearMoneda(montoActual), Icons.savings_rounded),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 20),
                   _buildDetalleItem('Monto objetivo', _formatearMoneda(montoObjetivo), Icons.flag_rounded),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 20),
                   _buildDetalleItem('Monto inicial', _formatearMoneda(montoInicial), Icons.play_arrow_rounded),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 20),
                   _buildDetalleItem('Fecha objetivo', _formatearFecha(fechaObjetivo), Icons.event_rounded),
                   if (fechaCreacion != null) ...[
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 20),
                     _buildDetalleItem('Fecha de creación', _formatearFecha(fechaCreacion), Icons.calendar_today_rounded),
                   ],
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 20),
                   _buildDetalleItem('Progreso', '${(progreso * 100).toStringAsFixed(1)}%', Icons.trending_up_rounded),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 20),
                   _buildDetalleItem('Días restantes', diasRestantes >= 0 ? '$diasRestantes días' : 'Meta vencida', Icons.hourglass_bottom_rounded),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 32),
                   _construirBarraProgreso(progreso, categoriaInfo['color'], esCompletada),
                 ],
               ),
             ),
           ),
-          // Botones de acción profesionales
+          // Botones de acción igual al de ingresos
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -1443,68 +1447,46 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.shade200,
-                  blurRadius: 8,
-                  offset: const Offset(0, -2),
-                ),
-              ],
             ),
             child: Row(
               children: [
                 Expanded(
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.grey.shade800,
-                      textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cerrar'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: categoriaInfo['color'],
-                      foregroundColor: Colors.white,
-                      textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
+                  child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
                       _mostrarDialogoEditarMeta(metaId, meta);
                     },
-                    child: const Text('Editar meta'),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
+                    icon: const Icon(Icons.edit_rounded, size: 20),
+                    label: const Text('Editar'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade600,
+                      backgroundColor: Color(0xFF8570FA),
                       foregroundColor: Colors.white,
-                      textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 0,
                     ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pop(context);
                       _confirmarEliminarMeta(metaId, meta['nombre'] ?? 'esta meta');
                     },
-                    child: const Text('Eliminar'),
+                    icon: const Icon(Icons.delete_rounded, size: 20),
+                    label: const Text('Eliminar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
                   ),
                 ),
               ],
