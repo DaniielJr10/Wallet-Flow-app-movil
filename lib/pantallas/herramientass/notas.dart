@@ -242,13 +242,26 @@ class _NotasScreenState extends State<NotasScreen> {
                 children: [
                   const Icon(Icons.note_alt_rounded, color: Color(0xFF10B981), size: 30),
                   const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('Notas Financieras', style: TextStyle(color: Color(0xFF059669), fontSize: 20, fontWeight: FontWeight.w800)),
-                      SizedBox(height: 4),
-                      Text('Organiza y gestiona todas tus ideas y recordatorios financieros', style: TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-                    ],
+                  // Allow the title/subtitle to wrap within available space to avoid overflow
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          'Notas Financieras',
+                          style: TextStyle(color: Color(0xFF059669), fontSize: 20, fontWeight: FontWeight.w800),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Organiza y gestiona todas tus ideas y recordatorios financieros',
+                          style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
