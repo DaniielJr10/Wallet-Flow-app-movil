@@ -6,11 +6,7 @@ import '../firebase/base_datos_servicio.dart';
 import '../firebase/servicios/principal_servicio.dart';
 import '../utilidades/formato_numeros.dart';
 import '../login/iniciosesion.dart';
-import 'ingresos.dart';
-import 'gastos.dart';
-import 'cuentas.dart';
-import 'ahorros.dart';
-import 'deudas.dart';
+// ...existing code...
 
 
 import 'configuracion.dart';
@@ -386,18 +382,16 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLoadingFinancialSummary();
         }
-        
         if (snapshot.hasError) {
           return _buildErrorFinancialSummary();
         }
-        
         final data = snapshot.data ?? {};
         final totalCuentas = data['totalCuentas'] ?? 0.0;
-        final totalIngresos = data['totalIngresos'] ?? 0.0;
-        final totalGastos = data['totalGastos'] ?? 0.0;
+        // ...existing code...
         final ingresosDelMes = data['ingresosDelMes'] ?? 0.0;
         final gastosDelMes = data['gastosDelMes'] ?? 0.0;
-        
+        final totalAhorros = data['totalAhorros'] ?? 0.0;
+        final totalDeudas = data['totalDeudas'] ?? 0.0;
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -413,7 +407,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           ),
           child: Column(
             children: [
-              // Primera fila: Ingresos del mes y Gastos del mes
+              // Primera fila: Ingresos y Gastos
               Row(
                 children: [
                   Expanded(
@@ -438,7 +432,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 ],
               ),
               const SizedBox(height: 12),
-              // Segunda fila: Total Cuentas y Balance Total
+              // Segunda fila: Cuentas y Ahorros
               Row(
                 children: [
                   Expanded(
@@ -453,15 +447,36 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildSummaryItem(
-                      title: 'Balance Total',
-                      amount: FormatoNumeros.formatearParaMostrar(totalIngresos - totalGastos),
-                      icon: totalIngresos >= totalGastos 
-                          ? Icons.trending_up_rounded 
-                          : Icons.trending_down_rounded,
-                      color: totalIngresos >= totalGastos 
-                          ? Colors.green.shade600 
-                          : Colors.red.shade600,
-                      onTap: () {}, // No navega, solo informativo
+                      title: 'Ahorros',
+                      amount: FormatoNumeros.formatearParaMostrar(totalAhorros),
+                      icon: Icons.savings_rounded,
+                      color: Colors.teal.shade600,
+                      onTap: () => _navigateToSection(6),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Tercera fila: Deudas y Herramientas
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Deudas',
+                      amount: FormatoNumeros.formatearParaMostrar(totalDeudas),
+                      icon: Icons.credit_card_rounded,
+                      color: Colors.orange.shade600,
+                      onTap: () => _navigateToSection(5),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Herramientas',
+                      amount: '',
+                      icon: Icons.build_outlined,
+                      color: Colors.indigo.shade600,
+                      onTap: () => _navigateToSection(7),
                     ),
                   ),
                 ],
@@ -682,18 +697,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             ),
             const SizedBox(height: 10),
             _buildFinancialSummary(),
-            const SizedBox(height: 20),
-            // Menú de servicios organizados
-            const Text(
-              'Servicios Financieros',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1F2937),
-              ),
-            ),
-            const SizedBox(height: 10),
-            _buildFinancialServicesMenu(),
           ],
         ),
       ),
@@ -725,172 +728,18 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
   }
 
 
-  Widget _buildFinancialServicesMenu() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.15),
-          width: 2,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Primera fila - Ahorros y Deudas
-          Row(
-            children: [
-              _buildMenuCard(
-                title: 'Ahorros',
-                icon: Icons.savings_rounded,
-                color: const Color(0xFF10B981),
-                onTap: () => _navigateToSection(6),
-              ),
-              const SizedBox(width: 12),
-              _buildMenuCard(
-                title: 'Deudas',
-                icon: Icons.credit_card_rounded,
-                color: Colors.orange.shade600,
-                onTap: () => _navigateToSection(5),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Segunda fila - Herramientas y Configuración
-          Row(
-            children: [
-              _buildMenuCard(
-                title: 'Herramientas',
-                icon: Icons.build_outlined,
-                color: Colors.indigo.shade600,
-                onTap: () => _navigateToSection(7),
-              ),
-              const SizedBox(width: 12),
-              _buildMenuCard(
-                title: 'Configuración',
-                icon: Icons.settings_outlined,
-                color: Colors.grey.shade700,
-                onTap: () => _navigateToSection(8),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+// ...existing code...
 
-  Widget _buildMenuCard({
-  required String title,
-  required IconData icon,
-  required Color color,
-  required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.2),
-            width: 2,
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: color,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1F2937),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  // Subtítulo eliminado
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+// ...existing code...
 
-  Widget _buildPlaceholderScreen(String title, IconData icon, Color color) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Icon(
-              icon,
-              size: 64,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Funcionalidad en desarrollo',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+// ...existing code...
 
   @override
   Widget build(BuildContext context) {
     // Colores personalizados para cada ítem
     final List<Color> itemColors = [
       Color(0xFF2563EB), // Inicio - azul
-      Color(0xFF2ECC71), // Ingresos - verde (#2ecc71)
-      Color(0xFFEF4444), // Gastos - rojo
-      Color(0xFF007bff), // Cuentas - azul
+      Colors.grey.shade700, // Configuración
       Color(0xFFF59E42), // Perfil - naranja
     ];
 
@@ -900,19 +749,13 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         index: _selectedIndex,
         children: [
           _buildDashboard(),         // 0 - Dashboard
-          const PantallaIngresos(),  // 1 - Ingresos
-          const PantallaGastos(),    // 2 - Gastos
-          const PantallaCuentas(),   // 3 - Cuentas
-          const PantallaPerfil(),    // 4 - Perfil
-          const PantallaDeudas(),    // 5 - Deudas
-          const PantallaAhorros(),   // 6 - Ahorros (antes era 7)
-          _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600), // 7 - Herramientas (antes era 9)
-          const PantallaConfiguracion(), // 8 - Configuración (antes era 10)
+          const PantallaConfiguracion(), // 1 - Configuración
+          const PantallaPerfil(),    // 2 - Perfil
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex <= 4 ? _selectedIndex : 0,
+        currentIndex: _selectedIndex <= 2 ? _selectedIndex : 0,
         onTap: _handleBottomNavigation,
         backgroundColor: Colors.white,
         selectedFontSize: 13,
@@ -925,23 +768,15 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             label: 'Inicio',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.attach_money_outlined, color: _selectedIndex == 1 ? itemColors[1] : Colors.grey.shade400),
-            label: 'Ingresos',
+            icon: Icon(Icons.settings_outlined, color: _selectedIndex == 1 ? itemColors[1] : Colors.grey.shade400),
+            label: 'Configuración',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.payment_outlined, color: _selectedIndex == 2 ? itemColors[2] : Colors.grey.shade400),
-            label: 'Gastos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_rounded, color: _selectedIndex == 3 ? itemColors[3] : Colors.grey.shade400),
-            label: 'Cuentas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline_rounded, color: _selectedIndex == 4 ? itemColors[4] : Colors.grey.shade400),
+            icon: Icon(Icons.person_outline_rounded, color: _selectedIndex == 2 ? itemColors[2] : Colors.grey.shade400),
             label: 'Perfil',
           ),
         ],
-        selectedItemColor: itemColors[_selectedIndex <= 4 ? _selectedIndex : 0],
+        selectedItemColor: itemColors[_selectedIndex <= 2 ? _selectedIndex : 0],
         unselectedItemColor: Colors.grey.shade400,
       ),
       drawer: _buildDrawer(),
