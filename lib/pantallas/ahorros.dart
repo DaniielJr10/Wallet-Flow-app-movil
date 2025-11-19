@@ -1149,7 +1149,6 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                               return null;
                             },
                             decoration: InputDecoration(
-                              prefixText: '�� ',
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               filled: true,
                               fillColor: Colors.grey.shade50,
@@ -1169,7 +1168,6 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                               return null;
                             },
                             decoration: InputDecoration(
-                              prefixText: '�� ',
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               filled: true,
                               fillColor: Colors.grey.shade50,
