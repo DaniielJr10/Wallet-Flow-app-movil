@@ -1178,7 +1178,6 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                               filled: true,
                               fillColor: Colors.grey.shade50,
                             ),
-                            enabled: !esEdicion, // No editable en edición
                           ),
                           const SizedBox(height: 20),
                           Text('Monto objetivo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
