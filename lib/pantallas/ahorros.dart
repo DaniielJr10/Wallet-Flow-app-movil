@@ -50,49 +50,49 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
       'valor': 'vacaciones',
       'nombre': 'Vacaciones',
       'icono': Icons.flight_takeoff_rounded,
-      'color': const Color(0xFF16A085), // Verde azulado para ahorros
+      'color': const Color(0xFF), // Verde azulado para ahorros
     },
     {
       'valor': 'casa',
       'nombre': 'Casa',
       'icono': Icons.home_rounded,
-      'color': const Color(0xFF2ECC71), // Verde principal para ahorros
+      'color': const Color(0xFF8570FA), // Verde principal para ahorros
     },
     {
       'valor': 'auto',
       'nombre': 'Auto',
       'icono': Icons.directions_car_rounded,
-      'color': const Color(0xFF27AE60), // Verde oscuro
+      'color': const Color(0xFF8570FA), // Verde oscuro para ahorros
     },
     {
       'valor': 'emergencia',
       'nombre': 'Emergencia',
       'icono': Icons.security_rounded,
-      'color': const Color(0xFF229954), // Verde seguridad
+      'color': const Color(0xFF8570FA), // Verde seguridad
     },
     {
       'valor': 'educacion',
       'nombre': 'Educación',
       'icono': Icons.school_rounded,
-      'color': const Color(0xFF1ABC9C), // Verde educación
+      'color': const Color(0xFF8570FA), // Verde educación
     },
     {
       'valor': 'inversion',
       'nombre': 'Inversión',
       'icono': Icons.trending_up_rounded,
-      'color': const Color(0xFF138D75), // Verde inversión
+      'color': const Color(0xFF8570FA), // Verde inversión
     },
     {
       'valor': 'salud',
       'nombre': 'Salud',
       'icono': Icons.health_and_safety_rounded,
-      'color': const Color(0xFF117A65), // Verde salud
+      'color': const Color(0xFF8570FA), // Verde salud
     },
     {
       'valor': 'otros',
       'nombre': 'Otros',
       'icono': Icons.more_horiz_rounded,
-      'color': const Color(0xFF0E6B5E), // Verde otros
+      'color': const Color(0xFF8570FA), // Verde otros
     },
   ];
 
@@ -314,7 +314,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(
-                      color: Color(0xFF2ECC71).withOpacity(0.5),
+                      color: Color(0xFF8570FA).withOpacity(0.5),
                       width: 2,
                     ),
                   ),
