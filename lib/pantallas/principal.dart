@@ -450,7 +450,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       title: 'Ahorros',
                       amount: FormatoNumeros.formatearParaMostrar(totalAhorros),
                       icon: Icons.savings_rounded,
-                      color: Colors.teal.shade600,
+                      color: const Color(0xFF8570FA),
                       onTap: () => _navigateToSection(6),
                     ),
                   ),
