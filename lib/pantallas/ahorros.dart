@@ -20,6 +20,14 @@ class PantallaAhorros extends StatefulWidget {
 }
 
 class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderStateMixin {
+    // Controladores para el formulario de nuevo ahorro
+    final _formKeyAhorro = GlobalKey<FormState>();
+    final TextEditingController _nombreController = TextEditingController();
+    final TextEditingController _montoInicialController = TextEditingController();
+    final TextEditingController _montoObjetivoController = TextEditingController();
+    DateTime? _fechaAhorro = DateTime.now();
+    String _categoriaAhorro = 'vacaciones';
+
   
   // === CONTROLADORES Y SERVICIOS FIREBASE ===
   final TextEditingController _busquedaController = TextEditingController();
@@ -1053,10 +1061,196 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
 
   /// Muestra el diálogo para agregar nueva meta
   void _mostrarDialogoAgregarMeta() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Funcionalidad de nueva meta en desarrollo'),
-        backgroundColor: Color(0xFF8570FA),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.80,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8570FA),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(25),
+                      topRight: Radius.circular(25),
+                    ),
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.savings_rounded, color: Colors.white, size: 28),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text('Nuevo ahorro', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Form(
+                      key: _formKeyAhorro,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Nombre del ahorro', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _nombreController,
+                            validator: (value) => value == null || value.isEmpty ? 'Ingresa el nombre del ahorro' : null,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text('Monto inicial', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _montoInicialController,
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) return 'Ingresa el monto inicial';
+                              final num? monto = num.tryParse(value.replaceAll(',', '.'));
+                              if (monto == null || monto < 0) return 'Monto inválido';
+                              return null;
+                            },
+                            decoration: InputDecoration(
+                              prefixText: ' 24 ',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text('Monto objetivo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _montoObjetivoController,
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) return 'Ingresa el monto objetivo';
+                              final num? monto = num.tryParse(value.replaceAll(',', '.'));
+                              if (monto == null || monto <= 0) return 'Monto inválido';
+                              return null;
+                            },
+                            decoration: InputDecoration(
+                              prefixText: ' 24 ',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text('Fecha objetivo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: _fechaAhorro ?? DateTime.now(),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime(2100),
+                              );
+                              if (picked != null) setModalState(() => _fechaAhorro = picked);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Color(0xFF8570FA), width: 2),
+                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.grey.shade50,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.calendar_today_rounded, color: Color(0xFF8570FA)),
+                                  const SizedBox(width: 12),
+                                  Text(_fechaAhorro != null ? '${_fechaAhorro!.day}/${_fechaAhorro!.month}/${_fechaAhorro!.year}' : 'Selecciona una fecha'),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text('Categoría', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            value: _categoriaAhorro,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                            ),
+                            items: _categorias.map((cat) => DropdownMenuItem<String>(
+                              value: cat['valor'] as String,
+                              child: Row(
+                                children: [
+                                  Icon(cat['icono'], color: Color(0xFF8570FA)),
+                                  const SizedBox(width: 8),
+                                  Text(cat['nombre']),
+                                ],
+                              ),
+                            )).toList(),
+                            onChanged: (val) => setModalState(() => _categoriaAhorro = val ?? 'vacaciones'),
+                          ),
+                          const SizedBox(height: 32),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                                  child: Text('Cancelar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    if (_formKeyAhorro.currentState?.validate() ?? false) {
+                                      // Aquí iría la lógica para guardar el ahorro en Firebase
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Ahorro creado correctamente'),
+                                          backgroundColor: Color(0xFF8570FA),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFF8570FA),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    elevation: 0,
+                                  ),
+                                  child: Text('Guardar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
