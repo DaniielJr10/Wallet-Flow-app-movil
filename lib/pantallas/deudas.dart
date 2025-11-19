@@ -514,7 +514,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
   /// Construye la barra de aplicación
   Widget _buildAppBar() {
     return SliverAppBar(
-      expandedHeight: 120,
+      expandedHeight: 96,
       floating: false,
       pinned: true,
       backgroundColor: const Color(0xFFEF4444),
@@ -525,7 +525,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 20,
+            fontSize: 18,
           ),
         ),
         background: Container(
@@ -549,7 +549,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
     return ScaleTransition(
       scale: _scaleAnimation,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
@@ -576,34 +576,33 @@ class _PantallaDeudasState extends State<PantallaDeudas>
               children: [
                 const Icon(
                   Icons.account_balance_wallet,
-                  color: Colors.white,
-                  size: 28,
+                    color: Colors.white,
+                    size: 22,
                 ),
-                const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                 Column(
                   children: [
-                    const Text(
-                      'Total Deuda Pendiente',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                      const Text(
+                        'Total Deuda Pendiente',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                    Text(
-                      _formatearMoneda(_totalDeudaPendiente),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                      Text(
+                        _formatearMoneda(_totalDeudaPendiente),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ],
             ),
-            
-            const SizedBox(height: 20),
+              const SizedBox(height: 12),
             
             // Estadísticas en grid
             Row(
@@ -615,7 +614,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                     Icons.warning,
                   ),
                 ),
-                const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                 Expanded(
                   child: _buildEstadisticaResumen(
                     'Pago Mínimo',
@@ -626,7 +625,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
               ],
             ),
             
-            const SizedBox(height: 16),
+              const SizedBox(height: 12),
             
             Row(
               children: [
@@ -637,7 +636,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                     Icons.list_alt,
                   ),
                 ),
-                const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                 Expanded(
                   child: _buildEstadisticaResumen(
                     'Promedio Vencimiento',
@@ -656,7 +655,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
   /// Construye una estadística del resumen
   Widget _buildEstadisticaResumen(String titulo, String valor, IconData icono) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
@@ -666,14 +665,14 @@ class _PantallaDeudasState extends State<PantallaDeudas>
           Icon(
             icono,
             color: Colors.white,
-            size: 20,
+            size: 18,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             valor,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
@@ -682,7 +681,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
             titulo,
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
@@ -699,7 +698,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
         // Filtro
         Expanded(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
@@ -714,7 +713,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                     value: filtro,
                     child: Text(
                       filtro,
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 13),
                     ),
                   );
                 }).toList(),
@@ -731,12 +730,12 @@ class _PantallaDeudasState extends State<PantallaDeudas>
           ),
         ),
         
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         
         // Ordenamiento
         Expanded(
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
@@ -751,7 +750,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                     value: orden,
                     child: Text(
                       orden,
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 13),
                     ),
                   );
                 }).toList(),
@@ -789,12 +788,12 @@ class _PantallaDeudasState extends State<PantallaDeudas>
             return Transform.translate(
               offset: Offset(
                 0, 
-                (1 - _cardController.value) * 50 * (index + 1),
+                (1 - _cardController.value) * 30 * (index + 1),
               ),
               child: Opacity(
                 opacity: _cardController.value,
                 child: Container(
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: const EdgeInsets.only(bottom: 8),
                   child: _buildTarjetaDeuda(deuda),
                 ),
               ),
@@ -808,33 +807,33 @@ class _PantallaDeudasState extends State<PantallaDeudas>
   /// Construye el mensaje cuando no hay deudas
   Widget _buildListaVacia() {
     return Container(
-      padding: const EdgeInsets.all(40),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           Icon(
             Icons.account_balance_wallet_outlined,
-            size: 64,
+            size: 48,
             color: Colors.grey[400],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
             _filtroSeleccionado == 'Todas' 
                 ? '¡Sin deudas registradas!'
                 : 'No hay deudas en esta categoría',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.grey[600],
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             _filtroSeleccionado == 'Todas'
                 ? 'Mantén un control financiero saludable'
                 : 'Intenta con otro filtro',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               color: Colors.grey[500],
             ),
             textAlign: TextAlign.center,
@@ -869,7 +868,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
         children: [
           // Encabezado de la tarjeta
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: colorEstado.withOpacity(0.1),
               borderRadius: const BorderRadius.vertical(
@@ -880,7 +879,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
               children: [
                 // Ícono del tipo de deuda
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
                     color: colorEstado.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
@@ -888,10 +887,10 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                   child: Icon(
                     _obtenerIconoTipoDeuda(deuda['tipo']),
                     color: colorEstado,
-                    size: 20,
+                    size: 18,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 
                 // Información principal
                 Expanded(
@@ -901,7 +900,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                       Text(
                         deuda['titulo'],
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF111827),
                         ),
@@ -910,7 +909,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                       Text(
                         '${deuda['tipo']} • ${deuda['acreedor']}',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: colorEstado.withOpacity(0.8),
                           fontWeight: FontWeight.w500,
                         ),
@@ -975,7 +974,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
           
           // Contenido de la tarjeta
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               children: [
                 // Montos y porcentaje
@@ -996,7 +995,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                           Text(
                             _formatearMoneda(deuda['montoPendiente']),
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: colorEstado,
                             ),
@@ -1019,7 +1018,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                         Text(
                           _formatearMoneda(deuda['pagoMinimo']),
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF111827),
                           ),
@@ -1029,7 +1028,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                   ],
                 ),
                 
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 
                 // Barra de progreso
                 Column(
@@ -1041,7 +1040,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                         const Text(
                           'Progreso de Pago',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Color(0xFF6B7280),
                             fontWeight: FontWeight.w500,
                           ),
@@ -1049,7 +1048,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                         Text(
                           '${(progresoPago * 100).toStringAsFixed(1)}%',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: colorEstado,
                             fontWeight: FontWeight.bold,
                           ),
@@ -1076,13 +1075,13 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                         Icon(
                           Icons.schedule,
                           color: colorEstado,
-                          size: 16,
+                          size: 14,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _formatearFecha(deuda['fechaVencimiento']),
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: colorEstado,
                             fontWeight: FontWeight.w500,
                           ),
@@ -1095,13 +1094,13 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                         Icon(
                           Icons.percent,
                           color: colorEstado,
-                          size: 16,
+                          size: 14,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${deuda['tasaInteres']}% anual',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: colorEstado,
                             fontWeight: FontWeight.w500,
                           ),
