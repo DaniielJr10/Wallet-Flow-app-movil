@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../utilidades/formato_numeros.dart';
+import '../firebase/servicios/ahorros_servicio.dart';
 
 /// Pantalla de gestión de metas de ahorro
 /// 
@@ -31,8 +32,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
   
   // === CONTROLADORES Y SERVICIOS FIREBASE ===
   final TextEditingController _busquedaController = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final AhorrosServicio _ahorrosServicio = AhorrosServicio();
   
   // === ANIMACIONES ===
   late AnimationController _animationController;
@@ -412,42 +412,31 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
 
   /// Construye el resumen financiero de ahorros
   Widget _construirResumenFinanciero() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _firestore
-          .collection('ahorros')
-          .where('usuarioId', isEqualTo: _auth.currentUser?.uid)
-          .snapshots(),
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _ahorrosServicio.obtenerMetasAhorro(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const SizedBox(height: 120);
         }
-
         double totalAhorrado = 0;
         double totalMetas = 0;
-        int totalMetasCount = snapshot.data!.docs.length;
+        int totalMetasCount = snapshot.data!.length;
         int metasCompletadas = 0;
-
-        for (var doc in snapshot.data!.docs) {
-          final meta = doc.data() as Map<String, dynamic>;
+        for (var meta in snapshot.data!) {
           final montoActual = (meta['montoActual'] ?? 0.0).toDouble();
           final montoObjetivo = (meta['montoObjetivo'] ?? 0.0).toDouble();
-          
           totalAhorrado += montoActual;
           totalMetas += montoObjetivo;
-          
-          // Verificar si la meta está completada
           if (montoActual >= montoObjetivo) {
             metasCompletadas++;
           }
         }
-
         final double progresoPorcentaje = totalMetas > 0 ? (totalAhorrado / totalMetas) * 100 : 0;
-
         return Container(
           margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Color(0xFF8570FA), // Verde principal para ahorros
+            color: Color(0xFF8570FA),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -493,7 +482,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
               ),
               const SizedBox(height: 8),
               Text(
-                '\$${_formatearMoneda(totalAhorrado)}',
+                _formatearMoneda(totalAhorrado),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 32,
@@ -517,7 +506,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '\$${_formatearMoneda(totalMetas)}',
+                          _formatearMoneda(totalMetas),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -586,11 +575,8 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
 
   /// Construye la lista de metas de ahorro
   Widget _construirListaMetas() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _firestore
-          .collection('ahorros')
-          .where('usuarioId', isEqualTo: _auth.currentUser?.uid)
-          .snapshots(),
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: _ahorrosServicio.obtenerMetasAhorro(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -599,29 +585,54 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
             ),
           );
         }
-
         if (snapshot.hasError) {
           return _construirEstadoError();
         }
-
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return _construirEstadoVacio();
         }
-
         // Filtrado por búsqueda y estado
-        var docs = _filtrarMetas(snapshot.data!.docs);
-
-        if (docs.isEmpty) {
+        var metas = snapshot.data!;
+        // Filtrado manual
+        if (_busquedaMeta.isNotEmpty) {
+          metas = metas.where((meta) {
+            final nombre = (meta['nombre'] ?? '').toString().toLowerCase();
+            final categoria = (meta['categoria'] ?? '').toString().toLowerCase();
+            return nombre.contains(_busquedaMeta.toLowerCase()) || categoria.contains(_busquedaMeta.toLowerCase());
+          }).toList();
+        }
+        if (_modoFiltro == 'activas') {
+          metas = metas.where((meta) {
+            final montoActual = (meta['montoActual'] ?? 0.0).toDouble();
+            final montoObjetivo = (meta['montoObjetivo'] ?? 0.0).toDouble();
+            return montoActual < montoObjetivo;
+          }).toList();
+        } else if (_modoFiltro == 'completadas') {
+          metas = metas.where((meta) {
+            final montoActual = (meta['montoActual'] ?? 0.0).toDouble();
+            final montoObjetivo = (meta['montoObjetivo'] ?? 0.0).toDouble();
+            return montoActual >= montoObjetivo;
+          }).toList();
+        }
+        // Ordenar por fecha de creación (más recientes primero)
+        metas.sort((a, b) {
+          final fechaA = a['fechaCreacion'] as DateTime?;
+          final fechaB = b['fechaCreacion'] as DateTime?;
+          if (fechaA == null && fechaB == null) return 0;
+          if (fechaA == null) return 1;
+          if (fechaB == null) return -1;
+          return fechaB.compareTo(fechaA);
+        });
+        if (metas.isEmpty) {
           return _construirEstadoSinResultados();
         }
-
         return ListView.builder(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: docs.length,
+          itemCount: metas.length,
           itemBuilder: (context, index) {
-            final doc = docs[index];
-            final meta = doc.data() as Map<String, dynamic>;
-            return _construirTarjetaMeta(doc.id, meta, index);
+            final meta = metas[index];
+            final id = meta['id'] as String;
+            return _construirTarjetaMeta(id, meta, index);
           },
         );
       },
@@ -1316,8 +1327,8 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
     );
 
     if (confirmacion == true) {
-      try {
-        await _firestore.collection('ahorros').doc(id).delete();
+      final error = await _ahorrosServicio.eliminarMetaAhorro(id);
+      if (error == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1327,11 +1338,11 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
             ),
           );
         }
-      } catch (e) {
+      } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Error al eliminar la meta'),
+            SnackBar(
+              content: Text(error),
               backgroundColor: Colors.red,
               behavior: SnackBarBehavior.floating,
             ),
