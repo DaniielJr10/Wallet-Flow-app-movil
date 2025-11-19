@@ -6,6 +6,11 @@ import '../firebase/base_datos_servicio.dart';
 import '../firebase/servicios/principal_servicio.dart';
 import '../utilidades/formato_numeros.dart';
 import '../login/iniciosesion.dart';
+import 'ingresos.dart';
+import 'gastos.dart';
+import 'cuentas.dart';
+import 'deudas.dart';
+import 'ahorros.dart';
 // ...existing code...
 
 
@@ -453,7 +458,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       title: 'Ahorros',
                       amount: FormatoNumeros.formatearParaMostrar(totalAhorros),
                       icon: Icons.savings_rounded,
-                      color: Colors.teal.shade600,
+                      color: const Color(0xFF8570FA),
                       onTap: () => _navigateToSection(6),
                     ),
                   ),
@@ -708,6 +713,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
 
   void _navigateToSection(int index) {
     HapticFeedback.lightImpact();
+<<<<<<< HEAD
 
     // Keep the IndexedStack for the main tabs (0..2). For other indices,
     // push the corresponding page to avoid setting an out-of-range index.
@@ -741,6 +747,49 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
       default:
         // Fallback to dashboard
         setState(() { _selectedIndex = 0; });
+=======
+    switch (index) {
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaIngresos()),
+        );
+        break;
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaGastos()),
+        );
+        break;
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaCuentas()),
+        );
+        break;
+      case 5:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaDeudas()),
+        );
+        break;
+      case 6:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaAhorros()),
+        );
+        break;
+      case 7:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaHerramientas()),
+        );
+        break;
+      default:
+        setState(() {
+          _selectedIndex = index;
+        });
+>>>>>>> 11a25829544d0fd4156c8a23081c503f8554ddc9
     }
   }
 
