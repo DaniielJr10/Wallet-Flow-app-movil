@@ -1306,14 +1306,238 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
     );
   }
 
-  /// Muestra los detalles de una meta
+  /// Muestra el modal con los detalles completos de la meta de ahorro
   void _mostrarDetallesMeta(String metaId, Map<String, dynamic> meta) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Detalles de: ${meta['nombre'] ?? 'Meta sin nombre'}'),
-        backgroundColor: Color(0xFF8570FA),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildModalDetallesMeta(metaId, meta),
+    );
+  }
+
+  /// Modal de detalles idéntico al de ingresos
+  Widget _buildModalDetallesMeta(String metaId, Map<String, dynamic> meta) {
+    final categoria = meta['categoria'] ?? 'otros';
+    final categoriaInfo = _categorias.firstWhere(
+      (cat) => cat['valor'] == categoria,
+      orElse: () => _categorias.last,
+    );
+    final montoInicial = (meta['montoInicial'] ?? 0.0).toDouble();
+    final montoActual = (meta['montoActual'] ?? 0.0).toDouble();
+    final montoObjetivo = (meta['montoObjetivo'] ?? 0.0).toDouble();
+    final fechaObjetivo = meta['fechaObjetivo'] as DateTime? ?? DateTime.now();
+    final fechaCreacion = meta['fechaCreacion'] as DateTime?;
+    final progreso = montoObjetivo > 0 ? (montoActual / montoObjetivo) : 0.0;
+    final diasRestantes = fechaObjetivo.difference(DateTime.now()).inDays;
+    final esCompletada = montoActual >= montoObjetivo;
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
+      ),
+      child: Column(
+        children: [
+          // Header del modal (idéntico a ingresos)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: categoriaInfo['color'].withOpacity(0.08),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: categoriaInfo['color'].withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    categoriaInfo['icono'],
+                    color: categoriaInfo['color'],
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        meta['nombre'] ?? 'Meta sin nombre',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        categoriaInfo['nombre'],
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: categoriaInfo['color'],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Contenido de los detalles (idéntico a ingresos)
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetalleItem('Monto actual', _formatearMoneda(montoActual), Icons.savings_rounded),
+                  const SizedBox(height: 12),
+                  _buildDetalleItem('Monto objetivo', _formatearMoneda(montoObjetivo), Icons.flag_rounded),
+                  const SizedBox(height: 12),
+                  _buildDetalleItem('Monto inicial', _formatearMoneda(montoInicial), Icons.play_arrow_rounded),
+                  const SizedBox(height: 12),
+                  _buildDetalleItem('Fecha objetivo', _formatearFecha(fechaObjetivo), Icons.event_rounded),
+                  if (fechaCreacion != null) ...[
+                    const SizedBox(height: 12),
+                    _buildDetalleItem('Fecha de creación', _formatearFecha(fechaCreacion), Icons.calendar_today_rounded),
+                  ],
+                  const SizedBox(height: 12),
+                  _buildDetalleItem('Progreso', '${(progreso * 100).toStringAsFixed(1)}%', Icons.trending_up_rounded),
+                  const SizedBox(height: 12),
+                  _buildDetalleItem('Días restantes', diasRestantes >= 0 ? '$diasRestantes días' : 'Meta vencida', Icons.hourglass_bottom_rounded),
+                  const SizedBox(height: 24),
+                  _construirBarraProgreso(progreso, categoriaInfo['color'], esCompletada),
+                ],
+              ),
+            ),
+          ),
+          // Botones de acción (idénticos a ingresos)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(25),
+                bottomRight: Radius.circular(25),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cerrar'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: categoriaInfo['color'],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _mostrarDialogoEditarMeta(metaId, meta);
+                    },
+                    child: const Text('Editar meta'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _confirmarEliminarMeta(metaId, meta['nombre'] ?? 'esta meta');
+                    },
+                    child: const Text('Eliminar'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  /// Construye un item de detalle con icono, título y valor
+  Widget _buildDetalleItem(String titulo, String valor, IconData icono) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icono,
+              color: Colors.grey.shade700,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  titulo,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  valor,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Formatea la fecha para mostrar en el modal
+  String _formatearFecha(DateTime fecha) {
+    return '${fecha.day.toString().padLeft(2, '0')}/${fecha.month.toString().padLeft(2, '0')}/${fecha.year}';
   }
 
   /// Muestra el diálogo para editar meta
