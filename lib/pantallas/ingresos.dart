@@ -1585,9 +1585,32 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false,
-        title: null,
-        toolbarHeight: 0, // Oculta la barra superior
+        automaticallyImplyLeading: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF27ae60)),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: Text(
+          'INGRESOS',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF27ae60),
+            letterSpacing: 2.2,
+            fontFamily: 'Montserrat',
+            height: 1.1,
+            shadows: [
+              Shadow(
+                color: Colors.black12,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+        ),
+        centerTitle: true,
       ),
       body: FadeTransition(
         opacity: _fadeAnimation,
@@ -1596,62 +1619,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header bonito y centrado
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.attach_money_rounded,
-                        color: Color(0xFF27ae60),
-                        size: 28,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black12,
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          'INGRESOS',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF27ae60),
-                            letterSpacing: 2.2,
-                            fontFamily: 'Montserrat',
-                            height: 1.1,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black12,
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Gestiona y controla todos tus ingresos',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
+              // ...el resto del código permanece igual...
               _buildResumenIngresos(),
               const SizedBox(height: 24),
               // Campo de búsqueda con botón de filtros
