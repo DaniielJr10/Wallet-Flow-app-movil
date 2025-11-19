@@ -6,6 +6,11 @@ import '../firebase/base_datos_servicio.dart';
 import '../firebase/servicios/principal_servicio.dart';
 import '../utilidades/formato_numeros.dart';
 import '../login/iniciosesion.dart';
+import 'ingresos.dart';
+import 'gastos.dart';
+import 'cuentas.dart';
+import 'deudas.dart';
+import 'ahorros.dart';
 // ...existing code...
 
 
@@ -705,16 +710,47 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
 
   void _navigateToSection(int index) {
     HapticFeedback.lightImpact();
-    if (index == 7) {
-      // Navegar a la pantalla de herramientas
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const PantallaHerramientas()),
-      );
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
+    switch (index) {
+      case 1:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaIngresos()),
+        );
+        break;
+      case 2:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaGastos()),
+        );
+        break;
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaCuentas()),
+        );
+        break;
+      case 5:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaDeudas()),
+        );
+        break;
+      case 6:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaAhorros()),
+        );
+        break;
+      case 7:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PantallaHerramientas()),
+        );
+        break;
+      default:
+        setState(() {
+          _selectedIndex = index;
+        });
     }
   }
 
