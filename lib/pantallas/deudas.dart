@@ -49,6 +49,15 @@ class _PantallaDeudasState extends State<PantallaDeudas>
   /// Orden de visualización de las deudas
   String _ordenSeleccionado = 'Vencimiento';
 
+  /// Texto de búsqueda (barra superior)
+  String _textoBusqueda = '';
+  
+  /// Modo de búsqueda del filtro ("categoría" o "mes")
+  String _modoBusqueda = 'categoría';
+  
+  /// Key para ubicar el botón de filtro y anclar el popup
+  final GlobalKey _filterButtonKey = GlobalKey();
+
   // ===== DATOS CALCULADOS =====
   /// Total de deuda pendiente
   double _totalDeudaPendiente = 0.0;
@@ -250,6 +259,16 @@ class _PantallaDeudasState extends State<PantallaDeudas>
   /// Obtiene las deudas filtradas según el filtro seleccionado
   List<Map<String, dynamic>> get _deudasFiltradas {
     var deudasFiltradas = List<Map<String, dynamic>>.from(_deudas);
+    // Aplica búsqueda por texto (título, tipo, acreedor)
+    if (_textoBusqueda.trim().isNotEmpty) {
+      final q = _textoBusqueda.toLowerCase();
+      deudasFiltradas = deudasFiltradas.where((d) {
+        final titulo = (d['titulo'] ?? '').toString().toLowerCase();
+        final tipo = (d['tipo'] ?? '').toString().toLowerCase();
+        final acreedor = (d['acreedor'] ?? '').toString().toLowerCase();
+        return titulo.contains(q) || tipo.contains(q) || acreedor.contains(q);
+      }).toList();
+    }
 
     // Aplicar filtro
     switch (_filtroSeleccionado) {
@@ -693,77 +712,97 @@ class _PantallaDeudasState extends State<PantallaDeudas>
 
   /// Construye los controles de filtros y ordenamiento
   Widget _buildFiltrosYOrden() {
-    return Row(
+    // Cabecera igual a la de 'ingresos': search bar grande + botón circular de filtro
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Filtro
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _filtroSeleccionado,
-                icon: const Icon(Icons.filter_list, color: Color(0xFF6B7280)),
-                items: _filtrosDisponibles.map((filtro) {
-                  return DropdownMenuItem(
-                    value: filtro,
-                    child: Text(
-                      filtro,
-                      style: const TextStyle(fontSize: 13),
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                height: 48,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, color: Color(0xFF6B7280)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        onChanged: (v) {
+                          setState(() {
+                            _textoBusqueda = v;
+                            _calcularEstadisticas();
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          hintText: 'Buscar por categoría...',
+                          border: InputBorder.none,
+                          isDense: true,
+                        ),
+                      ),
                     ),
-                  );
-                }).toList(),
-                onChanged: (nuevoFiltro) {
-                  if (nuevoFiltro != null) {
-                    setState(() {
-                      _filtroSeleccionado = nuevoFiltro;
-                    });
-                    _calcularEstadisticas();
-                  }
-                },
+                  ],
+                ),
               ),
             ),
-          ),
+
+            const SizedBox(width: 10),
+
+            // Small filter button styled like the attached icon (white rounded square + green funnel)
+            Container(
+              key: _filterButtonKey,
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: IconButton(
+                onPressed: () => _mostrarModalFiltroBusqueda(),
+                icon: const Icon(Icons.filter_alt_rounded, color: Color(0xFF10B981), size: 20),
+              ),
+            ),
+          ],
         ),
-        
-        const SizedBox(width: 8),
-        
-        // Ordenamiento
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _ordenSeleccionado,
-                icon: const Icon(Icons.sort, color: Color(0xFF6B7280)),
-                items: _opcionesOrden.map((orden) {
-                  return DropdownMenuItem(
-                    value: orden,
-                    child: Text(
-                      orden,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (nuevoOrden) {
-                  if (nuevoOrden != null) {
-                    setState(() {
-                      _ordenSeleccionado = nuevoOrden;
-                    });
-                  }
-                },
+
+        const SizedBox(height: 12),
+
+        // Title row: left title, right green action button (visual only)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Historial de Deudas',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0F172A),
               ),
             ),
-          ),
+            ElevatedButton.icon(
+                  onPressed: () => _mostrarFormularioNuevaDeuda(),
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('+ Nueva deuda'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -866,32 +905,42 @@ class _PantallaDeudasState extends State<PantallaDeudas>
       ),
       child: Column(
         children: [
-          // Encabezado de la tarjeta
+          // Encabezado de la tarjeta (estilo similar a ingresos)
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: colorEstado.withOpacity(0.1),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  colorEstado.withOpacity(0.95),
+                  colorEstado.withOpacity(0.85),
+                ],
+              ),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(16),
               ),
             ),
             child: Row(
               children: [
-                // Ícono del tipo de deuda
+                // Avatar con ícono
                 Container(
-                  padding: const EdgeInsets.all(6),
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: colorEstado.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.white.withOpacity(0.95),
+                    shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    _obtenerIconoTipoDeuda(deuda['tipo']),
-                    color: colorEstado,
-                    size: 18,
+                  child: Center(
+                    child: Icon(
+                      _obtenerIconoTipoDeuda(deuda['tipo']),
+                      color: colorEstado,
+                      size: 20,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                
+                const SizedBox(width: 12),
+
                 // Información principal
                 Expanded(
                   child: Column(
@@ -900,29 +949,39 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                       Text(
                         deuda['titulo'],
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF111827),
+                          color: Colors.white,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
                         '${deuda['tipo']} • ${deuda['acreedor']}',
                         style: TextStyle(
-                          fontSize: 11,
-                          color: colorEstado.withOpacity(0.8),
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.9),
                           fontWeight: FontWeight.w500,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-                
-                // Menú de opciones
+
+                // Menú de opciones (círculo blanco sobre fondo)
                 PopupMenuButton<String>(
-                  icon: Icon(
-                    Icons.more_vert,
-                    color: colorEstado,
+                  icon: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.more_vert,
+                      color: colorEstado,
+                      size: 18,
+                    ),
                   ),
                   onSelected: (opcion) => _manejarOpcionDeuda(opcion, deuda),
                   itemBuilder: (context) => [
@@ -981,50 +1040,50 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                 Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Monto Pendiente',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF6B7280),
-                              fontWeight: FontWeight.w500,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Monto Pendiente',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF6B7280),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                _formatearMoneda(deuda['montoPendiente']),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            _formatearMoneda(deuda['montoPendiente']),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: colorEstado,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
                     
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        const Text(
-                          'Pago Mínimo',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF6B7280),
-                            fontWeight: FontWeight.w500,
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            const Text(
+                              'Pago Mínimo',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF6B7280),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              _formatearMoneda(deuda['pagoMinimo']),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF111827),
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          _formatearMoneda(deuda['pagoMinimo']),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
                 
@@ -1331,6 +1390,299 @@ class _PantallaDeudasState extends State<PantallaDeudas>
         ],
       ),
     );
+  }
+
+  /// Muestra el formulario para crear una nueva deuda (modal)
+  void _mostrarFormularioNuevaDeuda() {
+    final _formKeyNueva = GlobalKey<FormState>();
+    final tituloCtrl = TextEditingController();
+    final montoCtrl = TextEditingController();
+    final pagoMinCtrl = TextEditingController();
+    final acreedorCtrl = TextEditingController();
+    String tipoSeleccionado = 'Préstamo Personal';
+    DateTime fechaVenc = DateTime.now().add(const Duration(days: 30));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateModal) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color(0xFFEF4444).withOpacity(0.95),
+                        const Color(0xFFEF7A3A).withOpacity(0.95),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(25),
+                      topRight: Radius.circular(25),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.receipt_long, color: Colors.white, size: 26),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Crear Deuda',
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close_rounded, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Form(
+                      key: _formKeyNueva,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            controller: tituloCtrl,
+                            decoration: const InputDecoration(labelText: 'Título'),
+                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un título' : null,
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: tipoSeleccionado,
+                            items: const [
+                              DropdownMenuItem(value: 'Préstamo Personal', child: Text('Préstamo Personal')),
+                              DropdownMenuItem(value: 'Tarjeta de Crédito', child: Text('Tarjeta de Crédito')),
+                              DropdownMenuItem(value: 'Préstamo Vehicular', child: Text('Préstamo Vehicular')),
+                              DropdownMenuItem(value: 'Préstamo Hipotecario', child: Text('Préstamo Hipotecario')),
+                              DropdownMenuItem(value: 'Otro', child: Text('Otro')),
+                            ],
+                            onChanged: (v) => setStateModal(() { tipoSeleccionado = v ?? tipoSeleccionado; }),
+                            decoration: const InputDecoration(labelText: 'Tipo'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: montoCtrl,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [FormateadorNumeros()],
+                            decoration: const InputDecoration(labelText: 'Monto'),
+                            validator: (v) {
+                              final n = FormatoNumeros.convertirANumero(v ?? '');
+                              return (n == null || n <= 0) ? 'Ingresa un monto válido' : null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: pagoMinCtrl,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [FormateadorNumeros()],
+                            decoration: const InputDecoration(labelText: 'Pago mínimo'),
+                            validator: (v) {
+                              final n = FormatoNumeros.convertirANumero(v ?? '');
+                              return (n == null || n < 0) ? 'Ingresa un pago mínimo válido' : null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: acreedorCtrl,
+                            decoration: const InputDecoration(labelText: 'Acreedor / Banco'),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Text('Fecha de vencimiento: '),
+                              const SizedBox(width: 8),
+                              TextButton(
+                                onPressed: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: fechaVenc,
+                                    firstDate: DateTime.now().subtract(const Duration(days: 3650)),
+                                    lastDate: DateTime.now().add(const Duration(days: 3650)),
+                                  );
+                                  if (picked != null) setStateModal(() { fechaVenc = picked; });
+                                },
+                                child: Text('${fechaVenc.day}/${fechaVenc.month}/${fechaVenc.year}'),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cancelar'),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: () {
+                                  if (_formKeyNueva.currentState?.validate() ?? false) {
+                                    final monto = FormatoNumeros.convertirANumero(montoCtrl.text) ?? 0.0;
+                                    final pagoMin = FormatoNumeros.convertirANumero(pagoMinCtrl.text) ?? 0.0;
+
+                                    final nueva = {
+                                      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                                      'titulo': tituloCtrl.text.trim(),
+                                      'tipo': tipoSeleccionado,
+                                      'montoOriginal': monto,
+                                      'montoPendiente': monto,
+                                      'tasaInteres': 0.0,
+                                      'fechaVencimiento': fechaVenc,
+                                      'pagoMinimo': pagoMin,
+                                      'estado': 'Pendiente',
+                                      'fechaCreacion': DateTime.now(),
+                                      'acreedor': acreedorCtrl.text.trim(),
+                                      'numeroCuenta': '',
+                                      'historialPagos': [],
+                                    };
+
+                                    setState(() {
+                                      _deudas.insert(0, nueva);
+                                    });
+
+                                    _calcularEstadisticas();
+                                    Navigator.pop(context);
+                                    _mostrarExito('Deuda creada correctamente');
+                                  }
+                                },
+                                child: const Text('Crear'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFEF4444),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Muestra el modal flotante de opciones de búsqueda (Por categoría / Por mes)
+  void _mostrarModalFiltroBusqueda() {
+    // Try to anchor a popup to the filter button. If key is not available, fallback to dialog.
+    final keyContext = _filterButtonKey.currentContext;
+    if (keyContext == null) {
+      // fallback: simple dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Modo de búsqueda'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                value: 'categoría',
+                groupValue: _modoBusqueda,
+                title: const Text('Por categoría'),
+                onChanged: (v) { setState(() { _modoBusqueda = v ?? _modoBusqueda; }); Navigator.pop(context); },
+              ),
+              RadioListTile<String>(
+                value: 'mes',
+                groupValue: _modoBusqueda,
+                title: const Text('Por mes'),
+                onChanged: (v) { setState(() { _modoBusqueda = v ?? _modoBusqueda; }); Navigator.pop(context); },
+              ),
+            ],
+          ),
+        ),
+      );
+      return;
+    }
+
+    final renderBox = keyContext.findRenderObject() as RenderBox;
+    final offset = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+    final screenSize = MediaQuery.of(context).size;
+
+    // Mostrar el popup debajo del botón (como en la imagen). Calculamos la posición
+    // y la recortamos para que no salga de la pantalla.
+    const double menuApproxHeight = 140.0;
+    double desiredTop = offset.dy + size.height + 8;
+    // Ajuste fino: subir el popup más arriba según solicitud
+    desiredTop -= 40; // subir 40px
+    // Si queda fuera inferior, subirlo para que quepa; también limitar el top mínimo
+    if (desiredTop + menuApproxHeight > screenSize.height - 8.0) {
+      desiredTop = (screenSize.height - menuApproxHeight - 8.0).clamp(8.0, double.infinity);
+    }
+    final top = desiredTop.clamp(8.0, screenSize.height - menuApproxHeight - 8.0);
+
+    showMenu<String>(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        top,
+        offset.dx + size.width,
+        offset.dy,
+      ),
+      items: [
+        PopupMenuItem<String>(
+          enabled: false,
+          child: Row(
+            children: const [
+              Icon(Icons.tune, color: Color(0xFF10B981)),
+              SizedBox(width: 8),
+              Text('Modo de búsqueda', style: TextStyle(color: Color(0xFF10B981), fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem<String>(
+          value: 'categoría',
+          child: Row(
+            children: [
+              const Icon(Icons.category, color: Color(0xFF10B981)),
+              const SizedBox(width: 10),
+              const Expanded(child: Text('Por categoría')),
+              if (_modoBusqueda == 'categoría') const Icon(Icons.check_circle, color: Color(0xFF10B981)),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'mes',
+          child: Row(
+            children: [
+              const Icon(Icons.calendar_month_outlined, color: Color(0xFF64748B)),
+              const SizedBox(width: 10),
+              const Expanded(child: Text('Por mes')),
+              if (_modoBusqueda == 'mes') const Icon(Icons.check_circle, color: Color(0xFF10B981)),
+            ],
+          ),
+        ),
+      ],
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ).then((value) {
+      if (value != null) setState(() { _modoBusqueda = value; });
+    });
+    // no await required; state will be updated in then
   }
 
   // Note: Floating action button and "nueva deuda" dialog removed per request.
