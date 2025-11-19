@@ -1082,8 +1082,26 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
     }
   }
 
-  /// Muestra el diálogo para agregar nueva meta
+  /// Muestra el diálogo para agregar o editar una meta
   void _mostrarDialogoAgregarMeta({bool esEdicion = false, String? metaId, Map<String, dynamic>? meta}) {
+    // Si es edición, inicializa los controladores y variables con los datos de la meta
+    if (esEdicion && meta != null) {
+      _nombreController.text = meta['nombre'] ?? '';
+      _montoInicialController.text = FormatoNumeros.formatearParaMostrar(meta['montoInicial'] ?? 0.0);
+      _montoObjetivoController.text = FormatoNumeros.formatearParaMostrar(meta['montoObjetivo'] ?? 0.0);
+      _fechaAhorro = meta['fechaObjetivo'] is DateTime
+          ? meta['fechaObjetivo']
+          : (meta['fechaObjetivo'] is Timestamp ? (meta['fechaObjetivo'] as Timestamp).toDate() : DateTime.now());
+      _categoriaAhorro = meta['categoria'] ?? 'vacaciones';
+    } else {
+      // Si es creación, limpia los campos
+      _nombreController.clear();
+      _montoInicialController.clear();
+      _montoObjetivoController.clear();
+      _fechaAhorro = DateTime.now();
+      _categoriaAhorro = 'vacaciones';
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1111,11 +1129,14 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                     ),
                   ),
                   child: Row(
-                    children: const [
-                      Icon(Icons.savings_rounded, color: Colors.white, size: 28),
-                      SizedBox(width: 12),
+                    children: [
+                      const Icon(Icons.savings_rounded, color: Colors.white, size: 28),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: Text('Nuevo ahorro', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
+                        child: Text(
+                          esEdicion ? 'Editar ahorro' : 'Nuevo ahorro',
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
                       ),
                     ],
                   ),
@@ -1157,6 +1178,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                               filled: true,
                               fillColor: Colors.grey.shade50,
                             ),
+                            enabled: !esEdicion, // No editable en edición
                           ),
                           const SizedBox(height: 20),
                           Text('Monto objetivo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -1233,7 +1255,10 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                             children: [
                               Expanded(
                                 child: TextButton(
-                                  onPressed: () => Navigator.pop(context),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    // Si es edición, no limpiar los campos aquí
+                                  },
                                   style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
                                   child: Text('Cancelar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
                                 ),
@@ -1245,26 +1270,41 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                                     if (_formKeyAhorro.currentState?.validate() ?? false) {
                                       final montoInicial = FormatoNumeros.convertirANumero(_montoInicialController.text) ?? 0.0;
                                       final montoObjetivo = FormatoNumeros.convertirANumero(_montoObjetivoController.text) ?? 0.0;
-                                      final error = await _ahorrosServicio.crearMetaAhorro(
-                                        nombre: _nombreController.text.trim(),
-                                        montoInicial: montoInicial,
-                                        montoObjetivo: montoObjetivo,
-                                        fechaObjetivo: _fechaAhorro ?? DateTime.now(),
-                                        categoria: _categoriaAhorro,
-                                      );
+                                      String? error;
+                                      if (esEdicion && metaId != null) {
+                                        // Actualizar meta existente
+                                        error = await _ahorrosServicio.actualizarMetaAhorro(
+                                          metaId: metaId,
+                                          nombre: _nombreController.text.trim(),
+                                          montoObjetivo: montoObjetivo,
+                                          fechaObjetivo: _fechaAhorro ?? DateTime.now(),
+                                          categoria: _categoriaAhorro,
+                                        );
+                                      } else {
+                                        // Crear nueva meta
+                                        error = await _ahorrosServicio.crearMetaAhorro(
+                                          nombre: _nombreController.text.trim(),
+                                          montoInicial: montoInicial,
+                                          montoObjetivo: montoObjetivo,
+                                          fechaObjetivo: _fechaAhorro ?? DateTime.now(),
+                                          categoria: _categoriaAhorro,
+                                        );
+                                      }
                                       if (error == null) {
                                         if (mounted) {
                                           Navigator.pop(context);
                                           setState(() {
-                                            _nombreController.clear();
-                                            _montoInicialController.clear();
-                                            _montoObjetivoController.clear();
-                                            _fechaAhorro = DateTime.now();
-                                            _categoriaAhorro = 'vacaciones';
+                                            if (!esEdicion) {
+                                              _nombreController.clear();
+                                              _montoInicialController.clear();
+                                              _montoObjetivoController.clear();
+                                              _fechaAhorro = DateTime.now();
+                                              _categoriaAhorro = 'vacaciones';
+                                            }
                                           });
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             SnackBar(
-                                              content: Text('Meta de ahorro creada correctamente'),
+                                              content: Text(esEdicion ? 'Meta de ahorro actualizada correctamente' : 'Meta de ahorro creada correctamente'),
                                               backgroundColor: Color(0xFF8570FA),
                                             ),
                                           );
