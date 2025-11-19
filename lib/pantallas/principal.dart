@@ -392,11 +392,11 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         }
         final data = snapshot.data ?? {};
         final totalCuentas = data['totalCuentas'] ?? 0.0;
-        // ...existing code...
         final ingresosDelMes = data['ingresosDelMes'] ?? 0.0;
         final gastosDelMes = data['gastosDelMes'] ?? 0.0;
         final totalAhorros = data['totalAhorros'] ?? 0.0;
         final totalDeudas = data['totalDeudas'] ?? 0.0;
+
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -412,41 +412,18 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           ),
           child: Column(
             children: [
-              // Primera fila: Ingresos y Gastos
+              // Primera fila: Cuentas y Ahorros
               Row(
                 children: [
                   Expanded(
                     child: _buildSummaryItem(
-                      title: 'Ingresos (mes)',
-                      amount: FormatoNumeros.formatearParaMostrar(ingresosDelMes),
-                      icon: Icons.trending_up_rounded,
-                      color: Colors.green.shade600,
-                      onTap: () => _navigateToSection(1),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildSummaryItem(
-                      title: 'Gastos (mes)',
-                      amount: FormatoNumeros.formatearParaMostrar(gastosDelMes),
-                      icon: Icons.trending_down_rounded,
-                      color: Colors.red.shade600,
-                      onTap: () => _navigateToSection(2),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Segunda fila: Cuentas y Ahorros
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildSummaryItem(
-                      title: 'Total Cuentas',
+                      title: 'Cuentas',
                       amount: FormatoNumeros.formatearParaMostrar(totalCuentas),
-                      icon: Icons.account_balance_rounded,
-                      color: Colors.blue.shade600,
-                      onTap: () => _navigateToSection(3),
+                      icon: Icons.account_balance_wallet_rounded,
+                      color: Color(0xFF2563EB),
+                      onTap: () {
+                        _navigateToSection(3);
+                      },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -455,8 +432,39 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       title: 'Ahorros',
                       amount: FormatoNumeros.formatearParaMostrar(totalAhorros),
                       icon: Icons.savings_rounded,
-                      color: const Color(0xFF8570FA),
-                      onTap: () => _navigateToSection(6),
+                      color: Color(0xFF10B981),
+                      onTap: () {
+                        _navigateToSection(6);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Segunda fila: Ingresos y Gastos
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Ingresos mes',
+                      amount: FormatoNumeros.formatearParaMostrar(ingresosDelMes),
+                      icon: Icons.trending_up_rounded,
+                      color: Color(0xFFF59E42),
+                      onTap: () {
+                        _navigateToSection(1);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Gastos mes',
+                      amount: FormatoNumeros.formatearParaMostrar(gastosDelMes),
+                      icon: Icons.trending_down_rounded,
+                      color: Color(0xFFEF4444),
+                      onTap: () {
+                        _navigateToSection(2);
+                      },
                     ),
                   ),
                 ],
@@ -471,7 +479,9 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       amount: FormatoNumeros.formatearParaMostrar(totalDeudas),
                       icon: Icons.credit_card_rounded,
                       color: Colors.orange.shade600,
-                      onTap: () => _navigateToSection(5),
+                      onTap: () {
+                        _navigateToSection(5);
+                      },
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -481,7 +491,9 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       amount: '',
                       icon: Icons.build_outlined,
                       color: Colors.indigo.shade600,
-                      onTap: () => _navigateToSection(7),
+                      onTap: () {
+                        _navigateToSection(7);
+                      },
                     ),
                   ),
                 ],
