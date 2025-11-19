@@ -453,10 +453,21 @@ class CalculadoraController {
   void input(String value) {
     if (value == '.' && expression.endsWith('.')) return;
     if (expression.length > 60) return;
-    if (_justCalculated && RegExp(r'[0-9.]').hasMatch(value)) {
-      expression = '';
-      result = '0';
-      _justCalculated = false;
+    // If the last action was a calculation:
+    // - typing a number should start a new expression
+    // - typing an operator should continue from the last result
+    if (_justCalculated) {
+      if (RegExp(r'[0-9.]').hasMatch(value)) {
+        // start new expression when user types a number
+        expression = '';
+        result = '0';
+        _justCalculated = false;
+      } else {
+        // operator typed after calculation: continue using the computed result
+        // set expression to the raw numeric result (parseable) so operator appends to it
+        expression = result.replaceAll(RegExp(r'[^0-9\.-]'), '');
+        _justCalculated = false;
+      }
     }
     if (expression.isNotEmpty && _isOperator(expression.substring(expression.length - 1)) && _isOperator(value)) {
       expression = expression.substring(0, expression.length - 1) + value;
@@ -485,17 +496,20 @@ class CalculadoraController {
       final numStr = numMatch.group(1)!;
       try {
         final val = double.parse(numStr) / 100.0;
-        expression = expression.substring(0, numMatch.start) + _format(val);
+        // keep expression parseable (no thousands separators)
+        expression = expression.substring(0, numMatch.start) + val.toString();
       } catch (_) {}
     }
   }
 
   void sqrtCurrent() {
     try {
-      final value = double.parse(expression.isEmpty ? result : expression);
+      final raw = expression.isEmpty ? result.replaceAll(RegExp(r'[^0-9\.-]'), '') : expression;
+      final value = double.parse(raw);
       final r = math.sqrt(value);
       result = _format(r);
-      expression = result;
+      // keep expression as raw numeric string for further operations
+      expression = r.toString();
       _justCalculated = true;
     } catch (_) {
       result = 'Error';
@@ -507,6 +521,8 @@ class CalculadoraController {
       final exp = expression.replaceAll('×', '*').replaceAll('÷', '/');
       final parsed = _parseExpression(exp);
       result = _format(parsed);
+      // set expression to raw numeric value so the user can chain operators after '='
+      expression = parsed.toString();
       _justCalculated = true;
     } catch (_) {
       result = 'Error';
