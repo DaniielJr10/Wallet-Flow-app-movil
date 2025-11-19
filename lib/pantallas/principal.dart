@@ -6,11 +6,7 @@ import '../firebase/base_datos_servicio.dart';
 import '../firebase/servicios/principal_servicio.dart';
 import '../utilidades/formato_numeros.dart';
 import '../login/iniciosesion.dart';
-import 'ingresos.dart';
-import 'gastos.dart';
-import 'cuentas.dart';
-import 'ahorros.dart';
-import 'deudas.dart';
+// ...existing code...
 
 
 import 'configuracion.dart';
@@ -391,8 +387,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         }
         final data = snapshot.data ?? {};
         final totalCuentas = data['totalCuentas'] ?? 0.0;
-        final totalIngresos = data['totalIngresos'] ?? 0.0;
-        final totalGastos = data['totalGastos'] ?? 0.0;
+        // ...existing code...
         final ingresosDelMes = data['ingresosDelMes'] ?? 0.0;
         final gastosDelMes = data['gastosDelMes'] ?? 0.0;
         final totalAhorros = data['totalAhorros'] ?? 0.0;
@@ -725,124 +720,9 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
   }
 
 
-  Widget _buildFinancialServicesMenu() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.15),
-          width: 2,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Primera fila - Ahorros y Deudas
-          Row(
-            children: [
-              _buildMenuCard(
-                title: 'Ahorros',
-                icon: Icons.savings_rounded,
-                color: const Color(0xFF10B981),
-                onTap: () => _navigateToSection(6),
-              ),
-              const SizedBox(width: 12),
-              _buildMenuCard(
-                title: 'Deudas',
-                icon: Icons.credit_card_rounded,
-                color: Colors.orange.shade600,
-                onTap: () => _navigateToSection(5),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Segunda fila - Herramientas y Configuración
-          Row(
-            children: [
-              _buildMenuCard(
-                title: 'Herramientas',
-                icon: Icons.build_outlined,
-                color: Colors.indigo.shade600,
-                onTap: () => _navigateToSection(7),
-              ),
-              const SizedBox(width: 12),
-              _buildMenuCard(
-                title: 'Configuración',
-                icon: Icons.settings_outlined,
-                color: Colors.grey.shade700,
-                onTap: () => _navigateToSection(8),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+// ...existing code...
 
-  Widget _buildMenuCard({
-  required String title,
-  required IconData icon,
-  required Color color,
-  required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.2),
-            width: 2,
-          ),
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: color,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1F2937),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  // Subtítulo eliminado
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+// ...existing code...
 
   Widget _buildPlaceholderScreen(String title, IconData icon, Color color) {
     return Center(
