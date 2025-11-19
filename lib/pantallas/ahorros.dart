@@ -973,7 +973,15 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
             ),
             const SizedBox(height: 4),
             Text(
-              '\$${_formatearMoneda(montoActual)} de \$${_formatearMoneda(montoObjetivo)}',
+              'Actual: ' + _formatearMoneda(montoActual),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1D29),
+              ),
+            ),
+            Text(
+              'Objetivo: ' + _formatearMoneda(montoObjetivo),
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -1133,14 +1141,15 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                           TextFormField(
                             controller: _montoInicialController,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [FormateadorNumeros()],
                             validator: (value) {
                               if (value == null || value.isEmpty) return 'Ingresa el monto inicial';
-                              final num? monto = num.tryParse(value.replaceAll(',', '.'));
+                              final monto = FormatoNumeros.convertirANumero(value);
                               if (monto == null || monto < 0) return 'Monto inválido';
                               return null;
                             },
                             decoration: InputDecoration(
-                              prefixText: ' 24 ',
+                              prefixText: '�� ',
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               filled: true,
                               fillColor: Colors.grey.shade50,
@@ -1152,14 +1161,15 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                           TextFormField(
                             controller: _montoObjetivoController,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [FormateadorNumeros()],
                             validator: (value) {
                               if (value == null || value.isEmpty) return 'Ingresa el monto objetivo';
-                              final num? monto = num.tryParse(value.replaceAll(',', '.'));
+                              final monto = FormatoNumeros.convertirANumero(value);
                               if (monto == null || monto <= 0) return 'Monto inválido';
                               return null;
                             },
                             decoration: InputDecoration(
-                              prefixText: ' 24 ',
+                              prefixText: '�� ',
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                               filled: true,
                               fillColor: Colors.grey.shade50,
