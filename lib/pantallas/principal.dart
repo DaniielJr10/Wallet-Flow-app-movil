@@ -412,7 +412,36 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           ),
           child: Column(
             children: [
-              // Primera fila: Cuentas y Ahorros
+              // Fila 1: Ingresos y Gastos
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Ingresos',
+                      amount: FormatoNumeros.formatearParaMostrar(ingresosDelMes),
+                      icon: Icons.trending_up_rounded,
+                      color: Color(0xFF2ecc71),
+                      onTap: () {
+                        _navigateToSection(1);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Gastos',
+                      amount: FormatoNumeros.formatearParaMostrar(gastosDelMes),
+                      icon: Icons.trending_down_rounded,
+                      color: Color(0xFFEF4444),
+                      onTap: () {
+                        _navigateToSection(2);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Fila 2: Cuentas y Deudas
               Row(
                 children: [
                   Expanded(
@@ -429,58 +458,29 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildSummaryItem(
-                      title: 'Ahorros',
-                      amount: FormatoNumeros.formatearParaMostrar(totalAhorros),
-                      icon: Icons.savings_rounded,
-                      color: Color(0xFF10B981),
-                      onTap: () {
-                        _navigateToSection(6);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Segunda fila: Ingresos y Gastos
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildSummaryItem(
-                      title: 'Ingresos mes',
-                      amount: FormatoNumeros.formatearParaMostrar(ingresosDelMes),
-                      icon: Icons.trending_up_rounded,
-                      color: Color(0xFFF59E42),
-                      onTap: () {
-                        _navigateToSection(1);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildSummaryItem(
-                      title: 'Gastos mes',
-                      amount: FormatoNumeros.formatearParaMostrar(gastosDelMes),
-                      icon: Icons.trending_down_rounded,
-                      color: Color(0xFFEF4444),
-                      onTap: () {
-                        _navigateToSection(2);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Tercera fila: Deudas y Herramientas
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildSummaryItem(
                       title: 'Deudas',
                       amount: FormatoNumeros.formatearParaMostrar(totalDeudas),
                       icon: Icons.credit_card_rounded,
                       color: Colors.orange.shade600,
                       onTap: () {
                         _navigateToSection(5);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Fila 3: Ahorros y Herramientas
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Ahorros',
+                      amount: FormatoNumeros.formatearParaMostrar(totalAhorros),
+                      icon: Icons.savings_rounded,
+                      color: Color(0xFF8570FA),
+                      onTap: () {
+                        _navigateToSection(6);
                       },
                     ),
                   ),
