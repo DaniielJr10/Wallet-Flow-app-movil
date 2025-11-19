@@ -1512,12 +1512,12 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: const Color(0xFF8570FA).withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               icono,
-              color: Colors.grey.shade700,
+              color: const Color(0xFF8570FA),
               size: 20,
             ),
           ),
