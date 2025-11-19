@@ -1237,16 +1237,44 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                               const SizedBox(width: 16),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () {
+                                  onPressed: () async {
                                     if (_formKeyAhorro.currentState?.validate() ?? false) {
-                                      // Aquí iría la lógica para guardar el ahorro en Firebase
-                                      Navigator.pop(context);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('Ahorro creado correctamente'),
-                                          backgroundColor: Color(0xFF8570FA),
-                                        ),
+                                      final montoInicial = FormatoNumeros.convertirANumero(_montoInicialController.text) ?? 0.0;
+                                      final montoObjetivo = FormatoNumeros.convertirANumero(_montoObjetivoController.text) ?? 0.0;
+                                      final error = await _ahorrosServicio.crearMetaAhorro(
+                                        nombre: _nombreController.text.trim(),
+                                        montoInicial: montoInicial,
+                                        montoObjetivo: montoObjetivo,
+                                        fechaObjetivo: _fechaAhorro ?? DateTime.now(),
+                                        categoria: _categoriaAhorro,
                                       );
+                                      if (error == null) {
+                                        if (mounted) {
+                                          Navigator.pop(context);
+                                          setState(() {
+                                            _nombreController.clear();
+                                            _montoInicialController.clear();
+                                            _montoObjetivoController.clear();
+                                            _fechaAhorro = DateTime.now();
+                                            _categoriaAhorro = 'vacaciones';
+                                          });
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Meta de ahorro creada correctamente'),
+                                              backgroundColor: Color(0xFF8570FA),
+                                            ),
+                                          );
+                                        }
+                                      } else {
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text(error),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
+                                      }
                                     }
                                   },
                                   style: ElevatedButton.styleFrom(
