@@ -1316,7 +1316,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
     );
   }
 
-  /// Modal de detalles idéntico al de ingresos
+  /// Modal de detalles profesional, idéntico a ingresos
   Widget _buildModalDetallesMeta(String metaId, Map<String, dynamic> meta) {
     final categoria = meta['categoria'] ?? 'otros';
     final categoriaInfo = _categorias.firstWhere(
@@ -1343,32 +1343,40 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
       ),
       child: Column(
         children: [
-          // Header del modal (idéntico a ingresos)
+          // Header profesional
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: categoriaInfo['color'].withOpacity(0.08),
+              color: categoriaInfo['color'].withOpacity(0.09),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(25),
                 topRight: Radius.circular(25),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: categoriaInfo['color'].withOpacity(0.12),
+                  blurRadius: 12,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 54,
+                  height: 54,
                   decoration: BoxDecoration(
-                    color: categoriaInfo['color'].withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    color: categoriaInfo['color'].withOpacity(0.18),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
                     categoriaInfo['icono'],
                     color: categoriaInfo['color'],
-                    size: 28,
+                    size: 32,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 18),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1376,17 +1384,18 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                       Text(
                         meta['nombre'] ?? 'Meta sin nombre',
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1D29),
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Text(
                         categoriaInfo['nombre'],
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 15,
                           color: categoriaInfo['color'],
                           fontWeight: FontWeight.w500,
                         ),
@@ -1397,35 +1406,35 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
               ],
             ),
           ),
-          // Contenido de los detalles (idéntico a ingresos)
+          // Detalles con layout profesional
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildDetalleItem('Monto actual', _formatearMoneda(montoActual), Icons.savings_rounded),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   _buildDetalleItem('Monto objetivo', _formatearMoneda(montoObjetivo), Icons.flag_rounded),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   _buildDetalleItem('Monto inicial', _formatearMoneda(montoInicial), Icons.play_arrow_rounded),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   _buildDetalleItem('Fecha objetivo', _formatearFecha(fechaObjetivo), Icons.event_rounded),
                   if (fechaCreacion != null) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     _buildDetalleItem('Fecha de creación', _formatearFecha(fechaCreacion), Icons.calendar_today_rounded),
                   ],
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   _buildDetalleItem('Progreso', '${(progreso * 100).toStringAsFixed(1)}%', Icons.trending_up_rounded),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   _buildDetalleItem('Días restantes', diasRestantes >= 0 ? '$diasRestantes días' : 'Meta vencida', Icons.hourglass_bottom_rounded),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
                   _construirBarraProgreso(progreso, categoriaInfo['color'], esCompletada),
                 ],
               ),
             ),
           ),
-          // Botones de acción (idénticos a ingresos)
+          // Botones de acción profesionales
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -1434,11 +1443,26 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                 bottomLeft: Radius.circular(25),
                 bottomRight: Radius.circular(25),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.shade200,
+                  blurRadius: 8,
+                  offset: const Offset(0, -2),
+                ),
+              ],
             ),
             child: Row(
               children: [
                 Expanded(
                   child: TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey.shade800,
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                     onPressed: () => Navigator.pop(context),
                     child: const Text('Cerrar'),
                   ),
@@ -1448,9 +1472,13 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: categoriaInfo['color'],
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      elevation: 0,
                     ),
                     onPressed: () {
                       Navigator.pop(context);
@@ -1464,9 +1492,13 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red.shade600,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      elevation: 0,
                     ),
                     onPressed: () {
                       Navigator.pop(context);
