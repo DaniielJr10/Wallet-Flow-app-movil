@@ -148,7 +148,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                 children: const [
                   Icon(
                     Icons.savings_rounded,
-                    color: Color(0xFF2ECC71), // Verde principal para ahorros
+                    color: Color(0xFF8570FA), // Morado solicitado para ahorros
                     size: 28,
                   ),
                   SizedBox(width: 8),
@@ -157,7 +157,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF2ECC71),
+                      color: Color(0xFF8570FA),
                     ),
                   ),
                 ],
@@ -204,7 +204,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2ECC71), // Verde principal
+                          color: const Color(0xFF8570FA), // Morado vibrante solicitado
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -216,7 +216,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                             ),
                             const SizedBox(width: 6),
                             const Text(
-                              'Nueva meta',
+                              'Nuevo ahorro',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
@@ -347,12 +347,12 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
         ],
       ),
       child: PopupMenuButton<String>(
-        icon: Icon(Icons.filter_alt_rounded, color: Color(0xFF2ECC71)),
+        icon: Icon(Icons.filter_alt_rounded, color: Color(0xFF8570FA)),
         color: Colors.white,
         elevation: 8,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF2ECC71), width: 0.7),
+          side: const BorderSide(color: Color(0xFF8570FA), width: 0.7),
         ),
         padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 0),
         itemBuilder: (context) => [
@@ -361,9 +361,9 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
             padding: const EdgeInsets.only(left: 12, right: 12, top: 10, bottom: 6),
             child: Row(
               children: [
-                Icon(Icons.tune_rounded, color: Color(0xFF2ECC71), size: 18),
+                Icon(Icons.tune_rounded, color: Color(0xFF8570FA), size: 18),
                 const SizedBox(width: 8),
-                Text('Filtros de metas', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF2ECC71))),
+                Text('Filtros de metas', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF8570FA))),
               ],
             ),
           ),
@@ -390,12 +390,12 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
-          Icon(icono, color: _modoFiltro == valor ? Color(0xFF2ECC71) : Colors.grey, size: 20),
+          Icon(icono, color: _modoFiltro == valor ? Color(0xFF8570FA) : Colors.grey, size: 20),
           const SizedBox(width: 10),
           Text(texto, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
           if (_modoFiltro == valor) ...[
             const SizedBox(width: 8),
-            Icon(Icons.check_circle_rounded, color: Color(0xFF2ECC71), size: 18),
+            Icon(Icons.check_circle_rounded, color: Color(0xFF8570FA), size: 18),
           ]
         ],
       ),
@@ -439,11 +439,11 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
           margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Color(0xFF2ECC71), // Verde principal para ahorros
+            color: Color(0xFF8570FA), // Verde principal para ahorros
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF2ECC71).withOpacity(0.3),
+                color: const Color(0xFF8570FA).withOpacity(0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -587,7 +587,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2ECC71)),
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF8570FA)),
             ),
           );
         }
@@ -673,13 +673,13 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: const Color(0xFF2ECC71).withOpacity(0.1),
+              color: const Color(0xFF8570FA).withOpacity(0.1),
               borderRadius: BorderRadius.circular(60),
             ),
             child: const Icon(
               Icons.savings_outlined,
               size: 60,
-              color: Color(0xFF2ECC71),
+              color: Color(0xFF8570FA),
             ),
           ),
           const SizedBox(height: 24),
@@ -810,7 +810,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: esCompletada
-                  ? Border.all(color: Color(0xFF2ECC71), width: 2)
+                  ? Border.all(color: Color(0xFF8570FA), width: 2)
                   : null,
               boxShadow: [
                 BoxShadow(
@@ -891,7 +891,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
           vertical: 4,
         ),
         decoration: BoxDecoration(
-          color: Color(0xFF2ECC71),
+          color: Color(0xFF8570FA),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
@@ -979,7 +979,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: diasRestantes >= 0 ? Color(0xFF2ECC71) : Colors.red,
+                color: diasRestantes >= 0 ? Color(0xFF8570FA) : Colors.red,
               ),
             ),
           ],
@@ -1008,7 +1008,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF2ECC71),
+                color: Color(0xFF8570FA),
               ),
             ),
           ],
@@ -1020,7 +1020,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
             value: progreso,
             backgroundColor: Colors.grey[200],
             valueColor: AlwaysStoppedAnimation<Color>(
-              esCompletada ? Color(0xFF2ECC71) : color,
+              esCompletada ? Color(0xFF8570FA) : color,
             ),
             minHeight: 6,
           ),
@@ -1056,7 +1056,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Funcionalidad de nueva meta en desarrollo'),
-        backgroundColor: Color(0xFF2ECC71),
+        backgroundColor: Color(0xFF8570FA),
       ),
     );
   }
@@ -1066,7 +1066,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Detalles de: ${meta['nombre'] ?? 'Meta sin nombre'}'),
-        backgroundColor: Color(0xFF2ECC71),
+        backgroundColor: Color(0xFF8570FA),
       ),
     );
   }
@@ -1076,7 +1076,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Editar: ${meta['nombre'] ?? 'Meta sin nombre'}'),
-        backgroundColor: Color(0xFF2ECC71),
+        backgroundColor: Color(0xFF8570FA),
       ),
     );
   }
@@ -1086,7 +1086,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Agregar dinero a: ${meta['nombre'] ?? 'Meta sin nombre'}'),
-        backgroundColor: Color(0xFF2ECC71),
+        backgroundColor: Color(0xFF8570FA),
       ),
     );
   }
@@ -1128,7 +1128,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Meta "$nombre" eliminada correctamente'),
-              backgroundColor: Colors.green,
+              backgroundColor: Color(0xFF8570FA),
               behavior: SnackBarBehavior.floating,
             ),
           );
