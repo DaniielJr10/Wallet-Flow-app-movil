@@ -54,7 +54,10 @@ class PantallaHerramientas extends StatelessWidget {
 			appBar: AppBar(
 				backgroundColor: Colors.transparent,
 				elevation: 0,
-				toolbarHeight: 0,
+				leading: IconButton(
+					icon: const Icon(Icons.arrow_back, color: Color(0xFF10B981)),
+					onPressed: () => Navigator.of(context).maybePop(),
+				),
 			),
 			body: SafeArea(
 				child: SingleChildScrollView(
