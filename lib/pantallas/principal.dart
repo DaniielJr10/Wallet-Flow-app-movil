@@ -739,8 +739,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
     // Colores personalizados para cada ítem
     final List<Color> itemColors = [
       Color(0xFF2563EB), // Inicio - azul
-      Colors.grey.shade700, // Configuración
       Color(0xFFF59E42), // Perfil - naranja
+      Colors.grey.shade700, // Configuración
     ];
 
     return Scaffold(
@@ -749,8 +749,8 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         index: _selectedIndex,
         children: [
           _buildDashboard(),         // 0 - Dashboard
-          const PantallaConfiguracion(), // 1 - Configuración
-          const PantallaPerfil(),    // 2 - Perfil
+          const PantallaPerfil(),    // 1 - Perfil
+          const PantallaConfiguracion(), // 2 - Configuración
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -768,12 +768,12 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             label: 'Inicio',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined, color: _selectedIndex == 1 ? itemColors[1] : Colors.grey.shade400),
-            label: 'Configuración',
+            icon: Icon(Icons.person_outline_rounded, color: _selectedIndex == 1 ? itemColors[1] : Colors.grey.shade400),
+            label: 'Perfil',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline_rounded, color: _selectedIndex == 2 ? itemColors[2] : Colors.grey.shade400),
-            label: 'Perfil',
+            icon: Icon(Icons.settings_outlined, color: _selectedIndex == 2 ? itemColors[2] : Colors.grey.shade400),
+            label: 'Configuración',
           ),
         ],
         selectedItemColor: itemColors[_selectedIndex <= 2 ? _selectedIndex : 0],
