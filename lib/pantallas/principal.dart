@@ -457,7 +457,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                 ],
               ),
               const SizedBox(height: 12),
-              // Tercera fila: Deudas
+              // Tercera fila: Deudas y Herramientas
               Row(
                 children: [
                   Expanded(
@@ -470,7 +470,15 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(child: Container()), // Espacio vacío
+                  Expanded(
+                    child: _buildSummaryItem(
+                      title: 'Herramientas',
+                      amount: '',
+                      icon: Icons.build_outlined,
+                      color: Colors.indigo.shade600,
+                      onTap: () => _navigateToSection(7),
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -724,51 +732,13 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
 
 // ...existing code...
 
-  Widget _buildPlaceholderScreen(String title, IconData icon, Color color) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Icon(
-              icon,
-              size: 64,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Funcionalidad en desarrollo',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+// ...existing code...
 
   @override
   Widget build(BuildContext context) {
     // Colores personalizados para cada ítem
     final List<Color> itemColors = [
       Color(0xFF2563EB), // Inicio - azul
-      Colors.indigo.shade600, // Herramientas
       Colors.grey.shade700, // Configuración
       Color(0xFFF59E42), // Perfil - naranja
     ];
@@ -779,14 +749,13 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
         index: _selectedIndex,
         children: [
           _buildDashboard(),         // 0 - Dashboard
-          _buildPlaceholderScreen('Herramientas', Icons.build_outlined, Colors.indigo.shade600), // 1 - Herramientas
-          const PantallaConfiguracion(), // 2 - Configuración
-          const PantallaPerfil(),    // 3 - Perfil
+          const PantallaConfiguracion(), // 1 - Configuración
+          const PantallaPerfil(),    // 2 - Perfil
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex <= 3 ? _selectedIndex : 0,
+        currentIndex: _selectedIndex <= 2 ? _selectedIndex : 0,
         onTap: _handleBottomNavigation,
         backgroundColor: Colors.white,
         selectedFontSize: 13,
@@ -799,19 +768,15 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
             label: 'Inicio',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.build_outlined, color: _selectedIndex == 1 ? itemColors[1] : Colors.grey.shade400),
-            label: 'Herramientas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined, color: _selectedIndex == 2 ? itemColors[2] : Colors.grey.shade400),
+            icon: Icon(Icons.settings_outlined, color: _selectedIndex == 1 ? itemColors[1] : Colors.grey.shade400),
             label: 'Configuración',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline_rounded, color: _selectedIndex == 3 ? itemColors[3] : Colors.grey.shade400),
+            icon: Icon(Icons.person_outline_rounded, color: _selectedIndex == 2 ? itemColors[2] : Colors.grey.shade400),
             label: 'Perfil',
           ),
         ],
-        selectedItemColor: itemColors[_selectedIndex <= 3 ? _selectedIndex : 0],
+        selectedItemColor: itemColors[_selectedIndex <= 2 ? _selectedIndex : 0],
         unselectedItemColor: Colors.grey.shade400,
       ),
       drawer: _buildDrawer(),
