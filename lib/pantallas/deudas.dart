@@ -955,8 +955,257 @@ class _PantallaDeudasState extends State<PantallaDeudas>
 
   /// Muestra el diálogo para editar una deuda
   void _mostrarDialogoEditar(Map<String, dynamic> deuda) {
-    // TODO: Implementar edición de deuda
-    _mostrarInfo('Próximamente: Editar deuda');
+    final formKey = GlobalKey<FormState>();
+    final tituloCtrl = TextEditingController(text: deuda['titulo'] ?? '');
+    final montoCtrl = TextEditingController(text: FormatoNumeros.formatearParaMostrar(deuda['montoOriginal'] ?? deuda['montoPendiente'] ?? 0.0));
+    final pagoMinCtrl = TextEditingController(text: FormatoNumeros.formatearParaMostrar(deuda['pagoMinimo'] ?? 0.0));
+    final acreedorCtrl = TextEditingController(text: deuda['acreedor'] ?? '');
+    String tipoSeleccionado = deuda['tipo'] ?? 'Préstamo Personal';
+    DateTime fechaVenc = deuda['fechaVencimiento'] ?? DateTime.now().add(const Duration(days: 30));
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateModal) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        const Color(0xFFF97316).withOpacity(0.95),
+                        const Color(0xFFFB923C).withOpacity(0.95),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(25),
+                      topRight: Radius.circular(25),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit, color: Colors.white, size: 26),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Editar Deuda',
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close_rounded, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextFormField(
+                            controller: montoCtrl,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [FormateadorNumeros()],
+                            decoration: InputDecoration(
+                              labelText: 'Monto',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFF97316)),
+                              ),
+                            ),
+                            validator: (v) {
+                              final n = FormatoNumeros.convertirANumero(v ?? '');
+                              return (n == null || n <= 0) ? 'Ingresa un monto válido' : null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: tituloCtrl,
+                            decoration: InputDecoration(
+                              labelText: 'Descripción',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFF97316)),
+                              ),
+                            ),
+                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa una descripción' : null,
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Text('Fecha: '),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: fechaVenc,
+                                    firstDate: DateTime.now().subtract(const Duration(days: 3650)),
+                                    lastDate: DateTime.now().add(const Duration(days: 3650)),
+                                  );
+                                  if (picked != null) setStateModal(() { fechaVenc = picked; });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: const Color(0xFFF97316)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.calendar_today, size: 18, color: Color(0xFFF97316)),
+                                      const SizedBox(width: 8),
+                                      Text('${fechaVenc.day}/${fechaVenc.month}/${fechaVenc.year}'),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: tipoSeleccionado,
+                            items: const [
+                              DropdownMenuItem(value: 'Préstamo Personal', child: Text('Préstamo Personal')),
+                              DropdownMenuItem(value: 'Tarjeta de Crédito', child: Text('Tarjeta de Crédito')),
+                              DropdownMenuItem(value: 'Préstamo Vehicular', child: Text('Préstamo Vehicular')),
+                              DropdownMenuItem(value: 'Préstamo Hipotecario', child: Text('Préstamo Hipotecario')),
+                              DropdownMenuItem(value: 'Otro', child: Text('Otro')),
+                            ],
+                            onChanged: (v) => setStateModal(() { tipoSeleccionado = v ?? tipoSeleccionado; }),
+                            decoration: InputDecoration(
+                              labelText: 'Categoría',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFF97316)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: pagoMinCtrl,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [FormateadorNumeros()],
+                            decoration: InputDecoration(
+                              labelText: 'Pago mínimo',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFF97316)),
+                              ),
+                            ),
+                            validator: (v) {
+                              final n = FormatoNumeros.convertirANumero(v ?? '');
+                              return (n == null || n < 0) ? 'Ingresa un pago mínimo válido' : null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: acreedorCtrl,
+                            decoration: InputDecoration(
+                              labelText: 'Acreedor / Banco',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFFF97316)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancelar'),
+                                  style: OutlinedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.grey.shade800,
+                                    side: BorderSide(color: Colors.grey.shade300),
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    if (formKey.currentState?.validate() ?? false) {
+                                      final monto = FormatoNumeros.convertirANumero(montoCtrl.text) ?? 0.0;
+                                      final pagoMin = FormatoNumeros.convertirANumero(pagoMinCtrl.text) ?? 0.0;
+
+                                      final indice = _deudas.indexWhere((d) => d['id'] == deuda['id']);
+                                      if (indice != -1) {
+                                        setState(() {
+                                          _deudas[indice]['titulo'] = tituloCtrl.text.trim();
+                                          _deudas[indice]['montoOriginal'] = monto;
+                                          _deudas[indice]['montoPendiente'] = (_deudas[indice]['montoPendiente'] as double) > monto
+                                              ? (_deudas[indice]['montoPendiente'] as double)
+                                              : monto;
+                                          _deudas[indice]['pagoMinimo'] = pagoMin;
+                                          _deudas[indice]['acreedor'] = acreedorCtrl.text.trim();
+                                          _deudas[indice]['tipo'] = tipoSeleccionado;
+                                          _deudas[indice]['fechaVencimiento'] = fechaVenc;
+                                        });
+
+                                        _calcularEstadisticas();
+                                        Navigator.pop(context);
+                                        _mostrarExito('Deuda actualizada correctamente');
+                                      }
+                                    }
+                                  },
+                                  child: const Text('Guardar Cambios'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFF97316),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   /// Muestra el historial de pagos de una deuda
@@ -1623,22 +1872,5 @@ class _PantallaDeudasState extends State<PantallaDeudas>
 
   // Note: Floating action button and "nueva deuda" dialog removed per request.
 
-  /// Muestra un mensaje informativo
-  void _mostrarInfo(String mensaje) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.info, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(child: Text(mensaje)),
-            ],
-          ),
-          backgroundColor: const Color(0xFF3B82F6),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    }
-  }
+  // Nota: helper '_mostrarInfo' eliminado porque no se usa en este archivo.
 }
