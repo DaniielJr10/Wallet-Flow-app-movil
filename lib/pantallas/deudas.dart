@@ -751,7 +751,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
             ElevatedButton.icon(
                   onPressed: () => _mostrarFormularioNuevaDeuda(),
               icon: const Icon(Icons.add, size: 16),
-              label: const Text('+ Nueva deuda'),
+              label: const Text('Nueva deuda'),
                 style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF97316),
                 foregroundColor: Colors.white,
