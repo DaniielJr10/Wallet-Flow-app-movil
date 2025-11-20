@@ -38,7 +38,9 @@ class _PantallaDeudasState extends State<PantallaDeudas>
 
   // ===== ESTADOS DE LA PANTALLA =====
   /// Indica si los datos están siendo cargados
-  bool _estaCargando = true;
+  /// Cambiado a `false` para mostrar la pantalla inmediatamente
+  /// y evitar el mensaje de carga "Cargando tus deudas...".
+  bool _estaCargando = false;
   
   /// Lista de todas las deudas del usuario
   List<Map<String, dynamic>> _deudas = [];
@@ -143,9 +145,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
 
   /// Carga todas las deudas del usuario desde la base de datos
   Future<void> _cargarDeudas() async {
-    setState(() {
-      _estaCargando = true;
-    });
+    // No mostramos la pantalla de carga; cargamos los datos en segundo plano.
 
     try {
       // TODO: Cargar deudas reales desde Firestore
