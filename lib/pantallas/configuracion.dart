@@ -36,7 +36,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   bool _notificacionesActivas = true;
   
   /// Controla si la autenticación biométrica está habilitada
-  bool _biometriaActiva = false;
+  // Autenticación biométrica eliminada: se mantuvieron otras opciones de seguridad
   
   /// Controla el tema de la aplicación (claro/oscuro)
   bool _modoOscuro = false;
@@ -354,19 +354,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       icono: Icons.security,
       color: const Color(0xFFEF4444),
       children: [
-        _buildSwitchTile(
-          titulo: 'Autenticación Biométrica',
-          subtitulo: 'Usar huella o reconocimiento facial',
-          icono: Icons.fingerprint,
-          valor: _biometriaActiva,
-          onChanged: (value) async {
-            setState(() {
-              _biometriaActiva = value;
-            });
-            await _guardarConfiguracion('biometria_activa', value);
-            // TODO: Configurar biometría real
-          },
-        ),
+        // Opción de autenticación biométrica eliminada por solicitud
         _buildOpcionTile(
           titulo: 'Cambiar Contraseña',
           subtitulo: 'Actualizar contraseña de tu cuenta',
