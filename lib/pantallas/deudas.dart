@@ -316,43 +316,8 @@ class _PantallaDeudasState extends State<PantallaDeudas>
     return deudasFiltradas;
   }
 
-  /// Registra un nuevo pago para una deuda específica
-  Future<void> _registrarPago(String deudaId, double montoPago) async {
-    try {
-      // Buscar la deuda
-      final indiceDeuda = _deudas.indexWhere((d) => d['id'] == deudaId);
-      if (indiceDeuda == -1) return;
-
-      // Actualizar la deuda
-      final deuda = _deudas[indiceDeuda];
-      final nuevoMontoPendiente = (deuda['montoPendiente'] as double) - montoPago;
-      
-      setState(() {
-        _deudas[indiceDeuda]['montoPendiente'] = nuevoMontoPendiente.clamp(0.0, double.infinity);
-        
-        // Agregar al historial de pagos
-        final historialPagos = List<Map<String, dynamic>>.from(_deudas[indiceDeuda]['historialPagos']);
-        historialPagos.insert(0, {
-          'fecha': DateTime.now(),
-          'monto': montoPago,
-        });
-        _deudas[indiceDeuda]['historialPagos'] = historialPagos;
-        
-        // Cambiar estado si está completamente pagada
-        if (nuevoMontoPendiente <= 0) {
-          _deudas[indiceDeuda]['estado'] = 'Pagada';
-        }
-      });
-
-      // TODO: Guardar en Firestore
-      _calcularEstadisticas();
-      _mostrarExito('Pago registrado correctamente');
-      
-    } catch (e) {
-      debugPrint('Error al registrar pago: $e');
-      _mostrarError('Error al registrar el pago');
-    }
-  }
+  // La lógica de registro de pagos fue removida porque ya no hay un flujo
+  // directo que invoque este helper desde la UI actual (se maneja vía modal).
 
   /// Elimina una deuda de la lista
   Future<void> _eliminarDeuda(String deudaId) async {
@@ -454,15 +419,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
     }
   }
 
-  /// Calcula el porcentaje de progreso de pago
-  double _calcularProgresoPago(Map<String, dynamic> deuda) {
-    final montoOriginal = deuda['montoOriginal'] as double;
-    final montoPendiente = deuda['montoPendiente'] as double;
-    
-    if (montoOriginal <= 0) return 0.0;
-    
-    return ((montoOriginal - montoPendiente) / montoOriginal).clamp(0.0, 1.0);
-  }
+  // El cálculo de progreso de pago fue eliminado al no usarse en la UI actual.
 
   @override
   void dispose() {
@@ -831,6 +788,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
   /// Construye una tarjeta compacta para una deuda (estilo similar a ingresos)
   Widget _buildTarjetaDeudaCompact(Map<String, dynamic> deuda, int index) {
     final colorEstado = _obtenerColorEstado(deuda);
+    // Color naranja consistente con la pantalla de Deudas
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -913,30 +871,11 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                   ),
                 ),
                 const SizedBox(width: 8),
-                PopupMenuButton<String>(
-                  icon: Icon(Icons.more_horiz, color: Colors.grey.shade500),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'pagar':
-                        _mostrarDialogoPago(deuda);
-                        break;
-                      case 'editar':
-                        _mostrarDialogoEditar(deuda);
-                        break;
-                      case 'historial':
-                        _mostrarHistorialPagos(deuda);
-                        break;
-                      case 'eliminar':
-                        _confirmarEliminarDeuda(deuda);
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(value: 'pagar', child: Text('Registrar pago')),
-                    const PopupMenuItem(value: 'editar', child: Text('Editar')),
-                    const PopupMenuItem(value: 'historial', child: Text('Ver historial')),
-                    const PopupMenuItem(value: 'eliminar', child: Text('Eliminar')),
-                  ],
+                // Reemplazado el menú de tres puntos por una flecha (estilo Ingresos)
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: Colors.grey.shade400,
                 ),
               ],
             ),
@@ -1011,86 +950,8 @@ class _PantallaDeudasState extends State<PantallaDeudas>
 
   // Opciones de menú antiguas eliminadas (no usadas en la versión compacta)
 
-  /// Muestra el diálogo para registrar un pago
-  void _mostrarDialogoPago(Map<String, dynamic> deuda) {
-    final controller = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                color: const Color(0xFFF97316).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.payment,
-                color: Color(0xFFF97316),
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text('Registrar Pago'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Deuda: ${deuda['titulo']}',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            Text(
-              'Pendiente: ${_formatearMoneda(deuda['montoPendiente'])}',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 16),
-            
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Monto del Pago',
-                prefixText: '\$ ',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                helperText: 'Mínimo: ${_formatearMoneda(deuda['pagoMinimo'])}',
-              ),
-              inputFormatters: [
-                FormateadorNumeros(),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              final monto = FormatoNumeros.convertirANumero(controller.text) ?? 0.0;
-              if (monto > 0) {
-                Navigator.pop(context);
-                _registrarPago(deuda['id'], monto);
-              }
-            },
-            child: const Text(
-              'Registrar Pago',
-              style: TextStyle(color: Color(0xFFF97316)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // La función de diálogo de pago fue eliminada porque ya no se usa
+  // (la UI ahora muestra los pagos y acciones en el modal de detalles).
 
   /// Muestra el diálogo para editar una deuda
   void _mostrarDialogoEditar(Map<String, dynamic> deuda) {
@@ -1129,16 +990,16 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [colorEstado.withOpacity(0.95), colorEstado.withOpacity(0.8)],
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [const Color(0xFFF97316), const Color(0xFFEA580C)],
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
                       ),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                      ),
-                    ),
                     child: Row(
                       children: [
                         Container(
@@ -1195,10 +1056,10 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                             ),
                             child: Text(
                               '-${FormatoNumeros.formatearParaMostrar(deuda['montoPendiente'])}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w800,
-                                color: colorEstado,
+                                color: Color(0xFFF97316),
                               ),
                             ),
                           ),
@@ -1287,7 +1148,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                             icon: const Icon(Icons.delete_rounded, size: 18),
                             label: const Text('Eliminar'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.shade600,
+                              backgroundColor: const Color(0xFFF97316),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
