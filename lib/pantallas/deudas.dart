@@ -811,35 +811,138 @@ class _PantallaDeudasState extends State<PantallaDeudas>
   /// Construye la lista de deudas
   Widget _buildListaDeudas() {
     final deudasFiltradas = _deudasFiltradas;
-    
+
     if (deudasFiltradas.isEmpty) {
       return _buildListaVacia();
     }
-    
-    return Column(
-      children: deudasFiltradas.asMap().entries.map((entry) {
-        final index = entry.key;
-        final deuda = entry.value;
-        
-        return AnimatedBuilder(
-          animation: _cardController,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(
-                0, 
-                (1 - _cardController.value) * 30 * (index + 1),
+
+    // Mostrar la lista en estilo compacto similar a la pantalla de ingresos
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: deudasFiltradas.length,
+      itemBuilder: (context, index) {
+        final deuda = deudasFiltradas[index];
+        return _buildTarjetaDeudaCompact(deuda, index);
+      },
+    );
+  }
+
+  /// Construye una tarjeta compacta para una deuda (estilo similar a ingresos)
+  Widget _buildTarjetaDeudaCompact(Map<String, dynamic> deuda, int index) {
+    final colorEstado = _obtenerColorEstado(deuda);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _mostrarHistorialPagos(deuda),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: colorEstado.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              _obtenerIconoTipoDeuda(deuda['tipo']),
+              color: colorEstado,
+              size: 20,
+            ),
+          ),
+          title: Text(
+            deuda['titulo'],
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF0F172A),
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text(
+                '${deuda['tipo']} • ${deuda['acreedor']}',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[600],
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
-              child: Opacity(
-                opacity: _cardController.value,
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: _buildTarjetaDeuda(deuda),
+              const SizedBox(height: 4),
+              Text(
+                '${deuda['fechaVencimiento'] != null ? '${deuda['fechaVencimiento'].day}/${deuda['fechaVencimiento'].month}/${deuda['fechaVencimiento'].year}' : ''}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[500],
                 ),
               ),
-            );
-          },
-        );
-      }).toList(),
+            ],
+          ),
+          trailing: SizedBox(
+            width: 120,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Text(
+                    '-${FormatoNumeros.formatearParaMostrar(deuda['montoPendiente'])}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: colorEstado == const Color(0xFF10B981) ? Colors.green : Colors.red,
+                    ),
+                    textAlign: TextAlign.right,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.more_horiz, color: Colors.grey.shade500),
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'pagar':
+                        _mostrarDialogoPago(deuda);
+                        break;
+                      case 'editar':
+                        _mostrarDialogoEditar(deuda);
+                        break;
+                      case 'historial':
+                        _mostrarHistorialPagos(deuda);
+                        break;
+                      case 'eliminar':
+                        _confirmarEliminarDeuda(deuda);
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(value: 'pagar', child: Text('Registrar pago')),
+                    const PopupMenuItem(value: 'editar', child: Text('Editar')),
+                    const PopupMenuItem(value: 'historial', child: Text('Ver historial')),
+                    const PopupMenuItem(value: 'eliminar', child: Text('Eliminar')),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -882,299 +985,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
     );
   }
 
-  /// Construye una tarjeta individual de deuda
-  Widget _buildTarjetaDeuda(Map<String, dynamic> deuda) {
-    final colorEstado = _obtenerColorEstado(deuda);
-    final progresoPago = _calcularProgresoPago(deuda);
-    
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: colorEstado.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Encabezado de la tarjeta (estilo similar a ingresos)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  colorEstado.withOpacity(0.95),
-                  colorEstado.withOpacity(0.85),
-                ],
-              ),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-            ),
-            child: Row(
-              children: [
-                // Avatar con ícono
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      _obtenerIconoTipoDeuda(deuda['tipo']),
-                      color: colorEstado,
-                      size: 20,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
 
-                // Información principal
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        deuda['titulo'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${deuda['tipo']} • ${deuda['acreedor']}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.9),
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Menú de opciones (círculo blanco sobre fondo)
-                PopupMenuButton<String>(
-                  icon: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.more_vert,
-                      color: colorEstado,
-                      size: 18,
-                    ),
-                  ),
-                  onSelected: (opcion) => _manejarOpcionDeuda(opcion, deuda),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'pagar',
-                      child: Row(
-                        children: [
-                          Icon(Icons.payment, color: Color(0xFFF97316)),
-                          SizedBox(width: 8),
-                          Text('Registrar Pago'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'editar',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, color: Color(0xFF3B82F6)),
-                          SizedBox(width: 8),
-                          Text('Editar'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'historial',
-                      child: Row(
-                        children: [
-                          Icon(Icons.history, color: Color(0xFF8B5CF6)),
-                          SizedBox(width: 8),
-                          Text('Ver Historial'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'eliminar',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Eliminar'),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          // Contenido de la tarjeta
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                // Montos y porcentaje
-                Row(
-                  children: [
-                    Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Monto Pendiente',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF6B7280),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                _formatearMoneda(deuda['montoPendiente']),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            const Text(
-                              'Pago Mínimo',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF6B7280),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              _formatearMoneda(deuda['pagoMinimo']),
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF111827),
-                              ),
-                            ),
-                          ],
-                        ),
-                  ],
-                ),
-                
-                const SizedBox(height: 8),
-                
-                // Barra de progreso
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Progreso de Pago',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF6B7280),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          '${(progresoPago * 100).toStringAsFixed(1)}%',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colorEstado,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    LinearProgressIndicator(
-                      value: progresoPago,
-                      backgroundColor: colorEstado.withOpacity(0.2),
-                      valueColor: AlwaysStoppedAnimation<Color>(colorEstado),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // Información adicional
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.schedule,
-                          color: colorEstado,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _formatearFecha(deuda['fechaVencimiento']),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colorEstado,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.percent,
-                          color: colorEstado,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${deuda['tasaInteres']}% anual',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: colorEstado,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   /// Obtiene el ícono según el tipo de deuda
   IconData _obtenerIconoTipoDeuda(String tipo) {
@@ -1198,23 +1009,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
     }
   }
 
-  /// Maneja las opciones del menú de cada deuda
-  void _manejarOpcionDeuda(String opcion, Map<String, dynamic> deuda) {
-    switch (opcion) {
-      case 'pagar':
-        _mostrarDialogoPago(deuda);
-        break;
-      case 'editar':
-        _mostrarDialogoEditar(deuda);
-        break;
-      case 'historial':
-        _mostrarHistorialPagos(deuda);
-        break;
-      case 'eliminar':
-        _confirmarEliminarDeuda(deuda);
-        break;
-    }
-  }
+  // Opciones de menú antiguas eliminadas (no usadas en la versión compacta)
 
   /// Muestra el diálogo para registrar un pago
   void _mostrarDialogoPago(Map<String, dynamic> deuda) {
