@@ -20,7 +20,10 @@ import '../firebase/base_datos_servicio.dart';
 /// - Estadísticas de uso y actividad
 /// - Validación en tiempo real de formularios
 class PantallaPerfil extends StatefulWidget {
-  const PantallaPerfil({super.key});
+  /// Si `true`, la pantalla se abrirá directamente en modo edición.
+  final bool iniciarEnEdicion;
+
+  const PantallaPerfil({super.key, this.iniciarEnEdicion = false});
 
   @override
   State<PantallaPerfil> createState() => _PantallaPerfilState();
@@ -113,6 +116,8 @@ class _PantallaPerfilState extends State<PantallaPerfil>
   @override
   void initState() {
     super.initState();
+    // Respetar el valor recibido para abrir en modo edición si corresponde
+    _modoEdicion = widget.iniciarEnEdicion;
     _initializeAnimations();
     _cargarDatosUsuario();
   }
@@ -174,8 +179,10 @@ class _PantallaPerfilState extends State<PantallaPerfil>
   /// Carga todos los datos del usuario desde Firebase
   /// Incluye información personal, preferencias y estadísticas
   Future<void> _cargarDatosUsuario() async {
+    // Si la pantalla fue abierta en modo edición, evitamos mostrar
+    // la pantalla de carga para mostrar directamente el formulario.
     setState(() {
-      _estaCargando = true;
+      _estaCargando = !widget.iniciarEnEdicion;
     });
 
     try {

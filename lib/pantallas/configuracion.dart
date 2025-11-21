@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../firebase/autenticacion_servicio.dart';
 import '../login/iniciosesion.dart';
+import 'perfil.dart';
 
 /// Pantalla de configuración de la aplicación Wallet Flow
 /// 
@@ -657,12 +658,9 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
 
   /// Navega a la pantalla de perfil del usuario
   void _navegarAPerfil() {
-    // TODO: Implementar navegación a perfil
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Próximamente: Editar perfil'),
-        backgroundColor: Color(0xFF10B981),
-      ),
+    // Navegar a la pantalla de perfil existente
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const PantallaPerfil(iniciarEnEdicion: true)),
     );
   }
 
