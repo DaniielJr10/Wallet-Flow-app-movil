@@ -657,11 +657,23 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   // ===== MÉTODOS DE NAVEGACIÓN Y ACCIONES =====
 
   /// Navega a la pantalla de perfil del usuario
-  void _navegarAPerfil() {
-    // Navegar a la pantalla de perfil existente
-    Navigator.of(context).push(
+  Future<void> _navegarAPerfil() async {
+    // Navegar a la pantalla de perfil existente y esperar si hubo cambios
+    final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (context) => const PantallaPerfil(iniciarEnEdicion: true)),
     );
+
+    // Si la pantalla de perfil devolvió `true`, recargar el usuario desde Firebase
+    if (result == true && mounted) {
+      try {
+        await FirebaseAuth.instance.currentUser?.reload();
+      } catch (e) {
+        debugPrint('Error al recargar usuario: $e');
+      }
+      setState(() {
+        // Forzar reconstrucción para leer los nuevos datos del usuario
+      });
+    }
   }
 
   /// Muestra el selector de moneda en un bottom sheet

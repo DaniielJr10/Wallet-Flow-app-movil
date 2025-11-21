@@ -309,6 +309,8 @@ class _PantallaPerfilState extends State<PantallaPerfil>
         });
 
         _mostrarExito('Perfil actualizado correctamente');
+        // Al guardar, regresar al caller indicando que hubo cambios
+        if (mounted) Navigator.pop(context, true);
       }
     } catch (e) {
       debugPrint('Error al guardar cambios: $e');
