@@ -17,6 +17,7 @@ import 'ahorros.dart';
 import 'configuracion.dart';
 import 'perfil.dart';
 import 'herramientas.dart';
+import 'ayuda_soporte.dart';
 
 class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
@@ -1089,7 +1090,10 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                       color: Colors.lime.shade600,
                       onTap: () {
                         Navigator.pop(context);
-                        // TODO: Implementar ayuda
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const AyudaSoporteScreen()),
+                        );
                       },
                     ),
                   ],

@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../firebase/autenticacion_servicio.dart';
 import '../login/iniciosesion.dart';
 import 'perfil.dart';
+import 'preguntas_frecuentes.dart';
+import 'contactar_soporte.dart';
 import 'cambiar_contrasena.dart';
 import 'recordatorios_gastos.dart';
 
@@ -787,23 +789,15 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
 
   /// Abre la sección de preguntas frecuentes
   void _abrirFAQ() {
-    // TODO: Implementar FAQ
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Próximamente: Preguntas frecuentes'),
-        backgroundColor: Color(0xFF10B981),
-      ),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const PreguntasFrecuentesScreen()),
     );
   }
 
   /// Abre el formulario de contacto con soporte
   void _contactarSoporte() {
-    // TODO: Implementar contacto con soporte
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Próximamente: Contactar soporte'),
-        backgroundColor: Color(0xFF10B981),
-      ),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const ContactarSoporteScreen()),
     );
   }
 
