@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../utilidades/formato_numeros.dart';
+import '../firebase/servicios/deudas_servicio.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Pantalla de gestión de deudas en Wallet Flow
 /// 
@@ -44,6 +46,7 @@ class _PantallaDeudasState extends State<PantallaDeudas>
   
   /// Lista de todas las deudas del usuario
   List<Map<String, dynamic>> _deudas = [];
+  final DeudasServicio _deudasServicio = DeudasServicio();
   
   /// Filtro de visualización seleccionado
   String _filtroSeleccionado = 'Todas';
@@ -145,80 +148,35 @@ class _PantallaDeudasState extends State<PantallaDeudas>
 
   /// Carga todas las deudas del usuario desde la base de datos
   Future<void> _cargarDeudas() async {
-    // No mostramos la pantalla de carga; cargamos los datos en segundo plano.
-
+    setState(() { _estaCargando = true; });
     try {
-      // TODO: Cargar deudas reales desde Firestore
-      await Future.delayed(const Duration(milliseconds: 1000));
-      
-      // Datos de ejemplo - reemplazar con datos reales
-      _deudas = [
-        {
-          'id': '1',
-          'titulo': 'Tarjeta de Crédito Principal',
-          'tipo': 'Tarjeta de Crédito',
-          'montoOriginal': 2500000.0,
-          'montoPendiente': 1850000.0,
-          'tasaInteres': 24.0,
-          'fechaVencimiento': DateTime.now().add(const Duration(days: 15)),
-          'pagoMinimo': 185000.0,
-          'estado': 'Pendiente',
-          'fechaCreacion': DateTime.now().subtract(const Duration(days: 120)),
-          'acreedor': 'Banco Nacional',
-          'numeroCuenta': '**** 1234',
-          'historialPagos': [
-            {'fecha': DateTime.now().subtract(const Duration(days: 30)), 'monto': 200000.0},
-            {'fecha': DateTime.now().subtract(const Duration(days: 60)), 'monto': 250000.0},
-          ],
-        },
-        {
-          'id': '2',
-          'titulo': 'Préstamo Personal Urgente',
-          'tipo': 'Préstamo Personal',
-          'montoOriginal': 5000000.0,
-          'montoPendiente': 3200000.0,
-          'tasaInteres': 18.5,
-          'fechaVencimiento': DateTime.now().subtract(const Duration(days: 5)),
-          'pagoMinimo': 320000.0,
-          'estado': 'Vencida',
-          'fechaCreacion': DateTime.now().subtract(const Duration(days: 180)),
-          'acreedor': 'Cooperativa Financiera',
-          'numeroCuenta': 'PR-789456',
-          'historialPagos': [
-            {'fecha': DateTime.now().subtract(const Duration(days: 45)), 'monto': 400000.0},
-          ],
-        },
-        {
-          'id': '3',
-          'titulo': 'Financiación Vehículo',
-          'tipo': 'Préstamo Vehicular',
-          'montoOriginal': 25000000.0,
-          'montoPendiente': 18500000.0,
-          'tasaInteres': 14.2,
-          'fechaVencimiento': DateTime.now().add(const Duration(days: 45)),
-          'pagoMinimo': 850000.0,
-          'estado': 'Pendiente',
-          'fechaCreacion': DateTime.now().subtract(const Duration(days: 365)),
-          'acreedor': 'Financiera Automotriz',
-          'numeroCuenta': 'VH-456789',
-          'historialPagos': [
-            {'fecha': DateTime.now().subtract(const Duration(days: 30)), 'monto': 850000.0},
-            {'fecha': DateTime.now().subtract(const Duration(days: 60)), 'monto': 850000.0},
-            {'fecha': DateTime.now().subtract(const Duration(days: 90)), 'monto': 850000.0},
-          ],
-        },
-      ];
-
+      final deudas = await _deudasServicio.obtenerDeudas();
+      // Convertir fechas de Firestore (Timestamp) a DateTime
+      _deudas = deudas.map((d) {
+        if (d['fechaVencimiento'] is Timestamp) {
+          d['fechaVencimiento'] = (d['fechaVencimiento'] as Timestamp).toDate();
+        }
+        if (d['fechaCreacion'] is Timestamp) {
+          d['fechaCreacion'] = (d['fechaCreacion'] as Timestamp).toDate();
+        }
+        // Convertir historialPagos fechas
+        if (d['historialPagos'] != null) {
+          d['historialPagos'] = List<Map<String, dynamic>>.from((d['historialPagos'] as List).map((p) {
+            if (p['fecha'] is Timestamp) {
+              p['fecha'] = (p['fecha'] as Timestamp).toDate();
+            }
+            return p;
+          }));
+        }
+        return d;
+      }).toList();
       _calcularEstadisticas();
       _cardController.forward();
-      
     } catch (e) {
       debugPrint('Error al cargar deudas: $e');
       _mostrarError('Error al cargar las deudas');
     } finally {
-      setState(() {
-        _estaCargando = false;
-      });
+      setState(() { _estaCargando = false; });
     }
   }
 
@@ -322,14 +280,9 @@ class _PantallaDeudasState extends State<PantallaDeudas>
   /// Elimina una deuda de la lista
   Future<void> _eliminarDeuda(String deudaId) async {
     try {
-      setState(() {
-        _deudas.removeWhere((d) => d['id'] == deudaId);
-      });
-
-      // TODO: Eliminar de Firestore
-      _calcularEstadisticas();
+      await _deudasServicio.eliminarDeuda(deudaId);
+      await _cargarDeudas();
       _mostrarExito('Deuda eliminada correctamente');
-      
     } catch (e) {
       debugPrint('Error al eliminar deuda: $e');
       _mostrarError('Error al eliminar la deuda');
@@ -957,8 +910,8 @@ class _PantallaDeudasState extends State<PantallaDeudas>
   void _mostrarDialogoEditar(Map<String, dynamic> deuda) {
     final formKey = GlobalKey<FormState>();
     final tituloCtrl = TextEditingController(text: deuda['titulo'] ?? '');
-    final montoCtrl = TextEditingController(text: FormatoNumeros.formatearParaMostrar(deuda['montoOriginal'] ?? deuda['montoPendiente'] ?? 0.0));
-    final pagoMinCtrl = TextEditingController(text: FormatoNumeros.formatearParaMostrar(deuda['pagoMinimo'] ?? 0.0));
+    final montoCtrl = TextEditingController(text: deuda['montoOriginal']?.toString() ?? deuda['montoPendiente']?.toString() ?? '0');
+    final pagoMinCtrl = TextEditingController(text: deuda['pagoMinimo']?.toString() ?? '0');
     final acreedorCtrl = TextEditingController(text: deuda['acreedor'] ?? '');
     String tipoSeleccionado = deuda['tipo'] ?? 'Préstamo Personal';
     DateTime fechaVenc = deuda['fechaVencimiento'] ?? DateTime.now().add(const Duration(days: 30));
@@ -1023,69 +976,9 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           TextFormField(
-                            controller: montoCtrl,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [FormateadorNumeros()],
-                            decoration: InputDecoration(
-                              labelText: 'Monto',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFF97316)),
-                              ),
-                            ),
-                            validator: (v) {
-                              final n = FormatoNumeros.convertirANumero(v ?? '');
-                              return (n == null || n <= 0) ? 'Ingresa un monto válido' : null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
                             controller: tituloCtrl,
-                            decoration: InputDecoration(
-                              labelText: 'Descripción',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFF97316)),
-                              ),
-                            ),
-                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa una descripción' : null,
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              const Text('Fecha: '),
-                              const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: () async {
-                                  final picked = await showDatePicker(
-                                    context: context,
-                                    initialDate: fechaVenc,
-                                    firstDate: DateTime.now().subtract(const Duration(days: 3650)),
-                                    lastDate: DateTime.now().add(const Duration(days: 3650)),
-                                  );
-                                  if (picked != null) setStateModal(() { fechaVenc = picked; });
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: const Color(0xFFF97316)),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.calendar_today, size: 18, color: Color(0xFFF97316)),
-                                      const SizedBox(width: 8),
-                                      Text('${fechaVenc.day}/${fechaVenc.month}/${fechaVenc.year}'),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                            decoration: const InputDecoration(labelText: 'Título'),
+                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un título' : null,
                           ),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
@@ -1098,47 +991,51 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                               DropdownMenuItem(value: 'Otro', child: Text('Otro')),
                             ],
                             onChanged: (v) => setStateModal(() { tipoSeleccionado = v ?? tipoSeleccionado; }),
-                            decoration: InputDecoration(
-                              labelText: 'Categoría',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFF97316)),
-                              ),
-                            ),
+                            decoration: const InputDecoration(labelText: 'Categoría'),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: montoCtrl,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(labelText: 'Monto'),
+                            validator: (v) {
+                              final n = double.tryParse(v ?? '');
+                              return (n == null || n <= 0) ? 'Ingresa un monto válido' : null;
+                            },
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: pagoMinCtrl,
                             keyboardType: TextInputType.number,
-                            inputFormatters: [FormateadorNumeros()],
-                            decoration: InputDecoration(
-                              labelText: 'Pago mínimo',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFF97316)),
-                              ),
-                            ),
+                            decoration: const InputDecoration(labelText: 'Pago mínimo'),
                             validator: (v) {
-                              final n = FormatoNumeros.convertirANumero(v ?? '');
+                              final n = double.tryParse(v ?? '');
                               return (n == null || n < 0) ? 'Ingresa un pago mínimo válido' : null;
                             },
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: acreedorCtrl,
-                            decoration: InputDecoration(
-                              labelText: 'Acreedor / Banco',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFF97316)),
+                            decoration: const InputDecoration(labelText: 'Acreedor / Banco'),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              const Text('Fecha de vencimiento:'),
+                              const SizedBox(width: 8),
+                              TextButton(
+                                onPressed: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: fechaVenc,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime(2100),
+                                  );
+                                  if (picked != null) setStateModal(() { fechaVenc = picked; });
+                                },
+                                child: Text('${fechaVenc.day}/${fechaVenc.month}/${fechaVenc.year}'),
                               ),
-                            ),
+                            ],
                           ),
                           const SizedBox(height: 20),
                           Row(
@@ -1159,29 +1056,21 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                               const SizedBox(width: 12),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: () {
+                                  onPressed: () async {
                                     if (formKey.currentState?.validate() ?? false) {
-                                      final monto = FormatoNumeros.convertirANumero(montoCtrl.text) ?? 0.0;
-                                      final pagoMin = FormatoNumeros.convertirANumero(pagoMinCtrl.text) ?? 0.0;
-
-                                      final indice = _deudas.indexWhere((d) => d['id'] == deuda['id']);
-                                      if (indice != -1) {
-                                        setState(() {
-                                          _deudas[indice]['titulo'] = tituloCtrl.text.trim();
-                                          _deudas[indice]['montoOriginal'] = monto;
-                                          _deudas[indice]['montoPendiente'] = (_deudas[indice]['montoPendiente'] as double) > monto
-                                              ? (_deudas[indice]['montoPendiente'] as double)
-                                              : monto;
-                                          _deudas[indice]['pagoMinimo'] = pagoMin;
-                                          _deudas[indice]['acreedor'] = acreedorCtrl.text.trim();
-                                          _deudas[indice]['tipo'] = tipoSeleccionado;
-                                          _deudas[indice]['fechaVencimiento'] = fechaVenc;
-                                        });
-
-                                        _calcularEstadisticas();
-                                        Navigator.pop(context);
-                                        _mostrarExito('Deuda actualizada correctamente');
-                                      }
+                                      final datosActualizados = {
+                                        'titulo': tituloCtrl.text.trim(),
+                                        'montoOriginal': double.tryParse(montoCtrl.text) ?? 0.0,
+                                        'montoPendiente': double.tryParse(montoCtrl.text) ?? 0.0,
+                                        'pagoMinimo': double.tryParse(pagoMinCtrl.text) ?? 0.0,
+                                        'acreedor': acreedorCtrl.text.trim(),
+                                        'tipo': tipoSeleccionado,
+                                        'fechaVencimiento': fechaVenc,
+                                      };
+                                      await _deudasServicio.editarDeuda(deuda['id'], datosActualizados);
+                                      Navigator.pop(context);
+                                      await _cargarDeudas();
+                                      _mostrarExito('Deuda actualizada correctamente');
                                     }
                                   },
                                   child: const Text('Guardar Cambios'),
@@ -1578,10 +1467,6 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(color: Colors.grey.shade300),
                               ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFF97316)),
-                              ),
                             ),
                             validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un título' : null,
                           ),
@@ -1596,25 +1481,12 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                               DropdownMenuItem(value: 'Otro', child: Text('Otro')),
                             ],
                             onChanged: (v) => setStateModal(() { tipoSeleccionado = v ?? tipoSeleccionado; }),
-                            decoration: InputDecoration(
-                              labelText: 'Tipo',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFF97316)),
-                              ),
-                            ),
+                            decoration: const InputDecoration(labelText: 'Categoría'),
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: montoCtrl,
                             keyboardType: TextInputType.number,
-                            inputFormatters: [FormateadorNumeros()],
                             decoration: InputDecoration(
                               labelText: 'Monto',
                               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -1623,13 +1495,9 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(color: Colors.grey.shade300),
                               ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFF97316)),
-                              ),
                             ),
                             validator: (v) {
-                              final n = FormatoNumeros.convertirANumero(v ?? '');
+                              final n = double.tryParse(v ?? '');
                               return (n == null || n <= 0) ? 'Ingresa un monto válido' : null;
                             },
                           ),
@@ -1637,7 +1505,6 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                           TextFormField(
                             controller: pagoMinCtrl,
                             keyboardType: TextInputType.number,
-                            inputFormatters: [FormateadorNumeros()],
                             decoration: InputDecoration(
                               labelText: 'Pago mínimo',
                               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -1646,13 +1513,9 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(color: Colors.grey.shade300),
                               ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFF97316)),
-                              ),
                             ),
                             validator: (v) {
-                              final n = FormatoNumeros.convertirANumero(v ?? '');
+                              final n = double.tryParse(v ?? '');
                               return (n == null || n < 0) ? 'Ingresa un pago mínimo válido' : null;
                             },
                           ),
@@ -1667,92 +1530,75 @@ class _PantallaDeudasState extends State<PantallaDeudas>
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(color: Colors.grey.shade300),
                               ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFFF97316)),
-                              ),
                             ),
                           ),
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              const Text('Fecha de vencimiento: '),
+                              const Text('Fecha de vencimiento:'),
                               const SizedBox(width: 8),
-                              GestureDetector(
-                                onTap: () async {
+                              TextButton(
+                                onPressed: () async {
                                   final picked = await showDatePicker(
                                     context: context,
                                     initialDate: fechaVenc,
-                                    firstDate: DateTime.now().subtract(const Duration(days: 3650)),
-                                    lastDate: DateTime.now().add(const Duration(days: 3650)),
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime(2100),
                                   );
                                   if (picked != null) setStateModal(() { fechaVenc = picked; });
                                 },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: const Color(0xFFF97316)),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.calendar_today, size: 18, color: Color(0xFFF97316)),
-                                      const SizedBox(width: 8),
-                                      Text('${fechaVenc.day}/${fechaVenc.month}/${fechaVenc.year}'),
-                                    ],
-                                  ),
-                                ),
+                                child: Text('${fechaVenc.day}/${fechaVenc.month}/${fechaVenc.year}'),
                               ),
                             ],
                           ),
                           const SizedBox(height: 20),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                style: TextButton.styleFrom(foregroundColor: Colors.grey.shade700),
-                                child: const Text('Cancelar'),
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancelar'),
+                                  style: OutlinedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.grey.shade800,
+                                    side: BorderSide(color: Colors.grey.shade300),
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                ),
                               ),
-                              const SizedBox(width: 8),
-                              ElevatedButton(
-                                onPressed: () {
-                                  if (_formKeyNueva.currentState?.validate() ?? false) {
-                                    final monto = FormatoNumeros.convertirANumero(montoCtrl.text) ?? 0.0;
-                                    final pagoMin = FormatoNumeros.convertirANumero(pagoMinCtrl.text) ?? 0.0;
-
-                                    final nueva = {
-                                      'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                                      'titulo': tituloCtrl.text.trim(),
-                                      'tipo': tipoSeleccionado,
-                                      'montoOriginal': monto,
-                                      'montoPendiente': monto,
-                                      'tasaInteres': 0.0,
-                                      'fechaVencimiento': fechaVenc,
-                                      'pagoMinimo': pagoMin,
-                                      'estado': 'Pendiente',
-                                      'fechaCreacion': DateTime.now(),
-                                      'acreedor': acreedorCtrl.text.trim(),
-                                      'numeroCuenta': '',
-                                      'historialPagos': [],
-                                    };
-
-                                    setState(() {
-                                      _deudas.insert(0, nueva);
-                                    });
-
-                                    _calcularEstadisticas();
-                                    Navigator.pop(context);
-                                    _mostrarExito('Deuda creada correctamente');
-                                  }
-                                },
-                                child: const Text('Crear'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFF97316),
-                                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                  elevation: 2,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    if (_formKeyNueva.currentState?.validate() ?? false) {
+                                      final nuevaDeuda = {
+                                        'titulo': tituloCtrl.text.trim(),
+                                        'tipo': tipoSeleccionado,
+                                        'montoOriginal': double.tryParse(montoCtrl.text) ?? 0.0,
+                                        'montoPendiente': double.tryParse(montoCtrl.text) ?? 0.0,
+                                        'tasaInteres': 0.0,
+                                        'fechaVencimiento': fechaVenc,
+                                        'pagoMinimo': double.tryParse(pagoMinCtrl.text) ?? 0.0,
+                                        'estado': 'Pendiente',
+                                        'fechaCreacion': DateTime.now(),
+                                        'acreedor': acreedorCtrl.text.trim(),
+                                        'numeroCuenta': '',
+                                        'historialPagos': [],
+                                      };
+                                      await _deudasServicio.crearDeuda(nuevaDeuda);
+                                      Navigator.pop(context);
+                                      await _cargarDeudas();
+                                      _mostrarExito('Deuda creada correctamente');
+                                    }
+                                  },
+                                  child: const Text('Crear'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFF97316),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
                                 ),
                               ),
                             ],
