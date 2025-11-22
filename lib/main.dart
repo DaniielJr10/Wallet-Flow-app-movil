@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'auth_wrapper.dart';
@@ -27,17 +26,7 @@ class WalletFlowApp extends StatelessWidget {
       title: 'Wallet Flow',
       debugShowCheckedModeBanner: false,
       
-      // Configuración de localizaciones
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('es', 'ES'), // Español
-        Locale('en', 'US'), // Inglés (fallback)
-      ],
-      locale: const Locale('es', 'ES'), // Idioma por defecto
+      // Localización y selección de idioma eliminadas: usar locale del sistema
       
       theme: ThemeData(
         // Configuración del tema principal con colores verdes

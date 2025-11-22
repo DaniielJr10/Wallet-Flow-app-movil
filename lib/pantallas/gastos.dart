@@ -1914,7 +1914,6 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
       initialDate: _fechaSeleccionada ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030), // Permitir fechas hasta el año 2030
-      locale: const Locale('es', 'ES'),
     );
 
     if (fecha != null) {
