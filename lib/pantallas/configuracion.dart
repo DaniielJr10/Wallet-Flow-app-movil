@@ -1,5 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import '../util/web_downloader.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:pdf/widgets.dart' as pw;
+// 'printing' plugin used previously for web; not required when using web_downloader
+// Note: previously used `Printing.sharePdf` for web, now we use a web downloader helper.
+// Keep the import commented in case you want to restore printing features later.
+// import 'package:printing/printing.dart';
+import 'package:excel/excel.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../firebase/base_datos_servicio.dart';
+import '../firebase/servicios/ingresos_servicio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../firebase/autenticacion_servicio.dart';
 import '../login/iniciosesion.dart';
@@ -31,6 +45,8 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   
   // ===== SERVICIOS Y CONTROLADORES =====
   final AutenticacionServicio _authService = AutenticacionServicio();
+  final BaseDatosServicio _baseDatosService = BaseDatosServicio();
+  final IngresosServicio _ingresosService = IngresosServicio();
   
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -69,6 +85,17 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
     super.initState();
     _initializeAnimations();
     _cargarConfiguracion();
+  }
+
+  /// Devuelve un directorio temporal; si el plugin no está registrado, usa systemTemp
+  Future<Directory> _getTempDirectory() async {
+    try {
+      return await getTemporaryDirectory();
+    } on MissingPluginException {
+      return Directory.systemTemp;
+    } catch (e) {
+      return Directory.systemTemp;
+    }
   }
 
   /// Inicializa las animaciones de entrada de la pantalla
@@ -778,13 +805,397 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
 
   /// Exporta los datos del usuario en formato Excel/PDF
   void _exportarDatos() {
-    // TODO: Implementar exportación real de datos
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Próximamente: Exportar datos'),
-        backgroundColor: Color(0xFF10B981),
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf),
+              title: const Text('Exportar a PDF'),
+              onTap: () async {
+                Navigator.pop(context);
+                await _exportAsPdf();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.table_chart),
+              title: const Text('Exportar a Excel (XLSX)'),
+              onTap: () async {
+                Navigator.pop(context);
+                await _exportAsExcel();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.close),
+              title: const Text('Cancelar'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  Future<void> _exportAsPdf() async {
+    try {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Generando PDF...')),
+      );
+
+      
+
+            // Obtener datos: ingresos, gastos, deudas, ahorros, cuentas
+            final ingresos = await _ingresosService.obtenerIngresos().first;
+
+            final gastosSnapshot = await _baseDatosService.obtenerGastos().first;
+            final gastos = gastosSnapshot.docs.map((d) {
+              final data = d.data() as Map<String, dynamic>;
+              return {
+                'id': d.id,
+                'nombre': data['nombre'] ?? '',
+                'monto': (data['monto'] as num?)?.toDouble() ?? 0.0,
+                'fecha': data['fecha'] is Timestamp ? (data['fecha'] as Timestamp).toDate() : data['fecha'],
+                'categoria': data['categoria'] ?? '',
+              };
+            }).toList();
+
+            final deudasSnapshot = await _baseDatosService.obtenerDeudas().first;
+            final deudas = deudasSnapshot.docs.map((d) {
+              final data = d.data() as Map<String, dynamic>;
+              return {
+                'id': d.id,
+                'acreedor': data['nombreAcreedor'] ?? '',
+                'montoTotal': (data['montoTotal'] as num?)?.toDouble() ?? 0.0,
+                'montoPagado': (data['montoPagado'] as num?)?.toDouble() ?? 0.0,
+                'fechaVencimiento': data['fechaVencimiento'] is Timestamp ? (data['fechaVencimiento'] as Timestamp).toDate() : data['fechaVencimiento'],
+                'estado': data['estado'] ?? '',
+              };
+            }).toList();
+
+            final ahorrosSnapshot = await _baseDatosService.obtenerAhorros().first;
+            final ahorros = ahorrosSnapshot.docs.map((d) {
+              final data = d.data() as Map<String, dynamic>;
+              return {
+                'id': d.id,
+                'descripcion': data['descripcion'] ?? '',
+                'montoObjetivo': (data['montoObjetivo'] as num?)?.toDouble() ?? 0.0,
+                'montoActual': (data['montoActual'] as num?)?.toDouble() ?? 0.0,
+                'fechaObjetivo': data['fechaObjetivo'] is Timestamp ? (data['fechaObjetivo'] as Timestamp).toDate() : data['fechaObjetivo'],
+                'estado': data['estado'] ?? '',
+              };
+            }).toList();
+
+            final cuentasSnapshot = await _baseDatosService.obtenerCuentas().first;
+            final cuentas = cuentasSnapshot.docs.map((d) {
+              final data = d.data() as Map<String, dynamic>;
+              return {
+                'id': d.id,
+                'banco': data['nombreBanco'] ?? '',
+                'numero': data['numeroCuenta'] ?? '',
+                'tipo': data['tipoCuenta'] ?? '',
+                'alias': data['alias'] ?? '',
+                'saldo': (data['saldo'] as num?)?.toDouble() ?? 0.0,
+              };
+            }).toList();
+
+            final doc = pw.Document();
+
+            doc.addPage(
+              pw.MultiPage(
+                build: (context) => [
+                  pw.Header(level: 0, child: pw.Text('Wallet Flow - Exportación de Datos')),
+                  pw.SizedBox(height: 8),
+                  pw.Text('Fecha: ${DateTime.now()}'),
+                  pw.SizedBox(height: 12),
+
+                  // Ingresos
+                  pw.Text('Ingresos', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                  pw.SizedBox(height: 6),
+                  if (ingresos.isEmpty)
+                    pw.Text('No hay ingresos registrados')
+                  else
+                    pw.Table.fromTextArray(
+                      headers: ['Descripción', 'Categoría', 'Monto', 'Fecha'],
+                      data: ingresos.map((i) => [
+                        i['descripcion'] ?? '',
+                        i['categoria'] ?? '',
+                        (i['monto'] as num?)?.toStringAsFixed(2) ?? '0.00',
+                        (i['fecha'] is DateTime) ? i['fecha'].toString() : i['fecha'].toString(),
+                      ]).toList(),
+                    ),
+
+                  pw.SizedBox(height: 12),
+
+                  // Gastos
+                  pw.Text('Gastos', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                  pw.SizedBox(height: 6),
+                  if (gastos.isEmpty)
+                    pw.Text('No hay gastos registrados')
+                  else
+                    pw.Table.fromTextArray(
+                      headers: ['Nombre', 'Categoría', 'Monto', 'Fecha'],
+                      data: gastos.map((g) => [
+                        g['nombre'] ?? '',
+                        g['categoria'] ?? '',
+                        (g['monto'] as double).toStringAsFixed(2),
+                        (g['fecha'] is DateTime) ? g['fecha'].toString() : g['fecha'].toString(),
+                      ]).toList(),
+                    ),
+
+                  pw.SizedBox(height: 12),
+
+                  // Deudas
+                  pw.Text('Deudas', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                  pw.SizedBox(height: 6),
+                  if (deudas.isEmpty)
+                    pw.Text('No hay deudas registradas')
+                  else
+                    pw.Table.fromTextArray(
+                      headers: ['Acreedor', 'Total', 'Pagado', 'Vencimiento', 'Estado'],
+                      data: deudas.map((d) => [
+                        d['acreedor'] ?? '',
+                        (d['montoTotal'] as double).toStringAsFixed(2),
+                        (d['montoPagado'] as double).toStringAsFixed(2),
+                        (d['fechaVencimiento'] is DateTime) ? d['fechaVencimiento'].toString() : d['fechaVencimiento'].toString(),
+                        d['estado'] ?? '',
+                      ]).toList(),
+                    ),
+
+                  pw.SizedBox(height: 12),
+
+                  // Ahorros
+                  pw.Text('Ahorros', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                  pw.SizedBox(height: 6),
+                  if (ahorros.isEmpty)
+                    pw.Text('No hay ahorros registrados')
+                  else
+                    pw.Table.fromTextArray(
+                      headers: ['Descripción', 'Objetivo', 'Actual', 'Fecha Objetivo', 'Estado'],
+                      data: ahorros.map((a) => [
+                        a['descripcion'] ?? '',
+                        (a['montoObjetivo'] as double).toStringAsFixed(2),
+                        (a['montoActual'] as double).toStringAsFixed(2),
+                        (a['fechaObjetivo'] is DateTime) ? a['fechaObjetivo'].toString() : a['fechaObjetivo'].toString(),
+                        a['estado'] ?? '',
+                      ]).toList(),
+                    ),
+
+                  pw.SizedBox(height: 12),
+
+                  // Cuentas
+                  pw.Text('Cuentas', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                  pw.SizedBox(height: 6),
+                  if (cuentas.isEmpty)
+                    pw.Text('No hay cuentas registradas')
+                  else
+                    pw.Table.fromTextArray(
+                      headers: ['Banco', 'Número', 'Tipo', 'Alias', 'Saldo'],
+                      data: cuentas.map((c) => [
+                        c['banco'] ?? '',
+                        c['numero'] ?? '',
+                        c['tipo'] ?? '',
+                        c['alias'] ?? '',
+                        (c['saldo'] as double).toStringAsFixed(2),
+                      ]).toList(),
+                    ),
+                ],
+              ),
+            );
+
+      // Guardar/descargar según plataforma
+      final bytes = await doc.save();
+
+      if (kIsWeb) {
+        try {
+          downloadBytesAsFile(bytes, 'walletflow_export_${DateTime.now().millisecondsSinceEpoch}.pdf', 'application/pdf');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('PDF descargado.')),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error al descargar PDF en web: $e')),
+            );
+          }
+        }
+      } else {
+        final dir = await _getTempDirectory();
+        final file = File('${dir.path}/walletflow_export_${DateTime.now().millisecondsSinceEpoch}.pdf');
+        await file.writeAsBytes(bytes);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('PDF generado. Preparando para compartir...')),
+        );
+
+        await Share.shareFiles([file.path], text: 'Exportación de datos - Wallet Flow');
+      }
+    } catch (e) {
+      debugPrint('Error exportando a PDF: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al exportar a PDF: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _exportAsExcel() async {
+    try {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Generando Excel...')),
+      );
+
+      final ingresos = await _ingresosService.obtenerIngresos().first;
+      final gastosSnapshot = await _baseDatosService.obtenerGastos().first;
+      final gastos = gastosSnapshot.docs.map((d) {
+        final data = d.data() as Map<String, dynamic>;
+        return {
+          'id': d.id,
+          'nombre': data['nombre'] ?? '',
+          'monto': (data['monto'] as num?)?.toDouble() ?? 0.0,
+          'fecha': data['fecha'] is Timestamp ? (data['fecha'] as Timestamp).toDate() : data['fecha'],
+          'categoria': data['categoria'] ?? '',
+        };
+      }).toList();
+
+      final deudasSnapshot = await _baseDatosService.obtenerDeudas().first;
+      final deudas = deudasSnapshot.docs.map((d) {
+        final data = d.data() as Map<String, dynamic>;
+        return {
+          'acreedor': data['nombreAcreedor'] ?? '',
+          'montoTotal': (data['montoTotal'] as num?)?.toDouble() ?? 0.0,
+          'montoPagado': (data['montoPagado'] as num?)?.toDouble() ?? 0.0,
+          'fechaVencimiento': data['fechaVencimiento'] is Timestamp ? (data['fechaVencimiento'] as Timestamp).toDate() : data['fechaVencimiento'],
+          'estado': data['estado'] ?? '',
+        };
+      }).toList();
+
+      final ahorrosSnapshot = await _baseDatosService.obtenerAhorros().first;
+      final ahorros = ahorrosSnapshot.docs.map((d) {
+        final data = d.data() as Map<String, dynamic>;
+        return {
+          'descripcion': data['descripcion'] ?? '',
+          'montoObjetivo': (data['montoObjetivo'] as num?)?.toDouble() ?? 0.0,
+          'montoActual': (data['montoActual'] as num?)?.toDouble() ?? 0.0,
+          'fechaObjetivo': data['fechaObjetivo'] is Timestamp ? (data['fechaObjetivo'] as Timestamp).toDate() : data['fechaObjetivo'],
+          'estado': data['estado'] ?? '',
+        };
+      }).toList();
+
+      final cuentasSnapshot = await _baseDatosService.obtenerCuentas().first;
+      final cuentas = cuentasSnapshot.docs.map((d) {
+        final data = d.data() as Map<String, dynamic>;
+        return {
+          'banco': data['nombreBanco'] ?? '',
+          'numero': data['numeroCuenta'] ?? '',
+          'tipo': data['tipoCuenta'] ?? '',
+          'alias': data['alias'] ?? '',
+          'saldo': (data['saldo'] as num?)?.toDouble() ?? 0.0,
+        };
+      }).toList();
+
+      final excel = Excel.createExcel();
+      var ingresosSheet = excel['Ingresos'];
+      ingresosSheet.appendRow(['Descripción', 'Categoría', 'Monto', 'Fecha']);
+      for (final i in ingresos) {
+        ingresosSheet.appendRow([
+          i['descripcion'] ?? '',
+          i['categoria'] ?? '',
+          (i['monto'] as num?)?.toStringAsFixed(2) ?? '0.00',
+          (i['fecha'] is DateTime) ? i['fecha'].toString() : i['fecha'].toString(),
+        ]);
+      }
+
+      var gastosSheet = excel['Gastos'];
+      gastosSheet.appendRow(['Nombre', 'Categoría', 'Monto', 'Fecha']);
+      for (final g in gastos) {
+        gastosSheet.appendRow([
+          g['nombre'] ?? '',
+          g['categoria'] ?? '',
+          (g['monto'] as double).toStringAsFixed(2),
+          (g['fecha'] is DateTime) ? g['fecha'].toString() : g['fecha'].toString(),
+        ]);
+      }
+
+      var deudasSheet = excel['Deudas'];
+      deudasSheet.appendRow(['Acreedor', 'Total', 'Pagado', 'Vencimiento', 'Estado']);
+      for (final d in deudas) {
+        deudasSheet.appendRow([
+          d['acreedor'] ?? '',
+          (d['montoTotal'] as double).toStringAsFixed(2),
+          (d['montoPagado'] as double).toStringAsFixed(2),
+          (d['fechaVencimiento'] is DateTime) ? d['fechaVencimiento'].toString() : d['fechaVencimiento'].toString(),
+          d['estado'] ?? '',
+        ]);
+      }
+
+      var ahorrosSheet = excel['Ahorros'];
+      ahorrosSheet.appendRow(['Descripción', 'Objetivo', 'Actual', 'Fecha Objetivo', 'Estado']);
+      for (final a in ahorros) {
+        ahorrosSheet.appendRow([
+          a['descripcion'] ?? '',
+          (a['montoObjetivo'] as double).toStringAsFixed(2),
+          (a['montoActual'] as double).toStringAsFixed(2),
+          (a['fechaObjetivo'] is DateTime) ? a['fechaObjetivo'].toString() : a['fechaObjetivo'].toString(),
+          a['estado'] ?? '',
+        ]);
+      }
+
+      var cuentasSheet = excel['Cuentas'];
+      cuentasSheet.appendRow(['Banco', 'Número', 'Tipo', 'Alias', 'Saldo']);
+      for (final c in cuentas) {
+        cuentasSheet.appendRow([
+          c['banco'] ?? '',
+          c['numero'] ?? '',
+          c['tipo'] ?? '',
+          c['alias'] ?? '',
+          (c['saldo'] as double).toStringAsFixed(2),
+        ]);
+      }
+
+      final bytes = excel.encode();
+      if (bytes == null) throw Exception('No se pudo generar el archivo Excel');
+
+      if (kIsWeb) {
+        try {
+          downloadBytesAsFile(bytes, 'walletflow_export_${DateTime.now().millisecondsSinceEpoch}.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Excel descargado.')),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error al descargar Excel en web: $e')),
+            );
+          }
+        }
+      } else {
+        final dir = await _getTempDirectory();
+        final file = File('${dir.path}/walletflow_export_${DateTime.now().millisecondsSinceEpoch}.xlsx');
+        await file.writeAsBytes(bytes);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Excel generado. Preparando para compartir...')),
+        );
+
+        await Share.shareFiles([file.path], text: 'Exportación de datos - Wallet Flow');
+      }
+    } catch (e) {
+      debugPrint('Error exportando a Excel: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al exportar a Excel: $e')),
+        );
+      }
+    }
   }
 
   /// Abre la sección de preguntas frecuentes
