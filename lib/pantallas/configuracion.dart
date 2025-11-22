@@ -60,7 +60,6 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   // Autenticación biométrica eliminada: se mantuvieron otras opciones de seguridad
   
   /// Controla el tema de la aplicación (claro/oscuro)
-  bool _modoOscuro = false;
   
   /// Controla la sincronización automática de datos
   bool _sincronizacionAutomatica = true;
@@ -69,7 +68,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   String _monedaSeleccionada = 'COP';
   
   /// Idioma seleccionado para la interfaz
-  String _idiomaSeleccionado = 'Español';
+  // Eliminado: selección de idioma manejada por el sistema
 
   // ===== DATOS ESTÁTICOS =====
   /// Lista de monedas disponibles en la aplicación
@@ -349,31 +348,14 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       icono: Icons.settings,
       color: const Color(0xFF3B82F6),
       children: [
-        _buildSwitchTile(
-          titulo: 'Modo Oscuro',
-          subtitulo: 'Cambiar apariencia de la aplicación',
-          icono: Icons.dark_mode,
-          valor: _modoOscuro,
-          onChanged: (value) {
-            setState(() {
-              _modoOscuro = value;
-            });
-            _guardarConfiguracion('modo_oscuro', value);
-            // TODO: Implementar cambio de tema real
-          },
-        ),
+        // Opción de Modo Oscuro eliminada: la app usa tema claro por defecto
         _buildOpcionTile(
           titulo: 'Moneda',
           subtitulo: _monedas.firstWhere((m) => m['codigo'] == _monedaSeleccionada)['nombre'],
           icono: Icons.attach_money,
           onTap: () => _mostrarSelectorMoneda(),
         ),
-        _buildOpcionTile(
-          titulo: 'Idioma',
-          subtitulo: _idiomaSeleccionado,
-          icono: Icons.language,
-          onTap: () => _mostrarSelectorIdioma(),
-        ),
+        // Opción de Idioma eliminada: usar idioma del sistema
       ],
     );
   }
@@ -775,16 +757,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
     );
   }
 
-  /// Muestra el selector de idioma
-  void _mostrarSelectorIdioma() {
-    // TODO: Implementar selector de idioma completo
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Próximamente: Múltiples idiomas'),
-        backgroundColor: Color(0xFF10B981),
-      ),
-    );
-  }
+  // Selector de idioma eliminado: la aplicación usa el idioma del sistema
 
   /// Inicia el proceso de cambio de contraseña
   void _cambiarContrasena() {
