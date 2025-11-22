@@ -65,19 +65,11 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   bool _sincronizacionAutomatica = true;
   
   /// Moneda seleccionada para mostrar valores
-  String _monedaSeleccionada = 'COP';
-  
-  /// Idioma seleccionado para la interfaz
-  // Eliminado: selección de idioma manejada por el sistema
+  // Moneda y selección de idioma eliminadas: la app no muestra opciones en UI
 
   // ===== DATOS ESTÁTICOS =====
   /// Lista de monedas disponibles en la aplicación
-  final List<Map<String, dynamic>> _monedas = [
-    {'codigo': 'COP', 'nombre': 'Peso Colombiano', 'simbolo': '\$'},
-    {'codigo': 'USD', 'nombre': 'Dólar Americano', 'simbolo': '\$'},
-    {'codigo': 'EUR', 'nombre': 'Euro', 'simbolo': '€'},
-    {'codigo': 'MXN', 'nombre': 'Peso Mexicano', 'simbolo': '\$'},
-  ];
+  // Eliminado: lista de monedas (no se usa tras quitar la opción de Moneda)
 
   @override
   void initState() {
@@ -196,8 +188,6 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     _buildPerfilCard(),
-                    const SizedBox(height: 24),
-                    _buildSeccionGeneral(),
                     const SizedBox(height: 24),
                     _buildSeccionSeguridad(),
                     const SizedBox(height: 24),
@@ -340,25 +330,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
     );
   }
 
-  /// Construye la sección de configuración general
-  /// Incluye tema, moneda e idioma
-  Widget _buildSeccionGeneral() {
-    return _buildSeccion(
-      titulo: 'General',
-      icono: Icons.settings,
-      color: const Color(0xFF3B82F6),
-      children: [
-        // Opción de Modo Oscuro eliminada: la app usa tema claro por defecto
-        _buildOpcionTile(
-          titulo: 'Moneda',
-          subtitulo: _monedas.firstWhere((m) => m['codigo'] == _monedaSeleccionada)['nombre'],
-          icono: Icons.attach_money,
-          onTap: () => _mostrarSelectorMoneda(),
-        ),
-        // Opción de Idioma eliminada: usar idioma del sistema
-      ],
-    );
-  }
+  // Sección 'General' eliminada: ya no se muestra en la pantalla de configuración
 
   /// Construye la sección de seguridad
   /// Incluye biometría, contraseña y 2FA
@@ -684,78 +656,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   }
 
   /// Muestra el selector de moneda en un bottom sheet
-  void _mostrarSelectorMoneda() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Indicador de arrastre
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Título
-            const Text(
-              'Seleccionar Moneda',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Lista de monedas
-            ..._monedas.map((moneda) => ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  moneda['simbolo'],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF10B981),
-                  ),
-                ),
-              ),
-              title: Text(moneda['nombre']),
-              subtitle: Text(moneda['codigo']),
-              trailing: _monedaSeleccionada == moneda['codigo']
-                  ? const Icon(Icons.check, color: Color(0xFF10B981))
-                  : null,
-              onTap: () {
-                setState(() {
-                  _monedaSeleccionada = moneda['codigo'];
-                });
-                _guardarConfiguracion('moneda_seleccionada', moneda['codigo']);
-                Navigator.pop(context);
-              },
-            )),
-            
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
+  // Selector de moneda eliminado: no se muestra al usuario
 
   // Selector de idioma eliminado: la aplicación usa el idioma del sistema
 
@@ -1187,56 +1088,131 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
 
   /// Muestra información sobre la aplicación
   void _mostrarAcercaDe() {
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
+      barrierLabel: 'Acerca de',
+      barrierDismissible: true,
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        final width = MediaQuery.of(context).size.width * 0.88;
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: width,
+              padding: const EdgeInsets.only(top: 56, left: 20, right: 20, bottom: 18),
               decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.12),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              child: const Icon(
-                Icons.info,
-                color: Color(0xFF10B981),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Logo encima del título
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'images/logo.png',
+                        fit: BoxFit.cover,
+                        width: 96,
+                        height: 96,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Title
+                  const Text(
+                    'Wallet Flow',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Tu compañero financiero personal',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Feature chips
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: const [
+                      Chip(label: Text('Gastos')), 
+                      Chip(label: Text('Ingresos')),
+                      Chip(label: Text('Ahorros')),
+                      Chip(label: Text('Exportar')),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      'Gestiona gastos, ingresos y objetivos con una interfaz limpia y segura. Tu información se mantiene privada y sincronizada.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, height: 1.4),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.withOpacity(0.2)),
+                  const SizedBox(height: 8),
+
+                  // Developer + contact
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      _SmallInfo(title: 'Desarrollador', subtitle: 'Wallet Flow Team'),
+                      _SmallInfo(title: 'Contacto', subtitle: 'walletflow@gmail.com'),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cerrar'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 12),
-            const Text('Acerca de Wallet Flow'),
-          ],
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Versión: 1.0.0'),
-            SizedBox(height: 8),
-            Text('Desarrollado con ❤️ usando Flutter'),
-            SizedBox(height: 8),
-            Text('Tu compañero financiero personal'),
-            SizedBox(height: 16),
-            Text(
-              '© 2025 Wallet Flow. Todos los derechos reservados.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cerrar',
-              style: TextStyle(color: Color(0xFF10B981)),
             ),
           ),
-        ],
-      ),
-    );
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: ScaleTransition(scale: Tween(begin: 0.96, end: 1.0).animate(animation), child: child),
+        );
+      },
+    ).then((_) {});
   }
 
   /// Confirma la eliminación permanente de la cuenta
@@ -1387,5 +1363,24 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
         );
       }
     }
+  }
+}
+
+/// Pequeño widget usado en el diálogo "Acerca de" para mostrar pares título/valor
+class _SmallInfo extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  const _SmallInfo({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        const SizedBox(height: 4),
+        Text(subtitle, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ],
+    );
   }
 }
