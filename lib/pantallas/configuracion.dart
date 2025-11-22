@@ -5,6 +5,7 @@ import '../firebase/autenticacion_servicio.dart';
 import '../login/iniciosesion.dart';
 import 'perfil.dart';
 import 'cambiar_contrasena.dart';
+import 'recordatorios_gastos.dart';
 
 /// Pantalla de configuración de la aplicación Wallet Flow
 /// 
@@ -768,12 +769,8 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
 
   /// Configura recordatorios personalizados
   void _configurarRecordatorios() {
-    // TODO: Implementar configuración de recordatorios
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Próximamente: Recordatorios personalizados'),
-        backgroundColor: Color(0xFF10B981),
-      ),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const RecordatoriosGastosScreen()),
     );
   }
 
