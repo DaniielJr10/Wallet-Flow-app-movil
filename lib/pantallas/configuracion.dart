@@ -215,28 +215,38 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       expandedHeight: 120,
       floating: false,
       pinned: true,
-      backgroundColor: const Color(0xFF1E293B),
+      backgroundColor: Colors.white,
       elevation: 0,
+      centerTitle: true,
       flexibleSpace: FlexibleSpaceBar(
-        title: const Text(
-          'Configuración',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+        centerTitle: true,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 6, offset: const Offset(0,2))],
+              ),
+              child: const Icon(Icons.settings, color: Color(0xFF0F172A), size: 24),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Configuración',
+              style: TextStyle(
+                color: Color(0xFF0F172A),
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ],
         ),
         background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF1E293B),
-                Color(0xFF334155),
-              ],
-            ),
-          ),
+          color: Colors.white,
         ),
       ),
     );
