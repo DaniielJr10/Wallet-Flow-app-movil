@@ -362,12 +362,6 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
           icono: Icons.lock,
           onTap: () => _cambiarContrasena(),
         ),
-        _buildOpcionTile(
-          titulo: 'Verificación en Dos Pasos',
-          subtitulo: 'Agregar capa extra de seguridad',
-          icono: Icons.verified_user,
-          onTap: () => _configurar2FA(),
-        ),
       ],
     );
   }
@@ -773,15 +767,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   }
 
   /// Configura la autenticación de dos factores
-  void _configurar2FA() {
-    // TODO: Implementar 2FA
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Próximamente: Autenticación 2FA'),
-        backgroundColor: Color(0xFF10B981),
-      ),
-    );
-  }
+  // Autenticación 2FA eliminada: opción eliminada de la UI por solicitud del usuario.
 
   /// Configura recordatorios personalizados
   void _configurarRecordatorios() {
