@@ -125,13 +125,27 @@ class _RecordatoriosGastosScreenState extends State<RecordatoriosGastosScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(isNew ? 'Nuevo recordatorio' : 'Editar recordatorio', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                          IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
-                        ],
-                      ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 40,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(10),
+                                            gradient: const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                                          ),
+                                          child: const Icon(Icons.notifications, color: Colors.white, size: 22),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(isNew ? 'Nuevo recordatorio' : 'Editar recordatorio', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                      ],
+                                    ),
+                                    IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                                  ],
+                                ),
                       const SizedBox(height: 8),
                       TextField(controller: tituloCtrl, decoration: const InputDecoration(labelText: 'Título')),
                       const SizedBox(height: 12),
@@ -160,24 +174,31 @@ class _RecordatoriosGastosScreenState extends State<RecordatoriosGastosScreen> {
                         weekdayChips(),
                       ],
                       const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          final id = existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString();
-                          if (isNew) {
-                            _items.add(RecordatorioGasto(id: id, titulo: tituloCtrl.text.trim(), hora: hora, diario: diario, diasSemana: dias, activo: true));
-                          } else {
-                            // existing is non-null here
-                            existing.titulo = tituloCtrl.text.trim();
-                            existing.hora = hora;
-                            existing.diario = diario;
-                            existing.diasSemana = dias;
-                          }
-                          _save();
-                          Navigator.pop(context);
-                          setState(() {});
-                        },
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), padding: const EdgeInsets.symmetric(vertical: 14)),
-                        child: Text(isNew ? 'Crear recordatorio' : 'Guardar cambios'),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            final id = existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString();
+                            if (isNew) {
+                              _items.add(RecordatorioGasto(id: id, titulo: tituloCtrl.text.trim(), hora: hora, diario: diario, diasSemana: dias, activo: true));
+                            } else {
+                              // existing is non-null here
+                              existing.titulo = tituloCtrl.text.trim();
+                              existing.hora = hora;
+                              existing.diario = diario;
+                              existing.diasSemana = dias;
+                            }
+                            _save();
+                            Navigator.pop(context);
+                            setState(() {});
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF10B981),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(isNew ? 'Crear recordatorio' : 'Guardar cambios'),
+                        ),
                       ),
                       const SizedBox(height: 20),
                     ],
@@ -209,6 +230,7 @@ class _RecordatoriosGastosScreenState extends State<RecordatoriosGastosScreen> {
       appBar: AppBar(
         title: const Text('Recordatorios de gastos'),
         backgroundColor: const Color(0xFF10B981),
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -220,36 +242,97 @@ class _RecordatoriosGastosScreenState extends State<RecordatoriosGastosScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('No hay recordatorios configurados.'),
-                          const SizedBox(height: 8),
+                          // show app logo if available
+                          Container(
+                            width: 120,
+                            height: 120,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(colors: [Color(0xFFE6FFFA), Color(0xFFCFFAFE)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                            ),
+                            child: const Center(
+                              child: Icon(Icons.notifications_none, size: 56, color: Color(0xFF10B981)),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Sin recordatorios',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Programa avisos para no olvidar tus gastos importantes.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                          const SizedBox(height: 16),
                           ElevatedButton.icon(
                             onPressed: () => _addOrEdit(),
                             icon: const Icon(Icons.add),
                             label: const Text('Crear recordatorio'),
-                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF10B981),
+                              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
                           ),
                         ],
                       ),
                     )
                   : ListView.separated(
                       itemCount: _items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, i) {
                         final r = _items[i];
-                        final subtitle = r.diario
-                            ? 'Todos los días - ${r.hora.format(context)}'
-                            : '${r.hora.format(context)} - ${r.diasSemana.map((d) => ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'][d-1]).join(', ')}';
-                        return Card(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        final timeText = r.hora.format(context);
+                        final daysText = r.diario
+                            ? 'Diario'
+                            : r.diasSemana.map((d) => ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'][d-1]).join(', ');
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0,6))],
+                          ),
                           child: ListTile(
-                            title: Text(r.titulo),
-                            subtitle: Text(subtitle),
-                            leading: Icon(r.activo ? Icons.alarm_on : Icons.alarm_off, color: r.activo ? const Color(0xFF10B981) : Colors.grey),
-                            trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                              IconButton(icon: const Icon(Icons.edit), onPressed: () => _addOrEdit(existing: r)),
-                              IconButton(icon: const Icon(Icons.delete), onPressed: () => _eliminar(r)),
-                            ]),
-                            onTap: () => _toggleActivo(r),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            leading: CircleAvatar(
+                              radius: 30,
+                              backgroundColor: r.activo ? const Color(0xFF10B981) : Colors.grey.shade300,
+                              child: Text(
+                                timeText,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: r.activo ? Colors.white : Colors.black87, fontSize: 12, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            title: Text(r.titulo, style: const TextStyle(fontWeight: FontWeight.w600)),
+                            subtitle: Padding(
+                              padding: const EdgeInsets.only(top: 6.0),
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 6,
+                                children: [
+                                  Chip(label: Text(daysText), backgroundColor: Colors.grey.shade100),
+                                  Chip(label: Text(r.activo ? 'Activo' : 'Inactivo'), backgroundColor: r.activo ? const Color(0xFFECFDF5) : Colors.grey.shade50),
+                                ],
+                              ),
+                            ),
+                            trailing: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Switch(value: r.activo, onChanged: (_) => _toggleActivo(r), activeColor: const Color(0xFF10B981)),
+                                PopupMenuButton<String>(
+                                  itemBuilder: (ctx) => [
+                                    const PopupMenuItem(value: 'edit', child: Text('Editar')),
+                                    const PopupMenuItem(value: 'delete', child: Text('Eliminar')),
+                                  ],
+                                  onSelected: (v) {
+                                    if (v == 'edit') _addOrEdit(existing: r);
+                                    if (v == 'delete') _eliminar(r);
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
@@ -262,7 +345,7 @@ class _RecordatoriosGastosScreenState extends State<RecordatoriosGastosScreen> {
                 onPressed: () => _addOrEdit(),
                 icon: const Icon(Icons.add),
                 label: const Text('Agregar recordatorio'),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), padding: const EdgeInsets.symmetric(vertical: 14)),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF10B981), padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
               ),
             ),
           ],
