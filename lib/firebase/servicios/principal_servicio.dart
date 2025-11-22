@@ -4,6 +4,27 @@ import 'package:firebase_auth/firebase_auth.dart';
 /// Servicio principal que obtiene y calcula datos resumidos
 /// para mostrar en la pantalla principal de Wallet Flow
 class PrincipalServicio {
+  /// Suma el monto pendiente de todas las deudas del usuario
+  Future<double> _obtenerTotalDeudas() async {
+    try {
+      final snapshot = await _firestore
+          .collection('usuarios')
+          .doc(_userId)
+          .collection('deudas')
+          .get();
+
+      double total = 0.0;
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final montoPendiente = (data['montoPendiente'] ?? 0.0);
+        total += (montoPendiente is num) ? montoPendiente.toDouble() : 0.0;
+      }
+      return total;
+    } catch (e) {
+      print('Error al obtener total de deudas: $e');
+      return 0.0;
+    }
+  }
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   
@@ -200,46 +221,50 @@ class PrincipalServicio {
 
   /// Obtiene estadísticas rápidas para la pantalla principal
   Future<Map<String, dynamic>> obtenerEstadisticasRapidas() async {
-      try {
-        final futures = await Future.wait([
-          _obtenerTotalCuentas(),
-          _obtenerTotalIngresos(), 
-          _obtenerTotalGastos(),
-          _obtenerIngresosDelMes(),
-          _obtenerGastosDelMes(),
-          _obtenerTotalAhorros(),
-        ]);
+    try {
+      final futures = await Future.wait([
+        _obtenerTotalCuentas(),
+        _obtenerTotalIngresos(),
+        _obtenerTotalGastos(),
+        _obtenerIngresosDelMes(),
+        _obtenerGastosDelMes(),
+        _obtenerTotalAhorros(),
+        _obtenerTotalDeudas(),
+      ]);
 
-        final totalCuentas = futures[0];
-        final totalIngresos = futures[1];
-        final totalGastos = futures[2];
-        final ingresosDelMes = futures[3];
-        final gastosDelMes = futures[4];
-        final totalAhorros = futures[5];
+      final totalCuentas = futures[0];
+      final totalIngresos = futures[1];
+      final totalGastos = futures[2];
+      final ingresosDelMes = futures[3];
+      final gastosDelMes = futures[4];
+      final totalAhorros = futures[5];
+      final totalDeudas = futures[6];
 
-        return {
-          'totalCuentas': totalCuentas,
-          'totalIngresos': totalIngresos,
-          'totalGastos': totalGastos,
-          'balanceTotal': totalIngresos - totalGastos,
-          'ingresosDelMes': ingresosDelMes,
-          'gastosDelMes': gastosDelMes,
-          'balanceMensual': ingresosDelMes - gastosDelMes,
-          'totalAhorros': totalAhorros,
-        };
-      } catch (e) {
-        return {
-          'error': 'Error al cargar estadísticas: $e',
-          'totalCuentas': 0.0,
-          'totalIngresos': 0.0,
-          'totalGastos': 0.0,
-          'balanceTotal': 0.0,
-          'ingresosDelMes': 0.0,
-          'gastosDelMes': 0.0,
-          'balanceMensual': 0.0,
-          'totalAhorros': 0.0,
-        };
-      }
+      return {
+        'totalCuentas': totalCuentas,
+        'totalIngresos': totalIngresos,
+        'totalGastos': totalGastos,
+        'balanceTotal': totalIngresos - totalGastos,
+        'ingresosDelMes': ingresosDelMes,
+        'gastosDelMes': gastosDelMes,
+        'balanceMensual': ingresosDelMes - gastosDelMes,
+        'totalAhorros': totalAhorros,
+        'totalDeudas': totalDeudas,
+      };
+    } catch (e) {
+      return {
+        'error': 'Error al cargar estadísticas: $e',
+        'totalCuentas': 0.0,
+        'totalIngresos': 0.0,
+        'totalGastos': 0.0,
+        'balanceTotal': 0.0,
+        'ingresosDelMes': 0.0,
+        'gastosDelMes': 0.0,
+        'balanceMensual': 0.0,
+        'totalAhorros': 0.0,
+        'totalDeudas': 0.0,
+      };
+    }
     }
 
     /// Obtiene el total real de ahorros del usuario (suma de montoActual de todas las metas)

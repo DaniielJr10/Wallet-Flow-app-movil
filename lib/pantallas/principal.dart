@@ -460,7 +460,9 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
                   Expanded(
                     child: _buildSummaryItem(
                       title: 'Deudas',
-                      amount: FormatoNumeros.formatearParaMostrar(totalDeudas),
+                      amount: totalDeudas > 0
+                          ? FormatoNumeros.formatearParaMostrar(totalDeudas)
+                          : 'Sin deudas',
                       icon: Icons.credit_card_rounded,
                       color: Colors.orange.shade600,
                       onTap: () {
@@ -638,7 +640,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal>
           decoration: BoxDecoration(
             border: Border.all(
               color: color.withOpacity(0.2),
-              width: 2,
             ),
             borderRadius: BorderRadius.circular(16),
           ),
