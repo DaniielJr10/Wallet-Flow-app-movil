@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../firebase/autenticacion_servicio.dart';
 import '../login/iniciosesion.dart';
 import 'perfil.dart';
+import 'cambiar_contrasena.dart';
 
 /// Pantalla de configuración de la aplicación Wallet Flow
 /// 
@@ -757,12 +758,8 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
 
   /// Inicia el proceso de cambio de contraseña
   void _cambiarContrasena() {
-    // TODO: Implementar cambio de contraseña con Firebase Auth
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Próximamente: Cambiar contraseña'),
-        backgroundColor: Color(0xFF10B981),
-      ),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const CambiarContrasenaScreen()),
     );
   }
 
