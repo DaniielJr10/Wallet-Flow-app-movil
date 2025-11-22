@@ -1088,56 +1088,131 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
 
   /// Muestra información sobre la aplicación
   void _mostrarAcercaDe() {
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
+      barrierLabel: 'Acerca de',
+      barrierDismissible: true,
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        final width = MediaQuery.of(context).size.width * 0.88;
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: width,
+              padding: const EdgeInsets.only(top: 56, left: 20, right: 20, bottom: 18),
               decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.12),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              child: const Icon(
-                Icons.info,
-                color: Color(0xFF10B981),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Logo encima del título
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'images/logo.png',
+                        fit: BoxFit.cover,
+                        width: 96,
+                        height: 96,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Title
+                  const Text(
+                    'Wallet Flow',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Tu compañero financiero personal',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Feature chips
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: const [
+                      Chip(label: Text('Gastos')), 
+                      Chip(label: Text('Ingresos')),
+                      Chip(label: Text('Ahorros')),
+                      Chip(label: Text('Exportar')),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      'Gestiona gastos, ingresos y objetivos con una interfaz limpia y segura. Tu información se mantiene privada y sincronizada.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, height: 1.4),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Divider(color: Colors.grey.withOpacity(0.2)),
+                  const SizedBox(height: 8),
+
+                  // Developer + contact
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      _SmallInfo(title: 'Desarrollador', subtitle: 'Wallet Flow Team'),
+                      _SmallInfo(title: 'Contacto', subtitle: 'walletflow@gmail.com'),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Actions
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cerrar'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 12),
-            const Text('Acerca de Wallet Flow'),
-          ],
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Versión: 1.0.0'),
-            SizedBox(height: 8),
-            Text('Desarrollado con ❤️ usando Flutter'),
-            SizedBox(height: 8),
-            Text('Tu compañero financiero personal'),
-            SizedBox(height: 16),
-            Text(
-              '© 2025 Wallet Flow. Todos los derechos reservados.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cerrar',
-              style: TextStyle(color: Color(0xFF10B981)),
             ),
           ),
-        ],
-      ),
-    );
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+          child: ScaleTransition(scale: Tween(begin: 0.96, end: 1.0).animate(animation), child: child),
+        );
+      },
+    ).then((_) {});
   }
 
   /// Confirma la eliminación permanente de la cuenta
@@ -1288,5 +1363,24 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
         );
       }
     }
+  }
+}
+
+/// Pequeño widget usado en el diálogo "Acerca de" para mostrar pares título/valor
+class _SmallInfo extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  const _SmallInfo({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        const SizedBox(height: 4),
+        Text(subtitle, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ],
+    );
   }
 }
