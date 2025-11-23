@@ -1274,15 +1274,135 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
     );
   }
 
-  /// Procesa la eliminación definitiva de la cuenta
-  void _procesarEliminacionCuenta() {
-    // TODO: Implementar eliminación real
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Función de eliminación disponible próximamente'),
-        backgroundColor: Colors.red,
+  /// Solicita la contraseña para reautenticación (si es necesario)
+  Future<String?> _promptPasswordForReauth() async {
+    final controller = TextEditingController();
+    final result = await showDialog<String?>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reautenticación requerida'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Por seguridad, por favor ingresa tu contraseña para confirmar la eliminación de la cuenta.'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Contraseña'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(null), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.of(ctx).pop(controller.text.trim()), child: const Text('Confirmar')),
+        ],
       ),
     );
+
+    return result;
+  }
+
+  /// Procesa la eliminación definitiva de la cuenta: borra datos en Firestore y elimina el usuario en Auth.
+  Future<void> _procesarEliminacionCuenta() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final bd = BaseDatosServicio();
+
+    // Mostrar indicador
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Eliminando cuenta...'), backgroundColor: Color(0xFF10B981)),
+      );
+    }
+
+    // 1) Eliminar datos en Firestore
+    final errDb = await bd.eliminarUsuarioPermanente();
+    if (errDb != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errDb), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
+
+    // 2) Intentar eliminar usuario de Firebase Auth
+    try {
+      await currentUser.delete();
+    } on FirebaseAuthException catch (e) {
+      // Si requiere reautenticación, solicitar contraseña y reintentar
+      if (e.code == 'requires-recent-login') {
+        final pwd = await _promptPasswordForReauth();
+        if (pwd == null || pwd.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Eliminación cancelada'), backgroundColor: Colors.orange),
+            );
+          }
+          return;
+        }
+
+        final email = currentUser.email;
+        if (email == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Reautenticación no disponible: usuario sin email'), backgroundColor: Colors.orange),
+            );
+          }
+          return;
+        }
+
+        try {
+          final cred = EmailAuthProvider.credential(email: email, password: pwd);
+          await currentUser.reauthenticateWithCredential(cred);
+          // Intentar borrar de nuevo
+          await currentUser.delete();
+        } on FirebaseAuthException catch (e2) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error de reautenticación: ${e2.message}'), backgroundColor: Colors.red),
+            );
+          }
+          return;
+        } catch (e2) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error de reautenticación: $e2'), backgroundColor: Colors.red),
+            );
+          }
+          return;
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error eliminando usuario: ${e.message}'), backgroundColor: Colors.red),
+          );
+        }
+        return;
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error eliminando usuario: $e'), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
+
+    // 3) Cerrar sesión y redirigir al login
+    try {
+      await _authService.cerrarSesion();
+    } catch (_) {}
+
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const InicioSesionScreen()),
+        (route) => false,
+      );
+    }
   }
 
   /// Confirma el cierre de sesión del usuario

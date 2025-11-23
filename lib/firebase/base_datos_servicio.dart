@@ -267,4 +267,44 @@ class BaseDatosServicio {
       return 'Error al actualizar perfil: $e';
     }
   }
+
+  /// ELIMINAR DATOS DEL USUARIO PERMANENTEMENTE
+  /// Intenta borrar las colecciones conocidas del usuario y finalmente el documento de perfil.
+  /// Retorna null si fue exitoso o un mensaje de error.
+  Future<String?> eliminarUsuarioPermanente() async {
+    try {
+      if (_userId == null) return 'Usuario no autenticado';
+
+      final userDocRef = _firestore.collection('usuarios').doc(_userId);
+
+      // Lista de subcolecciones conocidas en la app
+      final List<String> colecciones = ['ahorros', 'gastos', 'cuentas', 'deudas', 'ingresos'];
+
+      for (final coleccion in colecciones) {
+        final collRef = userDocRef.collection(coleccion);
+        final snapshot = await collRef.get();
+        for (final doc in snapshot.docs) {
+          // Si la colección es 'cuentas', también intentamos borrar movimientos asociados
+          if (coleccion == 'cuentas') {
+            try {
+              final movs = await doc.reference.collection('movimientos').get();
+              for (final mv in movs.docs) {
+                await mv.reference.delete();
+              }
+            } catch (_) {}
+          }
+
+          // Borrar el documento principal
+          await doc.reference.delete();
+        }
+      }
+
+      // Finalmente borrar el documento de usuario (perfil)
+      await userDocRef.delete();
+
+      return null;
+    } catch (e) {
+      return 'Error al eliminar datos del usuario: $e';
+    }
+  }
 }
