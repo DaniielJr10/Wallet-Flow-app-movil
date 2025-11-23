@@ -146,14 +146,21 @@ class _InicioSesionScreenState extends State<InicioSesionScreen> {
     );
   }
 
-  /// Navega a la pantalla de registro
-  void _navigateToRegister() {
-    Navigator.push(
+  /// Navega a la pantalla de registro y muestra confirmación si se creó la cuenta
+  void _navigateToRegister() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const RegistrarseScreen(),
       ),
     );
+
+    if (result == true && mounted) {
+      _showSnackBar(
+        'Cuenta creada correctamente. Por favor inicia sesión.',
+        const Color(0xFF10B981),
+      );
+    }
   }
 
   @override

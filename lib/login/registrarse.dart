@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../firebase/autenticacion_servicio.dart';
-import '../pantallas/principal.dart';
 
 /// Pantalla de registro de Wallet Flow
 /// Presenta un diseño moderno y responsivo para crear cuenta nueva
@@ -177,14 +176,10 @@ class _RegistrarseScreenState extends State<RegistrarseScreen> {
           const Color(0xFF10B981)
         );
         
-        // Navegar directamente a la pantalla principal
+        // Regresar a la pantalla de login y notificar éxito
         await Future.delayed(const Duration(milliseconds: 500));
-        
         if (mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const PantallaPrincipal()), 
-            (route) => false,
-          );
+          Navigator.of(context).pop(true);
         }
         return; // Salir aquí para evitar el finally
       }
