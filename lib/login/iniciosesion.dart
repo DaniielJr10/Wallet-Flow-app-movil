@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../firebase/autenticacion_servicio.dart';
-import '../pantallas/principal.dart';
+import '../pantallas/principal/principal.dart';
 import 'recuperar.dart';
 import 'registrarse.dart';
 
