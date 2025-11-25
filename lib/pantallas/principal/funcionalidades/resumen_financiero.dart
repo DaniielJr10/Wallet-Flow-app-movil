@@ -13,8 +13,8 @@ class ResumenFinanciero extends StatelessWidget {
 
 	@override
 	Widget build(BuildContext context) {
-		return FutureBuilder<Map<String, dynamic>>(
-			future: principalServicio.obtenerEstadisticasRapidas(),
+		return StreamBuilder<Map<String, dynamic>>(
+			stream: principalServicio.obtenerResumenFinanciero(),
 			builder: (context, snapshot) {
 				if (snapshot.connectionState == ConnectionState.waiting) {
 					return _buildLoadingFinancialSummary();

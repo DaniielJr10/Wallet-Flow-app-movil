@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../firebase/servicios/gastos_servicio.dart';
 import 'utils_gastos.dart';
+import '../../../utilidades/formato_numeros.dart';
 
 class ResumenGastos extends StatelessWidget {
   final GastosServicio gastosServicio;
@@ -78,7 +79,7 @@ class ResumenGastos extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                '\$${totalGastos.toStringAsFixed(2)}',
+                '\$${FormatoNumeros.formatearParaMostrar(totalGastos)}',
                 style: const TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.w800,
