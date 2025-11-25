@@ -4,8 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
-import '../firebase/autenticacion_servicio.dart';
-import '../firebase/base_datos_servicio.dart';
+import '../../firebase/autenticacion_servicio.dart';
+import '../../firebase/base_datos_servicio.dart';
 
 /// Pantalla de gestión de perfil de usuario en Wallet Flow
 /// 

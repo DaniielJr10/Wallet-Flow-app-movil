@@ -47,23 +47,23 @@ class ResumenFinanciero extends StatelessWidget {
 							Row(
 								children: [
 									Expanded(
-										child: _buildSummaryItem(
-											title: 'Ingresos',
-											amount: FormatoNumeros.formatearParaMostrar(ingresosDelMes),
-											icon: Icons.trending_up_rounded,
-											color: Color(0xFF2ecc71),
-											onTap: () => onNavigateToSection(1),
-										),
+										   child: _buildSummaryItem(
+											   title: 'Ingresos',
+											   amount: FormatoNumeros.formatearParaMostrar(ingresosDelMes),
+											   icon: Icons.trending_up_rounded,
+											   color: Color(0xFF2ecc71),
+											   onTap: () => onNavigateToSection(10),
+										   ),
 									),
 									const SizedBox(width: 12),
 									Expanded(
-										child: _buildSummaryItem(
-											title: 'Gastos',
-											amount: FormatoNumeros.formatearParaMostrar(gastosDelMes),
-											icon: Icons.trending_down_rounded,
-											color: Color(0xFFEF4444),
-											onTap: () => onNavigateToSection(2),
-										),
+										   child: _buildSummaryItem(
+											   title: 'Gastos',
+											   amount: FormatoNumeros.formatearParaMostrar(gastosDelMes),
+											   icon: Icons.trending_down_rounded,
+											   color: Color(0xFFEF4444),
+											   onTap: () => onNavigateToSection(11),
+										   ),
 									),
 								],
 							),
@@ -71,25 +71,25 @@ class ResumenFinanciero extends StatelessWidget {
 							Row(
 								children: [
 									Expanded(
-										child: _buildSummaryItem(
-											title: 'Cuentas',
-											amount: FormatoNumeros.formatearParaMostrar(totalCuentas),
-											icon: Icons.account_balance_wallet_rounded,
-											color: Color(0xFF2563EB),
-											onTap: () => onNavigateToSection(3),
-										),
+										   child: _buildSummaryItem(
+											   title: 'Cuentas',
+											   amount: FormatoNumeros.formatearParaMostrar(totalCuentas),
+											   icon: Icons.account_balance_wallet_rounded,
+											   color: Color(0xFF2563EB),
+											   onTap: () => onNavigateToSection(12),
+										   ),
 									),
 									const SizedBox(width: 12),
 									Expanded(
-										child: _buildSummaryItem(
-											title: 'Deudas',
-											amount: totalDeudas > 0
-													? FormatoNumeros.formatearParaMostrar(totalDeudas)
-													: 'Sin deudas',
-											icon: Icons.credit_card_rounded,
-											color: Colors.orange.shade600,
-											onTap: () => onNavigateToSection(5),
-										),
+										   child: _buildSummaryItem(
+											   title: 'Deudas',
+											   amount: totalDeudas > 0
+													   ? FormatoNumeros.formatearParaMostrar(totalDeudas)
+													   : 'Sin deudas',
+											   icon: Icons.credit_card_rounded,
+											   color: Colors.orange.shade600,
+											   onTap: () => onNavigateToSection(13),
+										   ),
 									),
 								],
 							),
@@ -97,23 +97,23 @@ class ResumenFinanciero extends StatelessWidget {
 							Row(
 								children: [
 									Expanded(
-										child: _buildSummaryItem(
-											title: 'Ahorros',
-											amount: FormatoNumeros.formatearParaMostrar(totalAhorros),
-											icon: Icons.savings_rounded,
-											color: Color(0xFF8570FA),
-											onTap: () => onNavigateToSection(6),
-										),
+										   child: _buildSummaryItem(
+											   title: 'Ahorros',
+											   amount: FormatoNumeros.formatearParaMostrar(totalAhorros),
+											   icon: Icons.savings_rounded,
+											   color: Color(0xFF8570FA),
+											   onTap: () => onNavigateToSection(14),
+										   ),
 									),
 									const SizedBox(width: 12),
 									Expanded(
-										child: _buildSummaryItem(
-											title: 'Herramientas',
-											amount: '',
-											icon: Icons.build_outlined,
-											color: Colors.indigo.shade600,
-											onTap: () => onNavigateToSection(7),
-										),
+										   child: _buildSummaryItem(
+											   title: 'Herramientas',
+											   amount: '',
+											   icon: Icons.build_outlined,
+											   color: Colors.indigo.shade600,
+											   onTap: () => onNavigateToSection(15),
+										   ),
 									),
 								],
 							),

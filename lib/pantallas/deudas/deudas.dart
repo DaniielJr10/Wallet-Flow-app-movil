@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../utilidades/formato_numeros.dart';
-import '../firebase/servicios/deudas_servicio.dart';
+import '../../utilidades/formato_numeros.dart';
+import '../../firebase/servicios/deudas_servicio.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Pantalla de gestión de deudas en Wallet Flow

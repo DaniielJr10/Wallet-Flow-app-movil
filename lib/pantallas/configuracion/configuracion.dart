@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../util/web_downloader.dart';
+import '../../util/web_downloader.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -12,16 +12,16 @@ import 'package:pdf/widgets.dart' as pw;
 // import 'package:printing/printing.dart';
 import 'package:excel/excel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../firebase/base_datos_servicio.dart';
-import '../firebase/servicios/ingresos_servicio.dart';
+import '../../firebase/base_datos_servicio.dart';
+import '../../firebase/servicios/ingresos_servicio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../firebase/autenticacion_servicio.dart';
-import '../login/iniciosesion.dart';
-import 'perfil.dart';
-import 'preguntas_frecuentes.dart';
-import 'contactar_soporte.dart';
-import 'cambiar_contrasena.dart';
-import 'recordatorios_gastos.dart';
+import '../../firebase/autenticacion_servicio.dart';
+import '../../login/iniciosesion.dart';
+import '../perfil/perfil.dart';
+import '../preguntas_frecuentes.dart';
+import '../contactar_soporte.dart';
+import '../cambiar_contrasena.dart';
+import '../recordatorios_gastos.dart';
 
 /// Pantalla de configuración de la aplicación Wallet Flow
 /// 

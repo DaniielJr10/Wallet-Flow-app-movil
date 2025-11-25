@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../utilidades/formato_numeros.dart';
-import '../firebase/servicios/ahorros_servicio.dart';
+import '../../utilidades/formato_numeros.dart';
+import '../../firebase/servicios/ahorros_servicio.dart';
 
 /// Pantalla de gestión de metas de ahorro
 /// 
