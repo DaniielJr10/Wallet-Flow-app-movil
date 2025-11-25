@@ -24,8 +24,13 @@ class DialogoEliminarGasto extends StatelessWidget {
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
-          onPressed: () async {
+          onPressed: () {
+            // Cerrar diálogo de confirmación y actualizar UI de forma optimista
             Navigator.pop(context);
+            try {
+              onEliminado();
+            } catch (_) {}
+            // Ejecutar eliminación en background sin overlay que bloquee la UI
             _procesarEliminacion(context);
           },
           style: ElevatedButton.styleFrom(
@@ -42,17 +47,9 @@ class DialogoEliminarGasto extends StatelessWidget {
     final GastosServicio servicio = GastosServicio();
     
     // Mostrar carga
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
     try {
-      final error = await servicio.eliminarGasto(gastoId);
-      
-      // Cerrar carga
-      if (context.mounted) Navigator.pop(context);
+      // Ejecutar eliminación en background con timeout
+      final error = await servicio.eliminarGasto(gastoId).timeout(const Duration(seconds: 15));
 
       if (context.mounted) {
         if (error == null) {
@@ -63,18 +60,16 @@ class DialogoEliminarGasto extends StatelessWidget {
               behavior: SnackBarBehavior.floating,
             ),
           );
-          onEliminado();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(error), backgroundColor: Colors.red),
           );
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (context.mounted) {
-        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error al eliminar: $e'), backgroundColor: Colors.red),
         );
       }
     }
