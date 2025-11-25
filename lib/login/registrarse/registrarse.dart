@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../firebase/autenticacion_servicio.dart';
+import '../../firebase/autenticacion_servicio.dart';
 
 /// Pantalla de registro de Wallet Flow
 /// Presenta un diseño moderno y responsivo para crear cuenta nueva

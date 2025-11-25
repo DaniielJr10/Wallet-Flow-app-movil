@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../firebase/autenticacion_servicio.dart';
 import '../../../firebase/base_datos_servicio.dart';
-import '../../../login/iniciosesion.dart';
+import '../../../login/iniciosesion/iniciosesion.dart';
 
 class PrincipalController {
 	final AutenticacionServicio authService = AutenticacionServicio();

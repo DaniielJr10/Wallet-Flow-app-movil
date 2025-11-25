@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login/iniciosesion.dart';
+import 'login/iniciosesion/iniciosesion.dart';
 import 'pantallas/principal/principal.dart';
 
 /// Wrapper de autenticación que decide qué pantalla mostrar
