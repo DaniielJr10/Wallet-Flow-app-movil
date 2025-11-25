@@ -1,14 +1,12 @@
+import 'package:flutter/material.dart';
 import '../../perfil/perfil.dart';
 import '../../configuracion/configuracion.dart';
-import 'package:flutter/material.dart';
 import '../../ingresos/ingresos.dart';
 import '../../gastos/gastos.dart';
 import '../../cuentas/cuentas.dart';
 import '../../deudas/deudas.dart';
 import '../../ahorros/ahorros.dart';
-import '../../herramientass/calculadora.dart';
-import '../../perfil/perfil.dart';
-import '../../configuracion/configuracion.dart';
+import '../../configuracion/herramientas.dart';
 
 void navegarASeccion(BuildContext context, int index, Function(int) setSelectedIndex) {
 		// Barra inferior: 0-Inicio, 1-Perfil, 2-Configuración
@@ -54,7 +52,7 @@ void navegarASeccion(BuildContext context, int index, Function(int) setSelectedI
 		} else if (index == 15) {
 			Navigator.push(
 				context,
-				MaterialPageRoute(builder: (context) => const CalculadoraPantalla()),
+				MaterialPageRoute(builder: (context) => const PantallaHerramientas()),
 			);
 		} else {
 			setSelectedIndex(index);
