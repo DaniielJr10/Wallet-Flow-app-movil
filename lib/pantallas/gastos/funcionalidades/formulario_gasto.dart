@@ -1,49 +1,345 @@
+// FormularioGasto: Formulario para crear o editar un gasto de forma avanzada.
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../firebase/servicios/gastos_servicio.dart';
+import '../../../firebase/servicios/cuentas_servicio.dart';
+import '../../../utilidades/formato_numeros.dart';
+import 'utils_gastos.dart';
 
-/// Formulario para crear o editar un gasto.
-class FormularioGasto extends StatelessWidget {
-  final GlobalKey<FormState> formKey;
-  final TextEditingController montoController;
-  final TextEditingController descripcionController;
-  final DateTime? fechaSeleccionada;
-  final String categoriaSeleccionada;
-  final String metodoPagoSeleccionado;
-  final String cuentaAsociada;
-  final bool esRecurrente;
-  final String frecuenciaRecurrente;
-  final List<String> categorias;
-  final List<String> metodosPago;
+class FormularioGasto extends StatefulWidget {
+  final bool esEdicion;
+  final Map<String, dynamic>? gastoExistente;
   final VoidCallback onGuardar;
-  final VoidCallback onCancelar;
-  final Function(DateTime) onFechaChanged;
-  final Function(String) onCategoriaChanged;
-  final Function(String) onMetodoPagoChanged;
-  final Function(String) onCuentaAsociadaChanged;
 
   const FormularioGasto({
     super.key,
-    required this.formKey,
-    required this.montoController,
-    required this.descripcionController,
-    required this.fechaSeleccionada,
-    required this.categoriaSeleccionada,
-    required this.metodoPagoSeleccionado,
-    required this.cuentaAsociada,
-    required this.esRecurrente,
-    required this.frecuenciaRecurrente,
-    required this.categorias,
-    required this.metodosPago,
+    this.esEdicion = false,
+    this.gastoExistente,
     required this.onGuardar,
-    required this.onCancelar,
-    required this.onFechaChanged,
-    required this.onCategoriaChanged,
-    required this.onMetodoPagoChanged,
-    required this.onCuentaAsociadaChanged,
   });
 
   @override
+  State<FormularioGasto> createState() => _FormularioGastoState();
+}
+
+class _FormularioGastoState extends State<FormularioGasto> {
+  final _formKey = GlobalKey<FormState>();
+  final _montoController = TextEditingController();
+  final _descripcionController = TextEditingController();
+  final GastosServicio _gastosServicio = GastosServicio();
+  final CuentasServicio _cuentasServicio = CuentasServicio();
+
+  DateTime _fechaSeleccionada = DateTime.now();
+  String _categoriaSeleccionada = 'alimentación';
+  String _metodoPagoSeleccionado = 'efectivo';
+  String _cuentaAsociada = 'ninguna';
+  bool _esRecurrente = false;
+  String _frecuenciaRecurrente = 'mensual';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.esEdicion && widget.gastoExistente != null) {
+      final g = widget.gastoExistente!;
+      _montoController.text = FormatoNumeros.formatearParaMostrar(g['monto']);
+      _descripcionController.text = g['descripcion'] ?? '';
+      _fechaSeleccionada = g['fecha'] ?? DateTime.now();
+      _categoriaSeleccionada = g['categoria'] ?? 'alimentación';
+      _metodoPagoSeleccionado = g['metodoPago'] ?? 'efectivo';
+      _cuentaAsociada = g['cuentaAsociada'] ?? 'ninguna';
+      _esRecurrente = g['esRecurrente'] ?? false;
+      _frecuenciaRecurrente = g['frecuencia'] ?? 'mensual';
+    }
+  }
+
+  @override
+  void dispose() {
+    _montoController.dispose();
+    _descripcionController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Implementar formulario aquí
-    return Container();
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [UtilsGastos.colorPrincipal, UtilsGastos.colorSecundario],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25),
+                topRight: Radius.circular(25),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(widget.esEdicion ? Icons.edit_rounded : Icons.payment_rounded, color: Colors.white, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.esEdicion ? 'Editar Gasto' : 'Nuevo Gasto',
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                  style: IconButton.styleFrom(backgroundColor: Colors.white.withOpacity(0.2)),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInput(
+                      controller: _montoController,
+                      label: 'Monto *',
+                      hint: '0.00',
+                      isNumber: true,
+                      icon: Icons.attach_money,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildInput(
+                      controller: _descripcionController,
+                      label: 'Descripción *',
+                      hint: 'Ej: Supermercado...',
+                      icon: Icons.description,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildSelectorFecha(),
+                    const SizedBox(height: 20),
+                    _buildDropdown('Categoría', _categoriaSeleccionada, UtilsGastos.categorias, (v) => setState(() => _categoriaSeleccionada = v!)),
+                    const SizedBox(height: 20),
+                    _buildDropdown('Método de Pago', _metodoPagoSeleccionado, UtilsGastos.metodosPago, (v) => setState(() => _metodoPagoSeleccionado = v!)),
+                    const SizedBox(height: 20),
+                    _buildSelectorCuenta(),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                            child: Text('Cancelar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _guardar,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: UtilsGastos.colorPrincipal,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text(widget.esEdicion ? 'Guardar Cambios' : 'Guardar', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInput({required TextEditingController controller, required String label, required String hint, bool isNumber = false, required IconData icon}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+          inputFormatters: isNumber ? [FormateadorNumeros()] : [],
+          validator: (v) {
+            if (v == null || v.isEmpty) return 'Campo requerido';
+            if (isNumber && (FormatoNumeros.convertirANumero(v) ?? 0) <= 0) return 'Monto inválido';
+            return null;
+          },
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: Icon(icon, color: UtilsGastos.colorPrincipal),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdown(String label, String value, List<String> items, Function(String?) onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: value,
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(UtilsGastos.capitalizar(e)))).toList(),
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: Colors.grey.shade50,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSelectorFecha() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Fecha', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () async {
+            final picked = await showDatePicker(context: context, initialDate: _fechaSeleccionada, firstDate: DateTime(2020), lastDate: DateTime(2030));
+            if (picked != null) setState(() => _fechaSeleccionada = picked);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade400),
+              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey.shade50,
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.calendar_today_rounded, color: UtilsGastos.colorPrincipal),
+                const SizedBox(width: 12),
+                Text('${_fechaSeleccionada.day}/${_fechaSeleccionada.month}/${_fechaSeleccionada.year}'),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSelectorCuenta() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _cuentasServicio.obtenerCuentas(),
+      builder: (context, snapshot) {
+        List<DropdownMenuItem<String>> items = [
+          const DropdownMenuItem(value: 'ninguna', child: Text('Ninguna')),
+        ];
+        if (snapshot.hasData) {
+          for (var doc in snapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            if (data['activa'] == true) {
+              items.add(DropdownMenuItem(value: doc.id, child: Text('${data['banco']} - ${data['numeroCuenta']}')));
+            }
+          }
+        }
+        // Validar que el valor actual exista en la lista
+        if (!items.any((item) => item.value == _cuentaAsociada)) {
+          _cuentaAsociada = 'ninguna';
+        }
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Cuenta Asociada', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: _cuentaAsociada,
+              items: items,
+              onChanged: (v) => setState(() => _cuentaAsociada = v!),
+              decoration: InputDecoration(
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _guardar() async {
+    if (_formKey.currentState!.validate()) {
+      final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
+      
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      try {
+        String? error;
+        if (widget.esEdicion && widget.gastoExistente != null) {
+          error = await _gastosServicio.actualizarGasto(
+            gastoId: widget.gastoExistente!['id'],
+            descripcion: _descripcionController.text.trim(),
+            monto: monto,
+            fecha: _fechaSeleccionada,
+            categoria: _categoriaSeleccionada,
+            metodoPago: _metodoPagoSeleccionado,
+            cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+            esRecurrente: _esRecurrente,
+            frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
+            notas: '',
+          );
+        } else {
+          error = await _gastosServicio.crearGasto(
+            descripcion: _descripcionController.text.trim(),
+            monto: monto,
+            fecha: _fechaSeleccionada,
+            categoria: _categoriaSeleccionada,
+            metodoPago: _metodoPagoSeleccionado,
+            cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+            esRecurrente: _esRecurrente,
+            frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
+            notas: '',
+          );
+        }
+
+        if (mounted) {
+          Navigator.pop(context); // Cerrar loading
+          if (error == null) {
+            Navigator.pop(context); // Cerrar form
+            widget.onGuardar();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: Colors.red));
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+        }
+      }
+    }
   }
 }
