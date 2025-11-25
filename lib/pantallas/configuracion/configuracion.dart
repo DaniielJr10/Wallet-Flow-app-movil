@@ -18,10 +18,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../firebase/autenticacion_servicio.dart';
 import '../../login/iniciosesion.dart';
 import '../perfil/perfil.dart';
-import '../preguntas_frecuentes.dart';
-import '../contactar_soporte.dart';
-import '../cambiar_contrasena.dart';
-import '../recordatorios_gastos.dart';
+import 'preguntas_frecuentes.dart';
+import 'contactar_soporte.dart';
+import 'cambiar_contrasena.dart';
+import 'recordatorios_gastos.dart';
 
 /// Pantalla de configuración de la aplicación Wallet Flow
 /// 
@@ -1195,7 +1195,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: const [
                       _SmallInfo(title: 'Desarrollador', subtitle: 'Wallet Flow Team'),
-                      _SmallInfo(title: 'Contacto', subtitle: 'walletflow@gmail.com'),
+                      _SmallInfo(title: 'Contacto', subtitle: 'walletfloww@gmail.com'),
                     ],
                   ),
                   const SizedBox(height: 16),
