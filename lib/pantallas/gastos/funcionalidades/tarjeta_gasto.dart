@@ -109,13 +109,13 @@ class TarjetaGasto extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                SizedBox(
-                  width: 80,
-                  child: Text(
+            SizedBox(
+              width: 100,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
                     '-${FormatoNumeros.formatearParaMostrar(gasto['monto'])}',
                     style: TextStyle(
                       fontSize: 18,
@@ -126,24 +126,14 @@ class TarjetaGasto extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.end,
                   ),
-                ),
-                IconButton(
-                  onPressed: onEliminar,
-                  icon: Icon(
-                    Icons.delete_outline_rounded,
-                    color: Colors.red.shade400,
-                    size: 20,
+                  const SizedBox(height: 6),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: Colors.grey.shade400,
                   ),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.red.shade50,
-                    padding: const EdgeInsets.all(4),
-                    minimumSize: const Size(32, 32),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
