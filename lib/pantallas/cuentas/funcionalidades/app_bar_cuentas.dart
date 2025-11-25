@@ -1,3 +1,6 @@
+/// COMPONENTE VISUAL
+/// Contiene únicamente el diseño del título superior, el icono y
+/// el subtítulo de la pantalla. Se separó para limpiar el archivo principal.
 import 'package:flutter/material.dart';
 
 class AppBarCuentas extends StatelessWidget implements PreferredSizeWidget {

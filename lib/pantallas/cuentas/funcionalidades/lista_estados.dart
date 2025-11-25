@@ -1,3 +1,8 @@
+/// PANTALLAS DE ESTADO (UI PURA)
+/// Contiene los diseños estáticos para cuando:
+/// - No hay cuentas registradas (EstadoCuentasVacio).
+/// - Ocurre un error de conexión (EstadoCuentasError).
+/// - La búsqueda no arroja resultados (EstadoSinResultadosBusqueda).
 import 'package:flutter/material.dart';
 
 class EstadoCuentasVacio extends StatelessWidget {

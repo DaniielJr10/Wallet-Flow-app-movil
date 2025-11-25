@@ -1,3 +1,6 @@
+/// MODAL DE DETALLES
+/// Muestra la información completa de una cuenta al seleccionarla.
+/// Incluye los botones para lanzar las acciones de Editar y Eliminar.
 import 'package:flutter/material.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_cuentas.dart';

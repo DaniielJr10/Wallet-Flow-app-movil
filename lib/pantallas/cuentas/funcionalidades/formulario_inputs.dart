@@ -1,3 +1,6 @@
+/// WIDGETS DE FORMULARIO
+/// Componentes reutilizables para los inputs de texto y el selector
+/// de tipo de cuenta, encargados de la estética y validación visual.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

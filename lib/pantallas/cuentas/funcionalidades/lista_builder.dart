@@ -1,3 +1,10 @@
+
+/// LÓGICA DE LISTADO
+/// Es el motor de la lista. Se encarga de:
+/// 1. Descargar datos de Firebase (StreamBuilder).
+/// 2. Filtrar la lista según la búsqueda del usuario.
+/// 3. Ordenar los resultados por saldo o fecha.
+/// 4. Decidir qué estado mostrar (Lista, Error o Vacío).
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../firebase/servicios/cuentas_servicio.dart';

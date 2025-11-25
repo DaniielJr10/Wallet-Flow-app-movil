@@ -1,3 +1,6 @@
+/// BARRA DE HERRAMIENTAS
+/// Agrupa el campo de texto para búsqueda y el botón de menú (Popup)
+/// para ordenar la lista. Comunica los cambios al padre mediante callbacks.
 import 'package:flutter/material.dart';
 
 class BarraBusquedaYFiltros extends StatelessWidget {

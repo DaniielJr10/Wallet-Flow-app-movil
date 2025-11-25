@@ -1,3 +1,8 @@
+/// LÓGICA DEL FORMULARIO
+/// Maneja la creación y edición de cuentas. Controla:
+/// - Los controladores de texto (TextEditingController).
+/// - La validación del formulario (FormKey).
+/// - La llamada al servicio de Firebase para guardar/actualizar.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../firebase/servicios/cuentas_servicio.dart';

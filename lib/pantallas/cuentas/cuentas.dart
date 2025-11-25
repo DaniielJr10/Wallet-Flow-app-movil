@@ -1,3 +1,7 @@
+/// ARCHIVO PRINCIPAL (ORQUESTADOR)
+/// Se encarga de la estructura base (Scaffold), maneja el estado global
+/// de la pantalla (filtros, búsquedas) y coordina la navegación hacia
+/// los formularios y modales.
 import 'package:flutter/material.dart';
 import '../../firebase/servicios/cuentas_servicio.dart';
 

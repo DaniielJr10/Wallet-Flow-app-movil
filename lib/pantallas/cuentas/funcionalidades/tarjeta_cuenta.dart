@@ -1,3 +1,6 @@
+/// ITEM INDIVIDUAL
+/// Define el diseño visual de cada tarjeta de cuenta dentro de la lista.
+/// Muestra el banco, número oculto, tipo y saldo formateado.
 import 'package:flutter/material.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_cuentas.dart';

@@ -1,3 +1,6 @@
+/// WIDGET DE BALANCE
+/// Muestra la tarjeta azul superior. Contiene su propio StreamBuilder
+/// para calcular y sumar el saldo total de todas las cuentas en tiempo real.
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../firebase/servicios/cuentas_servicio.dart';

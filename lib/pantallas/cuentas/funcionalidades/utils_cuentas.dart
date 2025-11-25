@@ -1,3 +1,7 @@
+/// UTILIDADES COMPARTIDAS
+/// Clase estática que centraliza la lógica visual repetitiva:
+/// - Asignación de colores según el tipo de cuenta.
+/// - Asignación de iconos según el tipo de cuenta.
 import 'package:flutter/material.dart';
 
 class UtilsCuentas {
