@@ -24,8 +24,13 @@ class DialogoEliminarGasto extends StatelessWidget {
           child: const Text('Cancelar'),
         ),
         ElevatedButton(
-          onPressed: () async {
+          onPressed: () {
+            // Cerrar diálogo de confirmación y actualizar UI de forma optimista
             Navigator.pop(context);
+            try {
+              onEliminado();
+            } catch (_) {}
+            // Ejecutar eliminación en background sin overlay que bloquee la UI
             _procesarEliminacion(context);
           },
           style: ElevatedButton.styleFrom(
@@ -42,24 +47,9 @@ class DialogoEliminarGasto extends StatelessWidget {
     final GastosServicio servicio = GastosServicio();
     
     // Mostrar carga
-    bool loaderShown = true;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
     try {
-      // Añadir timeout para evitar que la UI quede bloqueada indefinidamente
+      // Ejecutar eliminación en background con timeout
       final error = await servicio.eliminarGasto(gastoId).timeout(const Duration(seconds: 15));
-
-      // Cerrar carga si aún está abierta
-      if (loaderShown && context.mounted) {
-        try {
-          if (Navigator.canPop(context)) Navigator.pop(context);
-        } catch (_) {}
-        loaderShown = false;
-      }
 
       if (context.mounted) {
         if (error == null) {
@@ -70,7 +60,6 @@ class DialogoEliminarGasto extends StatelessWidget {
               behavior: SnackBarBehavior.floating,
             ),
           );
-          onEliminado();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(error), backgroundColor: Colors.red),
@@ -78,24 +67,10 @@ class DialogoEliminarGasto extends StatelessWidget {
         }
       }
     } on Exception catch (e) {
-      // Manejar timeout u otros errores y asegurarse de cerrar la carga
-      if (loaderShown && context.mounted) {
-        try {
-          if (Navigator.canPop(context)) Navigator.pop(context);
-        } catch (_) {}
-        loaderShown = false;
-      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al eliminar: $e'), backgroundColor: Colors.red),
         );
-      }
-    } finally {
-      // Asegurar que el diálogo de carga quede cerrado
-      if (loaderShown && context.mounted) {
-        try {
-          if (Navigator.canPop(context)) Navigator.pop(context);
-        } catch (_) {}
       }
     }
   }
