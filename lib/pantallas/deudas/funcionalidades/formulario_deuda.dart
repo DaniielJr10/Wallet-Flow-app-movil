@@ -54,6 +54,19 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
 
   @override
   Widget build(BuildContext context) {
+    final primary = UtilsDeudas.colorPrincipal;
+    final primaryDark = UtilsDeudas.colorSecundario;
+
+    InputDecoration _fieldDecoration({String? label, Widget? prefix}) => InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primary, width: 2)),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primary, width: 2)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primaryDark, width: 3)),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          prefixIcon: prefix,
+        );
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
@@ -66,34 +79,29 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  UtilsDeudas.colorPrincipal.withOpacity(0.95),
-                  UtilsDeudas.colorSecundario.withOpacity(0.95),
-                ],
+                colors: [UtilsDeudas.colorPrincipal, UtilsDeudas.colorSecundario],
               ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(25),
-                topRight: Radius.circular(25),
-              ),
+              borderRadius: const BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25)),
             ),
             child: Row(
               children: [
-                Icon(widget.esEdicion ? Icons.edit : Icons.receipt_long, color: Colors.white, size: 26),
+                const Icon(Icons.attach_money_rounded, color: Colors.white, size: 28),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    widget.esEdicion ? 'Editar Deuda' : 'Crear Deuda',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+                    widget.esEdicion ? 'Editar Deuda' : 'Nueva Deuda',
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close_rounded, color: Colors.white),
+                  style: IconButton.styleFrom(backgroundColor: Colors.white24, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                 ),
               ],
             ),
@@ -101,23 +109,29 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
 
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Título
+                    const Text('Título', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _tituloCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Título',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
+                      decoration: _fieldDecoration(label: 'Título'),
                       validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un título' : null,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
+
+                    // Categoría
+                    const Text('Categoría', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                    const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       value: _tipoSeleccionado,
+                      isExpanded: true,
+                      decoration: _fieldDecoration(label: 'Categoría'),
                       items: const [
                         DropdownMenuItem(value: 'Préstamo Personal', child: Text('Préstamo Personal')),
                         DropdownMenuItem(value: 'Tarjeta de Crédito', child: Text('Tarjeta de Crédito')),
@@ -126,88 +140,102 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                         DropdownMenuItem(value: 'Otro', child: Text('Otro')),
                       ],
                       onChanged: (v) => setState(() { _tipoSeleccionado = v ?? _tipoSeleccionado; }),
-                      decoration: InputDecoration(
-                        labelText: 'Categoría',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
+
+                    // Monto
+                    const Text('Monto', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _montoCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Monto',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
+                      decoration: _fieldDecoration(label: 'Monto', prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.attach_money_rounded, color: primary))),
                       validator: (v) {
                         final n = double.tryParse(v ?? '');
                         return (n == null || n <= 0) ? 'Ingresa un monto válido' : null;
                       },
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
+
+                    // Pago mínimo
+                    const Text('Pago mínimo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _pagoMinCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Pago mínimo',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
+                      decoration: _fieldDecoration(label: 'Pago mínimo', prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.payments_rounded, color: primary))),
                       validator: (v) {
                         final n = double.tryParse(v ?? '');
                         return (n == null || n < 0) ? 'Ingresa un pago mínimo válido' : null;
                       },
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
+
+                    // Acreedor
+                    const Text('Acreedor / Banco', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _acreedorCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Acreedor / Banco',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      decoration: _fieldDecoration(label: 'Acreedor / Banco', prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.account_balance_rounded, color: primary))),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Fecha
+                    const Text('Fecha', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _fechaVenc,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) setState(() { _fechaVenc = picked; });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: primary, width: 2),
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.grey.shade50,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 20),
+                            const SizedBox(width: 12),
+                            Text('${_fechaVenc.day}/${_fechaVenc.month}/${_fechaVenc.year}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        const Text('Fecha de vencimiento:'),
-                        const SizedBox(width: 8),
-                        TextButton(
-                          onPressed: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: _fechaVenc,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(2100),
-                            );
-                            if (picked != null) setState(() { _fechaVenc = picked; });
-                          },
-                          child: Text('${_fechaVenc.day}/${_fechaVenc.month}/${_fechaVenc.year}'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+
+                    const SizedBox(height: 28),
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton(
+                          child: TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancelar'),
-                            style: OutlinedButton.styleFrom(
+                            style: TextButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: BorderSide(color: Colors.grey.shade300)),
                             ),
+                            child: Text('Cancelar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: ElevatedButton(
                             onPressed: _guardar,
-                            child: Text(widget.esEdicion ? 'Guardar Cambios' : 'Crear'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: UtilsDeudas.colorPrincipal,
                               foregroundColor: Colors.white,
+                              minimumSize: const Size.fromHeight(48),
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                              elevation: 0,
                             ),
+                            child: Text(widget.esEdicion ? 'Guardar Cambios' : 'Crear', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                           ),
                         ),
                       ],
