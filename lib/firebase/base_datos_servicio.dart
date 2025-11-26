@@ -207,7 +207,6 @@ class BaseDatosServicio {
     required String nombre,
     required String apellido,
     required String identificacion,
-    required String telefono,
     required DateTime fechaNacimiento,
     required String nombreUsuario,
   }) async {
@@ -221,7 +220,6 @@ class BaseDatosServicio {
         'nombre': nombre,
         'apellido': apellido,
         'identificacion': identificacion,
-        'telefono': telefono,
         'fechaNacimiento': fechaNacimiento,
         'nombreUsuario': nombreUsuario,
         'email': FirebaseAuth.instance.currentUser?.email,

@@ -61,8 +61,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
   /// Controlador para el campo de email
   final TextEditingController _emailController = TextEditingController();
   
-  /// Controlador para el campo de teléfono
-  final TextEditingController _telefonoController = TextEditingController();
+  /// Controlador para el campo de teléfono (eliminado)
   
   /// Controlador para el campo de biografía/descripción
   final TextEditingController _biografiaController = TextEditingController();
@@ -88,7 +87,6 @@ class _PantallaPerfilState extends State<PantallaPerfil>
   Map<String, dynamic> _datosUsuario = {
     'nombre': '',
     'email': '',
-    'telefono': '',
     'biografia': '',
     'fechaRegistro': null,
     'ultimoAcceso': null,
@@ -192,7 +190,6 @@ class _PantallaPerfilState extends State<PantallaPerfil>
         _datosUsuario = {
           'nombre': user.displayName ?? '',
           'email': user.email ?? '',
-          'telefono': '', // TODO: Obtener de Firestore
           'biografia': '', // TODO: Obtener de Firestore
           'fechaRegistro': user.metadata.creationTime,
           'ultimoAcceso': user.metadata.lastSignInTime,
@@ -201,7 +198,6 @@ class _PantallaPerfilState extends State<PantallaPerfil>
         // Actualizar controladores de texto
         _nombreController.text = _datosUsuario['nombre'];
         _emailController.text = _datosUsuario['email'];
-        _telefonoController.text = _datosUsuario['telefono'];
         _biografiaController.text = _datosUsuario['biografia'];
 
         // Cargar foto de perfil
@@ -262,11 +258,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
       return false;
     }
 
-    if (_telefonoController.text.isNotEmpty && 
-        !RegExp(r'^\+?[0-9]{10,}$').hasMatch(_telefonoController.text)) {
-      _mostrarError('El número de teléfono no es válido');
-      return false;
-    }
+    // El campo teléfono fue eliminado; no validar aquí.
 
     return true;
   }
@@ -300,7 +292,6 @@ class _PantallaPerfilState extends State<PantallaPerfil>
         // Actualizar estado local
         _datosUsuario['nombre'] = _nombreController.text;
         _datosUsuario['email'] = _emailController.text;
-        _datosUsuario['telefono'] = _telefonoController.text;
         _datosUsuario['biografia'] = _biografiaController.text;
 
         // Salir del modo edición
@@ -338,7 +329,6 @@ class _PantallaPerfilState extends State<PantallaPerfil>
       if (user != null) {
         final datosParaGuardar = {
           'nombre': _nombreController.text,
-          'telefono': _telefonoController.text,
           'biografia': _biografiaController.text,
           'limiteGastoMensual': _limiteGastoMensual,
 
@@ -560,7 +550,6 @@ class _PantallaPerfilState extends State<PantallaPerfil>
       // Restaurar valores originales
       _nombreController.text = _datosUsuario['nombre'];
       _emailController.text = _datosUsuario['email'];
-      _telefonoController.text = _datosUsuario['telefono'];
       _biografiaController.text = _datosUsuario['biografia'];
     });
   }
@@ -650,7 +639,6 @@ class _PantallaPerfilState extends State<PantallaPerfil>
     _loadingController.dispose();
     _nombreController.dispose();
     _emailController.dispose();
-    _telefonoController.dispose();
     _biografiaController.dispose();
     super.dispose();
   }
@@ -984,24 +972,7 @@ class _PantallaPerfilState extends State<PantallaPerfil>
 
             const SizedBox(height: 16),
 
-            // Campo teléfono
-            _buildCampoTexto(
-              controller: _telefonoController,
-              label: 'Teléfono (Opcional)',
-              icono: Icons.phone,
-              habilitado: _modoEdicion,
-              tipoTeclado: TextInputType.phone,
-              validador: (value) {
-                if (value != null && value.isNotEmpty) {
-                  if (!RegExp(r'^\+?[0-9]{10,}$').hasMatch(value)) {
-                    return 'Ingresa un número válido (mín. 10 dígitos)';
-                  }
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 16),
+            // Campo teléfono eliminado
 
             // Campo biografía
             _buildCampoTexto(
