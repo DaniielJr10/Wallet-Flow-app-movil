@@ -18,8 +18,8 @@ class ResumenFinancieroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: servicio.obtenerEstadisticasRapidas(),
+    return StreamBuilder<Map<String, dynamic>>(
+      stream: servicio.obtenerResumenFinanciero(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLoading();
@@ -27,7 +27,7 @@ class ResumenFinancieroCard extends StatelessWidget {
         if (snapshot.hasError) {
           return _buildError();
         }
-        
+
         final data = snapshot.data ?? {};
         final totalCuentas = data['totalCuentas'] ?? 0.0;
         final ingresosDelMes = data['ingresosDelMes'] ?? 0.0;
