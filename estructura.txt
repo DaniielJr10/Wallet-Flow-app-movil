@@ -1,0 +1,199 @@
+lib/
+├── auth_wrapper.dart
+├── firebase_options.dart
+├── main.dart
+├── firebase/
+│   ├── autenticacion_servicio.dart
+│   ├── base_datos_servicio.dart
+│   ├── firebase_configuracion.dart
+│   └── servicios/
+│       ├── ahorros_servicio.dart
+│       ├── cuentas_servicio.dart
+│       ├── deudas_servicio.dart
+│       ├── gastos_servicio.dart
+│       ├── ingresos_servicio.dart
+│       ├── principal_servicio.dart
+│       └── usuarios_servicio.dart
+├── login/
+│   ├── iniciosesion/
+│   │   ├── iniciosesion.dart
+│   │   └── componentes/
+│   │       ├── boton_ingresar.dart
+│   │       ├── boton_registro.dart
+│   │       ├── campo_email.dart
+│   │       ├── campo_password.dart
+│   │       ├── header_logo.dart
+│   │       ├── header_titulo.dart
+│   │       ├── layout_background.dart
+│   │       ├── link_recuperar.dart
+│   │       └── utils_login.dart
+│   ├── recuperar/
+│   │   ├── recuperar.dart
+│   │   └── componentes/
+│   │       ├── boton_enviar.dart
+│   │       ├── campo_email.dart
+│   │       ├── header_logo.dart
+│   │       ├── header_titulo.dart
+│   │       ├── layout_background.dart
+│   │       ├── link_volver.dart
+│   │       └── utils_recuperar.dart
+│   └── registrarse/
+│       ├── registrarse.dart
+│       └── componentes/
+│           ├── boton_registrar.dart
+│           ├── campo_confirmar.dart
+│           ├── campo_email.dart
+│           ├── campo_nombre.dart
+│           ├── campo_password.dart
+│           ├── header_logo.dart
+│           ├── header_titulo.dart
+│           ├── layout_background.dart
+│           ├── link_login.dart
+│           └── utils_registro.dart
+├── pantallas/
+│   ├── ahorros/
+│   │   ├── ahorros.dart
+│   │   └── funcionalidades/
+│   │       ├── app_bar_ahorros.dart
+│   │       ├── barra_busqueda_ahorros.dart
+│   │       ├── detalle_meta.dart
+│   │       ├── estados_ahorros.dart
+│   │       ├── formulario_meta.dart
+│   │       ├── lista_ahorros_builder.dart
+│   │       ├── resumen_ahorros.dart
+│   │       ├── tarjeta_meta.dart
+│   │       └── utils_ahorros.dart
+│   ├── configuracion/
+│   │   ├── ayuda_soporte.dart
+│   │   ├── cambiar_contrasena.dart
+│   │   ├── configuracion.dart
+│   │   ├── contactar_soporte.dart
+│   │   ├── preguntas_frecuentes.dart
+│   │   └── recordatorios_gastos.dart
+│   ├── cuentas/
+│   │   ├── cuentas.dart
+│   │   └── funcionalidades/
+│   │       ├── app_bar_cuentas.dart
+│   │       ├── detalle_cuenta.dart
+│   │       ├── filtros_cuentas.dart
+│   │       ├── formulario_inputs.dart
+│   │       ├── formulario_main.dart
+│   │       ├── lista_builder.dart
+│   │       ├── lista_estados.dart
+│   │       ├── resumen_financiero.dart
+│   │       ├── tarjeta_cuenta.dart
+│   │       └── utils_cuentas.dart
+│   ├── deudas/
+│   │   ├── deudas.dart
+│   │   └── funcionalidades/
+│   │       ├── app_bar_deudas.dart
+│   │       ├── detalle_deuda.dart
+│   │       ├── dialogos_deudas.dart
+│   │       ├── estados_deudas.dart
+│   │       ├── filtros_deudas.dart
+│   │       ├── formulario_deuda.dart
+│   │       ├── lista_deudas_builder.dart
+│   │       ├── resumen_deudas.dart
+│   │       ├── tarjeta_deuda.dart
+│   │       └── utils_deudas.dart
+│   ├── gastos/
+│   │   ├── gastos.dart
+│   │   └── funcionalidades/
+│   │       ├── app_bar_gastos.dart
+│   │       ├── detalle_gasto.dart
+│   │       ├── dialogos_gastos.dart
+│   │       ├── estados_gastos.dart
+│   │       ├── filtros_gastos.dart
+│   │       ├── formulario_gasto.dart
+│   │       ├── lista_gastos_builder.dart
+│   │       ├── resumen_gastos.dart
+│   │       ├── tarjeta_gasto.dart
+│   │       └── utils_gastos.dart
+│   ├── herramientass/
+│   │   ├── herramientas.dart
+│   │   ├── 4elementos_herramientas/
+│   │   │   ├── calculadora/
+│   │   │   │   ├── calculadora.dart
+│   │   │   │   └── funcionalidades/
+│   │   │   │       ├── boton_calculadora.dart
+│   │   │   │       ├── display_calculadora.dart
+│   │   │   │       ├── logica_calculadora.dart
+│   │   │   │       ├── teclado_calculadora.dart
+│   │   │   │       └── utils_calculadora.dart
+│   │   │   ├── calendario/
+│   │   │   │   ├── calendario.dart
+│   │   │   │   └── funcionalidades/
+│   │   │   │       ├── app_bar_calendario.dart
+│   │   │   │       ├── boton_navegacion.dart
+│   │   │   │       ├── grilla_calendario.dart
+│   │   │   │       ├── header_mes.dart
+│   │   │   │       └── utils_calendario.dart
+│   │   │   ├── conversor_monedas/
+│   │   │   │   ├── conversor_monedas.dart
+│   │   │   │   └── funcionalidades/
+│   │   │   │       ├── app_bar_conversor.dart
+│   │   │   │       ├── header_conversor.dart
+│   │   │   │       ├── resultado_conversor.dart
+│   │   │   │       ├── tarjeta_conversor.dart
+│   │   │   │       └── utils_conversor.dart
+│   │   │   ├── notas/
+│   │   │   │   ├── notas.dart
+│   │   │   │   └── funcionalidades/
+│   │   │   │       ├── app_bar_notas.dart
+│   │   │   │       ├── barra_busqueda_notas.dart
+│   │   │   │       ├── dialogo_nota.dart
+│   │   │   │       ├── grid_notas.dart
+│   │   │   │       ├── header_notas.dart
+│   │   │   │       ├── servicio_notas.dart
+│   │   │   │       ├── tarjeta_nota.dart
+│   │   │   │       └── utils_notas.dart
+│   │   └── funcionalidades/
+│   │       ├── app_bar_herramientas.dart
+│   │       ├── grid_herramientas.dart
+│   │       ├── header_herramientas.dart
+│   │       ├── modelo_herramienta.dart
+│   │       ├── tarjeta_herramienta.dart
+│   │       └── utils_herramientas.dart
+│   ├── ingresos/
+│   │   ├── ingresos.dart
+│   │   └── funcionalidades/
+│   │       ├── app_bar_ingresos.dart
+│   │       ├── detalle_ingreso.dart
+│   │       ├── dialogos_ingresos.dart
+│   │       ├── estados_ingresos.dart
+│   │       ├── filtros_ingresos.dart
+│   │       ├── formulario_ingreso.dart
+│   │       ├── lista_ingresos_builder.dart
+│   │       ├── resumen_ingresos.dart
+│   │       ├── tarjeta_ingreso.dart
+│   │       └── utils_ingresos.dart
+│   ├── perfil/
+│   │   ├── perfil.dart
+│   │   └── funcionalidades/
+│   │       ├── app_bar_perfil.dart
+│   │       ├── estadisticas_perfil.dart
+│   │       ├── estados_perfil.dart
+│   │       ├── formulario_info.dart
+│   │       ├── foto_perfil.dart
+│   │       ├── inputs_perfil.dart
+│   │       ├── modales_perfil.dart
+│   │       ├── preferencias_perfil.dart
+│   │       └── utils_perfil.dart
+│   └── principal/
+│       ├── principal.dart
+│       └── funcionalidades/
+│           ├── app_bar_drawer.dart
+│           ├── bottom_nav_principal.dart
+│           ├── dashboard_body.dart
+│           ├── dialogos_principal.dart
+│           ├── header_saludo.dart
+│           ├── item_resumen.dart
+│           ├── resumen_financiero_card.dart
+│           ├── user_avatar.dart
+│           └── utils_principal.dart
+├── util/
+│   ├── web_downloader_stub.dart
+│   ├── web_downloader_web.dart
+│   └── web_downloader.dart
+└── utilidades/
+    └── formato_numeros.dart
