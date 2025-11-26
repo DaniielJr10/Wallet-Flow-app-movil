@@ -85,23 +85,23 @@ class TarjetaDeuda extends StatelessWidget {
           ),
           trailing: SizedBox(
             width: 120,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Expanded(
-                  child: Text(
-                    '-${FormatoNumeros.formatearParaMostrar(deuda['montoPendiente'])}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: colorEstado == const Color(0xFF10B981) ? Colors.green : Colors.red,
-                    ),
-                    textAlign: TextAlign.right,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                Text(
+                  '-${FormatoNumeros.formatearParaMostrar(deuda['montoPendiente'])}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: colorEstado == const Color(0xFF10B981) ? Colors.green : Colors.red,
                   ),
+                  textAlign: TextAlign.right,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(height: 6),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
