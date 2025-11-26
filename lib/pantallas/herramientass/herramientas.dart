@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../herramientass/calculadora.dart';
-import '../herramientass/calendario.dart';
-import '../herramientass/conversor_monedas.dart';
-import '../herramientass/notas.dart';
+import 'calculadora.dart';
+import 'calendario.dart';
+import 'conversor_monedas.dart';
+import 'notas.dart';
 
 /// Pantalla principal de Herramientas - rediseño visual tipo tarjeta grande
 class PantallaHerramientas extends StatelessWidget {
