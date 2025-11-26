@@ -30,6 +30,7 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
   InputDecoration _inputDecoration(String label, bool visible, VoidCallback toggle) {
     return InputDecoration(
       labelText: label,
+      prefixIcon: const Icon(Icons.lock_outline),
       suffixIcon: IconButton(
         icon: Icon(visible ? Icons.visibility : Icons.visibility_off, color: Theme.of(context).colorScheme.primary),
         onPressed: toggle,
@@ -37,6 +38,7 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
       border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
       filled: true,
       fillColor: Theme.of(context).cardColor,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
 
@@ -89,69 +91,100 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
   Widget build(BuildContext context) {
     final primaryGreen = const Color(0xFF10B981);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cambiar contraseña'),
-        backgroundColor: primaryGreen,
-      ),
-      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(backgroundColor: primaryGreen, elevation: 0, iconTheme: const IconThemeData(color: Colors.white), title: const Text('Cambiar contraseña')),
+      backgroundColor: const Color(0xFFF1F7F4),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 4,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 6))],
+              ),
+              child: Row(
                 children: [
-                  const Text('Actualiza tu contraseña de forma segura', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _currentCtrl,
-                    obscureText: !_showCurrent,
-                    decoration: _inputDecoration('Contraseña actual', _showCurrent, () => setState(() => _showCurrent = !_showCurrent)),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Ingresa tu contraseña actual' : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _newCtrl,
-                    obscureText: !_showNew,
-                    decoration: _inputDecoration('Nueva contraseña', _showNew, () => setState(() => _showNew = !_showNew)),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Ingresa la nueva contraseña';
-                      if (v.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _confirmCtrl,
-                    obscureText: !_showConfirm,
-                    decoration: _inputDecoration('Confirmar nueva contraseña', _showConfirm, () => setState(() => _showConfirm = !_showConfirm)),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'Confirma la nueva contraseña';
-                      if (v != _newCtrl.text) return 'Las contraseñas no coinciden';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: primaryGreen,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(colors: [primaryGreen.withOpacity(0.95), primaryGreen.withOpacity(0.7)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                      boxShadow: [BoxShadow(color: primaryGreen.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
                     ),
-                    onPressed: _isLoading ? null : _submit,
-                    child: _isLoading
-                        ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text('Actualizar contraseña', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    child: const Icon(Icons.lock, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
+                      Text('Actualiza tu contraseña', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                      SizedBox(height: 4),
+                      Text('Mantén tu cuenta segura cambiando tu contraseña regularmente', style: TextStyle(fontSize: 13, color: Colors.black54)),
+                    ]),
                   ),
                 ],
               ),
             ),
-          ),
+            const SizedBox(height: 18),
+            Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              elevation: 0,
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: _currentCtrl,
+                        obscureText: !_showCurrent,
+                        decoration: _inputDecoration('Contraseña actual', _showCurrent, () => setState(() => _showCurrent = !_showCurrent)).copyWith(prefixIcon: Icon(Icons.lock_outline, color: primaryGreen)),
+                        validator: (v) => (v == null || v.isEmpty) ? 'Ingresa tu contraseña actual' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _newCtrl,
+                        obscureText: !_showNew,
+                        decoration: _inputDecoration('Nueva contraseña', _showNew, () => setState(() => _showNew = !_showNew)).copyWith(prefixIcon: Icon(Icons.fingerprint, color: primaryGreen)),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Ingresa la nueva contraseña';
+                          if (v.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _confirmCtrl,
+                        obscureText: !_showConfirm,
+                        decoration: _inputDecoration('Confirmar nueva contraseña', _showConfirm, () => setState(() => _showConfirm = !_showConfirm)).copyWith(prefixIcon: Icon(Icons.check_circle_outline, color: primaryGreen)),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Confirma la nueva contraseña';
+                          if (v != _newCtrl.text) return 'Las contraseñas no coinciden';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 18),
+                      SizedBox(
+                        height: 52,
+                        child: ElevatedButton.icon(
+                          icon: _isLoading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.save, size: 20),
+                          label: Text(_isLoading ? 'Guardando...' : 'Actualizar contraseña', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryGreen,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: _isLoading ? null : _submit,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
