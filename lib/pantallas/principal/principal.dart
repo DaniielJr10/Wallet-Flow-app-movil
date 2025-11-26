@@ -69,7 +69,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> with TickerProvid
                   },
                   onCerrarSesion: () => controller.cerrarSesion(context),
                   selectedIndex: selectedIndex,
-                  onPerfilTap: setSelectedIndex,
+                  onPerfilTap: (index) => navegarASeccion(context, index, setSelectedIndex),
                 ),
                 const SizedBox(height: 20),
                 const Text(

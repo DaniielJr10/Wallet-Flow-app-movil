@@ -68,7 +68,7 @@ class _GreetingUsuarioState extends State<GreetingUsuario> {
 								children: [
 									GestureDetector(
 										onTap: () {
-											widget.onPerfilTap(4);
+											widget.onPerfilTap(1);
 										},
 										child: Container(
 											width: 62,
