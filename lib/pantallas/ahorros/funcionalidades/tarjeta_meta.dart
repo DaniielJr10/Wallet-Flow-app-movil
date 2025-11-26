@@ -137,35 +137,13 @@ class TarjetaMeta extends StatelessWidget {
       );
     }
 
-    return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, color: Colors.grey[400]),
-      onSelected: (value) => onAccionSeleccionada(value, meta),
-      itemBuilder: (context) => [
-        const PopupMenuItem(
-          value: 'agregar',
-          child: ListTile(
-            leading: Icon(Icons.add_circle),
-            title: Text('Agregar dinero'),
-            contentPadding: EdgeInsets.zero,
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'editar',
-          child: ListTile(
-            leading: Icon(Icons.edit),
-            title: Text('Editar meta'),
-            contentPadding: EdgeInsets.zero,
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'eliminar',
-          child: ListTile(
-            leading: Icon(Icons.delete, color: Colors.red),
-            title: Text('Eliminar', style: TextStyle(color: Colors.red)),
-            contentPadding: EdgeInsets.zero,
-          ),
-        ),
-      ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Icon(
+        Icons.arrow_forward_ios_rounded,
+        size: 16,
+        color: Colors.grey[400],
+      ),
     );
   }
 
