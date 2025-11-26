@@ -1,20 +1,24 @@
+/// TARJETA DE INGRESO
+/// Componente visual que representa un ingreso individual en la lista.
+/// Muestra icono de categoría, descripción, fecha y monto formateado.
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../utilidades/formato_numeros.dart';
+import '../../../utilidades/formato_numeros.dart';
 import 'utils_ingresos.dart';
 
 class TarjetaIngreso extends StatelessWidget {
   final Map<String, dynamic> ingreso;
+  final int index;
   final VoidCallback onTap;
 
-  const TarjetaIngreso({super.key, required this.ingreso, required this.onTap});
+  const TarjetaIngreso({
+    super.key,
+    required this.ingreso,
+    required this.index,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final fecha = ingreso['fecha'] is Timestamp 
-        ? (ingreso['fecha'] as Timestamp).toDate() 
-        : ingreso['fecha'] as DateTime;
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -40,7 +44,7 @@ class TarjetaIngreso extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              UtilsIngresos.getIconoCategoria(ingreso['categoria']),
+              UtilsIngresos.obtenerIconoCategoria(ingreso['categoria']),
               color: Colors.green.shade600,
               size: 24,
             ),
@@ -50,7 +54,7 @@ class TarjetaIngreso extends StatelessWidget {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1F2937),
+              color: UtilsIngresos.colorTexto,
             ),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
@@ -60,14 +64,14 @@ class TarjetaIngreso extends StatelessWidget {
             children: [
               const SizedBox(height: 4),
               Text(
-                '${ingreso['categoria'].toString().substring(0, 1).toUpperCase()}${ingreso['categoria'].toString().substring(1)} • ${ingreso['metodoPago'].toString().substring(0, 1).toUpperCase()}${ingreso['metodoPago'].toString().substring(1)}',
+                '${UtilsIngresos.capitalizar(ingreso['categoria'])} • ${UtilsIngresos.capitalizar(ingreso['metodoPago'])}',
                 style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
               const SizedBox(height: 4),
               Text(
-                '${fecha.day}/${fecha.month}/${fecha.year}',
+                '${ingreso['fecha'].day}/${ingreso['fecha'].month}/${ingreso['fecha'].year}',
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
               ),
             ],
@@ -83,17 +87,13 @@ class TarjetaIngreso extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF2ecc71),
+                    color: UtilsIngresos.colorPrincipal,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
                 const SizedBox(height: 4),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: Colors.grey.shade400,
-                ),
+                Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey.shade400),
               ],
             ),
           ),

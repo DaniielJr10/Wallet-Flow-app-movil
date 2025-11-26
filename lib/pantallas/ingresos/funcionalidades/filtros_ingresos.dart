@@ -1,17 +1,23 @@
+/// BARRA DE BÚSQUEDA Y FILTROS
+/// Gestiona la entrada de texto para búsquedas y el menú desplegable
+/// para alternar entre búsqueda por "Categoría" o por "Mes".
 import 'package:flutter/material.dart';
+import 'utils_ingresos.dart';
 
 class FiltrosIngresos extends StatelessWidget {
-  final String busqueda;
-  final Function(String) onBusquedaChanged;
+  final TextEditingController controller;
   final String modoBusqueda;
-  final Function(String) onModoChanged;
+  final Function(String) onChanged;
+  final Function() onClear;
+  final Function(String) onModeChanged;
 
   const FiltrosIngresos({
     super.key,
-    required this.busqueda,
-    required this.onBusquedaChanged,
+    required this.controller,
     required this.modoBusqueda,
-    required this.onModoChanged,
+    required this.onChanged,
+    required this.onClear,
+    required this.onModeChanged,
   });
 
   @override
@@ -20,6 +26,7 @@ class FiltrosIngresos extends StatelessWidget {
       children: [
         Expanded(
           child: TextField(
+            controller: controller,
             decoration: InputDecoration(
               hintText: modoBusqueda == 'categoría' 
                   ? 'Buscar por categoría...' 
@@ -27,27 +34,23 @@ class FiltrosIngresos extends StatelessWidget {
               prefixIcon: const Icon(Icons.search_rounded),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFF2ecc71), width: 1.2),
+                borderSide: const BorderSide(color: UtilsIngresos.colorPrincipal, width: 1.2),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: Color(0xFF27ae60), width: 2),
+                borderSide: const BorderSide(color: UtilsIngresos.colorSecundario, width: 2),
               ),
               filled: true,
               fillColor: Colors.white,
               contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-              suffixIcon: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: busqueda.isNotEmpty
-                    ? IconButton(
-                        key: const ValueKey('clear'),
-                        icon: const Icon(Icons.close_rounded, color: Colors.grey),
-                        onPressed: () => onBusquedaChanged(''),
-                      )
-                    : null,
-              ),
+              suffixIcon: controller.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                      onPressed: onClear,
+                    )
+                  : null,
             ),
-            onChanged: onBusquedaChanged,
+            onChanged: onChanged,
           ),
         ),
         const SizedBox(width: 8),
@@ -66,54 +69,51 @@ class FiltrosIngresos extends StatelessWidget {
           child: PopupMenuButton<String>(
             icon: AnimatedSwitcher(
               duration: const Duration(milliseconds: 250),
-              child: Icon(Icons.filter_alt_rounded, color: const Color(0xFF2ecc71), key: ValueKey(modoBusqueda)),
+              child: Icon(Icons.filter_alt_rounded, color: UtilsIngresos.colorPrincipal, key: ValueKey(modoBusqueda)),
             ),
             color: Colors.white,
             elevation: 8,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: const BorderSide(color: Color(0xFF2ecc71), width: 0.7),
+              side: const BorderSide(color: UtilsIngresos.colorPrincipal, width: 0.7),
             ),
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 enabled: false,
-                padding: EdgeInsets.only(left: 12, right: 12, top: 10, bottom: 6),
                 child: Row(
-                  children: [
-                    Icon(Icons.tune_rounded, color: Color(0xFF2ecc71), size: 18),
+                  children: const [
+                    Icon(Icons.tune_rounded, color: UtilsIngresos.colorPrincipal, size: 18),
                     SizedBox(width: 8),
-                    Text('Modo de búsqueda', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF2ecc71))),
+                    Text('Modo de búsqueda', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: UtilsIngresos.colorPrincipal)),
                   ],
                 ),
               ),
               const PopupMenuDivider(height: 1),
-              PopupMenuItem(
-                value: 'categoría',
-                child: _buildFilterOption('Por categoría', Icons.category_rounded, modoBusqueda == 'categoría'),
-              ),
-              PopupMenuItem(
-                value: 'mes',
-                child: _buildFilterOption('Por mes', Icons.calendar_month_rounded, modoBusqueda == 'mes'),
-              ),
+              _buildFilterItem('categoría', 'Por categoría', Icons.category_rounded),
+              _buildFilterItem('mes', 'Por mes', Icons.calendar_month_rounded),
             ],
-            onSelected: onModoChanged,
+            onSelected: onModeChanged,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildFilterOption(String text, IconData icon, bool isSelected) {
-    return Row(
-      children: [
-        Icon(icon, color: isSelected ? const Color(0xFF2ecc71) : Colors.grey, size: 20),
-        const SizedBox(width: 10),
-        Text(text, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-        if (isSelected) ...[
-          const SizedBox(width: 8),
-          const Icon(Icons.check_circle_rounded, color: Color(0xFF2ecc71), size: 18),
-        ]
-      ],
+  PopupMenuItem<String> _buildFilterItem(String value, String text, IconData icon) {
+    return PopupMenuItem(
+      value: value,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, color: modoBusqueda == value ? UtilsIngresos.colorPrincipal : Colors.grey, size: 20),
+          const SizedBox(width: 10),
+          Text(text, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+          if (modoBusqueda == value) ...[
+            const SizedBox(width: 8),
+            const Icon(Icons.check_circle_rounded, color: UtilsIngresos.colorPrincipal, size: 18),
+          ]
+        ],
+      ),
     );
   }
 }
