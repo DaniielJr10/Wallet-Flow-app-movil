@@ -52,13 +52,15 @@ class PrincipalServicio {
   Stream<Map<String, dynamic>> _combinarStreams() async* {
     await for (final _ in Stream.periodic(const Duration(seconds: 1))) {
       try {
-        // Obtener datos en paralelo
+        // Obtener datos en paralelo (incluye ahorros y deudas)
         final futures = await Future.wait([
           _obtenerTotalCuentas(),
           _obtenerTotalIngresos(),
           _obtenerTotalGastos(),
           _obtenerIngresosDelMes(),
           _obtenerGastosDelMes(),
+          _obtenerTotalAhorros(),
+          _obtenerTotalDeudas(),
         ]);
 
         final totalCuentas = futures[0];
@@ -66,6 +68,8 @@ class PrincipalServicio {
         final totalGastos = futures[2];
         final ingresosDelMes = futures[3];
         final gastosDelMes = futures[4];
+        final totalAhorros = futures[5];
+        final totalDeudas = futures[6];
 
         final balanceTotal = totalIngresos - totalGastos;
 
@@ -76,6 +80,8 @@ class PrincipalServicio {
           'balanceTotal': balanceTotal,
           'ingresosDelMes': ingresosDelMes,
           'gastosDelMes': gastosDelMes,
+          'totalAhorros': totalAhorros,
+          'totalDeudas': totalDeudas,
           'error': null,
         };
       } catch (e) {
@@ -86,6 +92,8 @@ class PrincipalServicio {
           'balanceTotal': 0.0,
           'ingresosDelMes': 0.0,
           'gastosDelMes': 0.0,
+          'totalAhorros': 0.0,
+          'totalDeudas': 0.0,
           'error': 'Error al cargar datos: $e',
         };
       }
