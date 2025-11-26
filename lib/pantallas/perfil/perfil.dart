@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../firebase/base_datos_servicio.dart';
 import '../../firebase/servicios/principal_servicio.dart';
 
@@ -302,21 +303,41 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
                             },
                           ),
                           const SizedBox(height: 24),
-                          PreferenciasPerfil(
-                            limiteGastoMensual: _limiteGastoMensual,
-                            categoriaFavorita: _categoriaFavorita,
-                            modoEdicion: _modoEdicion,
-                            onEditarLimite: () => ModalesPerfil.mostrarDialogoNumerico(
-                              context: context,
-                              titulo: 'Límite de Gasto Mensual',
-                              valorActual: _limiteGastoMensual,
-                              onGuardar: (v) => setState(() => _limiteGastoMensual = v),
-                            ),
-                            onEditarCategoria: () => ModalesPerfil.mostrarSelectorCategoria(
-                              context: context,
-                              categoriaActual: _categoriaFavorita,
-                              onSeleccionado: (v) => setState(() => _categoriaFavorita = v),
-                            ),
+                          StreamBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
+                            stream: _baseDatosService.obtenerPerfilStream(),
+                            builder: (context, snapPerfil) {
+                              double limite = _limiteGastoMensual;
+                              String categoria = _categoriaFavorita;
+
+                              if (snapPerfil.hasData && snapPerfil.data != null && snapPerfil.data!.exists) {
+                                final data = snapPerfil.data!.data() ?? {};
+                                if (data['limiteGastoMensual'] != null) {
+                                  final v = data['limiteGastoMensual'];
+                                  if (v is num) limite = v.toDouble();
+                                  else if (v is String) limite = double.tryParse(v) ?? limite;
+                                }
+                                if (data['categoriaFavorita'] != null) {
+                                  categoria = data['categoriaFavorita'].toString();
+                                }
+                              }
+
+                              return PreferenciasPerfil(
+                                limiteGastoMensual: limite,
+                                categoriaFavorita: categoria,
+                                modoEdicion: _modoEdicion,
+                                onEditarLimite: () => ModalesPerfil.mostrarDialogoNumerico(
+                                  context: context,
+                                  titulo: 'Límite de Gasto Mensual',
+                                  valorActual: limite,
+                                  onGuardar: (v) => _baseDatosService.actualizarPerfilUsuario({'limiteGastoMensual': v}),
+                                ),
+                                onEditarCategoria: () => ModalesPerfil.mostrarSelectorCategoria(
+                                  context: context,
+                                  categoriaActual: categoria,
+                                  onSeleccionado: (v) => _baseDatosService.actualizarPerfilUsuario({'categoriaFavorita': v}),
+                                ),
+                              );
+                            },
                           ),
                           const SizedBox(height: 32),
                         ]),

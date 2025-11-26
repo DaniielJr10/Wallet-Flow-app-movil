@@ -247,6 +247,13 @@ class BaseDatosServicio {
     }
   }
 
+  /// PERFIL USUARIO - Obtener stream del documento de perfil (actualizaciones en tiempo real)
+  Stream<DocumentSnapshot<Map<String, dynamic>>?> obtenerPerfilStream() {
+    if (_userId == null) return const Stream.empty();
+
+    return _firestore.collection('usuarios').doc(_userId).snapshots();
+  }
+
   /// PERFIL USUARIO - Actualizar información específica del usuario
   Future<String?> actualizarPerfilUsuario(Map<String, dynamic> datos) async {
     try {
