@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import '../../firebase/base_datos_servicio.dart';
+import '../../firebase/servicios/principal_servicio.dart';
 
 // Importaciones modularizadas
 import 'funcionalidades/app_bar_perfil.dart';
@@ -32,6 +33,7 @@ class PantallaPerfil extends StatefulWidget {
 
 class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStateMixin {
   final BaseDatosServicio _baseDatosService = BaseDatosServicio();
+  final PrincipalServicio _principalServicio = PrincipalServicio();
   final ImagePicker _imagePicker = ImagePicker();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   
@@ -51,7 +53,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
   bool _guardando = false;
   String? _urlFotoPerfil;
   
-  Map<String, dynamic> _estadisticas = {};
+  
   Map<String, dynamic> _datosUsuario = {
     'nombre': '',
     'email': '',
@@ -121,15 +123,8 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
         _biografiaController.text = _datosUsuario['biografia'];
         _urlFotoPerfil = user.photoURL;
 
-        // Simulaciones de datos extra
+        // Simulaciones de datos extra (se mantienen algunas variables de UI)
         await Future.delayed(const Duration(milliseconds: 300));
-        _estadisticas = {
-          'transaccionesTotales': 156,
-          'gastoPromedio': 125000,
-          'ahorroTotal': 890000,
-          'categoriaMasUsada': 'Alimentación',
-          'diasActivo': 45,
-        };
         _limiteGastoMensual = 800000.0;
         _categoriaFavorita = 'Alimentación';
       }
@@ -293,7 +288,19 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
                             datosUsuario: _datosUsuario,
                           ),
                           const SizedBox(height: 24),
-                          EstadisticasPerfil(estadisticas: _estadisticas),
+                          StreamBuilder<Map<String, dynamic>>(
+                            stream: _principalServicio.obtenerEstadisticasPerfilStream(),
+                            builder: (context, snapshot) {
+                              final stats = snapshot.data ?? {
+                                'transaccionesTotales': 0,
+                                'gastoPromedio': 0.0,
+                                'ahorroTotal': 0.0,
+                                'categoriaMasUsada': 'General',
+                                'diasActivo': 0,
+                              };
+                              return EstadisticasPerfil(estadisticas: stats);
+                            },
+                          ),
                           const SizedBox(height: 24),
                           PreferenciasPerfil(
                             limiteGastoMensual: _limiteGastoMensual,
