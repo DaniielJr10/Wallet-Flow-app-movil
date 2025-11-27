@@ -117,6 +117,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
               ListaGastosBuilder(
                 gastosServicio: _gastosServicio,
                 textoBusqueda: _textoBusqueda,
+                modoBusqueda: _modoBusqueda,
                 onTapGasto: _mostrarDetalleGasto,
                 onEliminarGasto: _confirmarEliminarGasto,
               ),

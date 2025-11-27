@@ -176,9 +176,9 @@ class GastosServicio {
     }
     
     try {
-      // Obtener todos los gastos ordenados por fecha de creación
+      // Obtener todos los gastos ordenados por la fecha del gasto
       return _gastosRef()
-          .orderBy('fechaCreacion', descending: true)
+          .orderBy('fecha', descending: true)
           .snapshots();
     } catch (e) {
       return const Stream.empty();
@@ -347,7 +347,7 @@ class GastosServicio {
     // Filtraremos 'activo' en el cliente
     return _gastosRef()
         .where('categoria', isEqualTo: categoria)
-        .orderBy('fechaCreacion', descending: true)
+        .orderBy('fecha', descending: true)
         .snapshots();
   }
   
@@ -363,9 +363,9 @@ class GastosServicio {
     // Simplificamos para evitar índice compuesto
     // Filtraremos 'activo' en el cliente
     return _gastosRef()
-        .where('fechaCreacion', isGreaterThanOrEqualTo: Timestamp.fromDate(fechaInicio))
-        .where('fechaCreacion', isLessThanOrEqualTo: Timestamp.fromDate(fechaFin))
-        .orderBy('fechaCreacion', descending: true)
+        .where('fecha', isGreaterThanOrEqualTo: Timestamp.fromDate(fechaInicio))
+        .where('fecha', isLessThanOrEqualTo: Timestamp.fromDate(fechaFin))
+        .orderBy('fecha', descending: true)
         .snapshots();
   }
   
