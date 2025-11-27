@@ -219,7 +219,10 @@ class GastosServicio {
       // Verificar que el gasto existe y aplicar cambios en transacción
       final gastoRef = _gastosRef().doc(gastoId);
 
+      print('🔍 Iniciando transacción para actualizar gasto: $gastoId');
+
       await _firestore.runTransaction((transaction) async {
+        print('🔍 Dentro de la transacción (actualizarGasto) - leyendo gasto');
         final gastoSnap = await transaction.get(gastoRef);
         if (!gastoSnap.exists) throw Exception('El gasto no existe');
 
@@ -227,7 +230,31 @@ class GastosServicio {
         final oldMonto = (oldData['monto'] as num?)?.toDouble() ?? 0.0;
         final oldCuenta = (oldData['cuentaAsociada'] as String?);
 
-        // Actualizar el documento del gasto
+        print('🔍 Gasto previo: monto=$oldMonto, cuenta=$oldCuenta');
+
+        // Normalizar valores de cuenta (antes de cualquier escritura)
+        String? normalizedOldCuenta = (oldCuenta == null || oldCuenta == 'ninguna' || oldCuenta.isEmpty) ? null : oldCuenta;
+        String? normalizedNewCuenta = (cuentaAsociada == null || cuentaAsociada == 'ninguna' || cuentaAsociada.isEmpty) ? null : cuentaAsociada;
+
+        // Leer documentos de las cuentas implicadas ANTES de escribir
+        DocumentSnapshot? cuentaOldSnap;
+        DocumentSnapshot? cuentaNewSnap;
+
+        if (normalizedOldCuenta != null) {
+          final oldCuentaRef = _firestore.collection('usuarios').doc(_userId).collection('cuentas').doc(normalizedOldCuenta);
+          cuentaOldSnap = await transaction.get(oldCuentaRef);
+        }
+
+        if (normalizedNewCuenta != null && normalizedNewCuenta != normalizedOldCuenta) {
+          final newCuentaRef = _firestore.collection('usuarios').doc(_userId).collection('cuentas').doc(normalizedNewCuenta);
+          cuentaNewSnap = await transaction.get(newCuentaRef);
+        } else if (normalizedNewCuenta != null && normalizedNewCuenta == normalizedOldCuenta) {
+          // si son la misma cuenta, ya fue leída en cuentaOldSnap
+          cuentaNewSnap = cuentaOldSnap;
+        }
+
+        // Ahora realizar todas las escrituras (después de las lecturas)
+        print('🔍 Actualizando documento del gasto $gastoId con nuevo monto $monto y cuenta $cuentaAsociada');
         transaction.update(gastoRef, {
           'descripcion': descripcion.trim(),
           'monto': monto,
@@ -241,16 +268,12 @@ class GastosServicio {
           'fechaModificacion': FieldValue.serverTimestamp(),
         });
 
-        // Normalizar valores de cuenta
-        String? normalizedOldCuenta = (oldCuenta == null || oldCuenta == 'ninguna' || oldCuenta.isEmpty) ? null : oldCuenta;
-        String? normalizedNewCuenta = (cuentaAsociada == null || cuentaAsociada == 'ninguna' || cuentaAsociada.isEmpty) ? null : cuentaAsociada;
-
         // Si la cuenta no cambió y existe, ajustar por la diferencia
         if (normalizedOldCuenta != null && normalizedOldCuenta == normalizedNewCuenta) {
           final cuentaRef = _firestore.collection('usuarios').doc(_userId).collection('cuentas').doc(normalizedOldCuenta);
-          final cuentaSnap = await transaction.get(cuentaRef);
-          if (cuentaSnap.exists) {
-            final saldoActual = (cuentaSnap.data()!['saldo'] as num).toDouble();
+          if (cuentaOldSnap != null && cuentaOldSnap.exists) {
+            final dataOld = cuentaOldSnap.data() as Map<String, dynamic>;
+            final saldoActual = (dataOld['saldo'] as num).toDouble();
             final delta = monto - oldMonto; // si positivo -> gasto aumentó -> restar delta
             final nuevoSaldo = saldoActual - delta;
             transaction.update(cuentaRef, {
@@ -275,9 +298,9 @@ class GastosServicio {
           // Cuentas distintas: devolver monto al viejo (si existe) y restar al nuevo (si existe)
           if (normalizedOldCuenta != null) {
             final oldCuentaRef = _firestore.collection('usuarios').doc(_userId).collection('cuentas').doc(normalizedOldCuenta);
-            final oldCuentaSnap = await transaction.get(oldCuentaRef);
-            if (oldCuentaSnap.exists) {
-              final saldoOld = (oldCuentaSnap.data()!['saldo'] as num).toDouble();
+            if (cuentaOldSnap != null && cuentaOldSnap.exists) {
+              final dataOld2 = cuentaOldSnap.data() as Map<String, dynamic>;
+              final saldoOld = (dataOld2['saldo'] as num).toDouble();
               final nuevoSaldoOld = saldoOld + oldMonto; // devolver el monto viejo
               transaction.update(oldCuentaRef, {
                 'saldo': nuevoSaldoOld,
@@ -299,9 +322,9 @@ class GastosServicio {
 
           if (normalizedNewCuenta != null) {
             final newCuentaRef = _firestore.collection('usuarios').doc(_userId).collection('cuentas').doc(normalizedNewCuenta);
-            final newCuentaSnap = await transaction.get(newCuentaRef);
-            if (newCuentaSnap.exists) {
-              final saldoNew = (newCuentaSnap.data()!['saldo'] as num).toDouble();
+            if (cuentaNewSnap != null && cuentaNewSnap.exists) {
+              final dataNew = cuentaNewSnap.data() as Map<String, dynamic>;
+              final saldoNew = (dataNew['saldo'] as num).toDouble();
               final nuevoSaldoNew = saldoNew - monto; // restar el nuevo monto
               transaction.update(newCuentaRef, {
                 'saldo': nuevoSaldoNew,
@@ -326,8 +349,14 @@ class GastosServicio {
 
       return null; // Éxito
       
-    } catch (e) {
-      return 'Error al actualizar gasto: $e';
+    } catch (e, st) {
+      // Imprimir error y stack trace para depuración en consola
+      print('❌ Error al actualizar gasto: $e');
+      print('--- StackTrace ---');
+      print(st);
+      // Devolver una cadena con información clave (evitar exponer datos sensibles)
+      final mensaje = e is FirebaseException ? (e.message ?? e.toString()) : e.toString();
+      return 'Error al actualizar gasto: $mensaje';
     }
   }
   
