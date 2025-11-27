@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'utils_conversor.dart';
 
 class AppBarConversor extends StatelessWidget implements PreferredSizeWidget {
-  const AppBarConversor({super.key});
+  final VoidCallback? onRefresh;
+
+  const AppBarConversor({super.key, this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +17,14 @@ class AppBarConversor extends StatelessWidget implements PreferredSizeWidget {
         icon: const Icon(Icons.arrow_back, color: UtilsConversor.colorPrincipal),
         onPressed: () => Navigator.of(context).maybePop(),
       ),
+      actions: [
+        if (onRefresh != null)
+          IconButton(
+            tooltip: 'Actualizar tasas',
+            icon: const Icon(Icons.refresh, color: UtilsConversor.colorPrincipal),
+            onPressed: onRefresh,
+          ),
+      ],
     );
   }
 

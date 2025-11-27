@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 // Importaciones modularizadas
 import 'funcionalidades/utils_conversor.dart';
 import 'funcionalidades/app_bar_conversor.dart';
+import 'funcionalidades/tasas_servicio.dart';
 import 'funcionalidades/header_conversor.dart';
 import 'funcionalidades/tarjeta_conversor.dart';
 import 'funcionalidades/resultado_conversor.dart';
@@ -31,7 +32,22 @@ class _ConversorMonedasScreenState extends State<ConversorMonedasScreen> {
   String lastUpdated = '';
 
   // Tasas locales (se usan como fallback)
-  final Map<String, double> _localRates = UtilsConversor.ratesBase;
+  Map<String, double> _localRates = Map<String, double>.from(UtilsConversor.ratesBase);
+
+  @override
+  void initState() {
+    super.initState();
+    // Cargar tasas en caché al iniciar
+    TasasServicio.loadCachedRates().then((cached) {
+      if (cached != null && cached['rates'] != null) {
+        final Map<String, dynamic> ratesDyn = Map<String, dynamic>.from(cached['rates']);
+        setState(() {
+          _localRates = ratesDyn.map((k, v) => MapEntry(k, (v is num) ? v.toDouble() : double.tryParse('$v') ?? 0.0));
+          lastUpdated = cached['date'] ?? '';
+        });
+      }
+    });
+  }
 
   void _swap() {
     setState(() {
@@ -109,11 +125,35 @@ class _ConversorMonedasScreenState extends State<ConversorMonedasScreen> {
     });
   }
 
+  Future<void> _refreshRates() async {
+    setState(() => isLoading = true);
+    final latest = await TasasServicio.fetchLatestRates(base: 'USD', symbols: UtilsConversor.currencies);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (latest != null && latest.isNotEmpty) {
+      setState(() {
+        _localRates = latest;
+        onlineMode = true;
+        lastUpdated = DateTime.now().toIso8601String();
+        isLoading = false;
+        result = 'Tasas actualizadas.';
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+        result = 'No se pudieron actualizar las tasas.';
+      });
+    }
+    // Limpiar mensaje después de 2s
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => result = '');
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: UtilsConversor.colorFondo,
-      appBar: const AppBarConversor(),
+      appBar: AppBarConversor(onRefresh: _refreshRates),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
