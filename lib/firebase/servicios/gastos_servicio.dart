@@ -216,20 +216,115 @@ class GastosServicio {
       
       // TODO: Implementar lógica compleja de actualización con cambios en cuentas
       // Por ahora, actualización simple sin cambios de cuenta
-      await _gastosRef().doc(gastoId).update({
-        'descripcion': descripcion.trim(),
-        'monto': monto,
-        'fecha': Timestamp.fromDate(fecha),
-        'categoria': categoria.trim(),
-        'metodoPago': metodoPago.trim(),
-        'cuentaAsociada': cuentaAsociada,
-        'esRecurrente': esRecurrente,
-        'frecuencia': frecuencia?.trim(),
-        'notas': notas?.trim(),
-        'fechaModificacion': FieldValue.serverTimestamp(),
+      // Verificar que el gasto existe y aplicar cambios en transacción
+      final gastoRef = _gastosRef().doc(gastoId);
+
+      await _firestore.runTransaction((transaction) async {
+        final gastoSnap = await transaction.get(gastoRef);
+        if (!gastoSnap.exists) throw Exception('El gasto no existe');
+
+        final oldData = gastoSnap.data() as Map<String, dynamic>;
+        final oldMonto = (oldData['monto'] as num?)?.toDouble() ?? 0.0;
+        final oldCuenta = (oldData['cuentaAsociada'] as String?);
+
+        // Actualizar el documento del gasto
+        transaction.update(gastoRef, {
+          'descripcion': descripcion.trim(),
+          'monto': monto,
+          'fecha': Timestamp.fromDate(fecha),
+          'categoria': categoria.trim(),
+          'metodoPago': metodoPago.trim(),
+          'cuentaAsociada': cuentaAsociada,
+          'esRecurrente': esRecurrente,
+          'frecuencia': frecuencia?.trim(),
+          'notas': notas?.trim(),
+          'fechaModificacion': FieldValue.serverTimestamp(),
+        });
+
+        // Normalizar valores de cuenta
+        String? normalizedOldCuenta = (oldCuenta == null || oldCuenta == 'ninguna' || oldCuenta.isEmpty) ? null : oldCuenta;
+        String? normalizedNewCuenta = (cuentaAsociada == null || cuentaAsociada == 'ninguna' || cuentaAsociada.isEmpty) ? null : cuentaAsociada;
+
+        // Si la cuenta no cambió y existe, ajustar por la diferencia
+        if (normalizedOldCuenta != null && normalizedOldCuenta == normalizedNewCuenta) {
+          final cuentaRef = _firestore.collection('usuarios').doc(_userId).collection('cuentas').doc(normalizedOldCuenta);
+          final cuentaSnap = await transaction.get(cuentaRef);
+          if (cuentaSnap.exists) {
+            final saldoActual = (cuentaSnap.data()!['saldo'] as num).toDouble();
+            final delta = monto - oldMonto; // si positivo -> gasto aumentó -> restar delta
+            final nuevoSaldo = saldoActual - delta;
+            transaction.update(cuentaRef, {
+              'saldo': nuevoSaldo,
+              'fechaModificacion': FieldValue.serverTimestamp(),
+            });
+
+            // Registrar movimiento de ajuste si hay diferencia
+            if (delta != 0) {
+              final movRef = cuentaRef.collection('movimientos').doc();
+              transaction.set(movRef, {
+                'tipo': 'ajuste_gasto',
+                'monto': -delta,
+                'descripcion': 'Ajuste de gasto: $gastoId',
+                'gastoId': gastoId,
+                'fecha': FieldValue.serverTimestamp(),
+                'fechaCreacion': FieldValue.serverTimestamp(),
+              });
+            }
+          }
+        } else {
+          // Cuentas distintas: devolver monto al viejo (si existe) y restar al nuevo (si existe)
+          if (normalizedOldCuenta != null) {
+            final oldCuentaRef = _firestore.collection('usuarios').doc(_userId).collection('cuentas').doc(normalizedOldCuenta);
+            final oldCuentaSnap = await transaction.get(oldCuentaRef);
+            if (oldCuentaSnap.exists) {
+              final saldoOld = (oldCuentaSnap.data()!['saldo'] as num).toDouble();
+              final nuevoSaldoOld = saldoOld + oldMonto; // devolver el monto viejo
+              transaction.update(oldCuentaRef, {
+                'saldo': nuevoSaldoOld,
+                'fechaModificacion': FieldValue.serverTimestamp(),
+              });
+
+              // registrar movimiento de reversión en cuenta antigua
+              final movOldRef = oldCuentaRef.collection('movimientos').doc();
+              transaction.set(movOldRef, {
+                'tipo': 'reversa_gasto_actualizacion',
+                'monto': oldMonto,
+                'descripcion': 'Reversión por edición de gasto: $gastoId',
+                'gastoId': gastoId,
+                'fecha': FieldValue.serverTimestamp(),
+                'fechaCreacion': FieldValue.serverTimestamp(),
+              });
+            }
+          }
+
+          if (normalizedNewCuenta != null) {
+            final newCuentaRef = _firestore.collection('usuarios').doc(_userId).collection('cuentas').doc(normalizedNewCuenta);
+            final newCuentaSnap = await transaction.get(newCuentaRef);
+            if (newCuentaSnap.exists) {
+              final saldoNew = (newCuentaSnap.data()!['saldo'] as num).toDouble();
+              final nuevoSaldoNew = saldoNew - monto; // restar el nuevo monto
+              transaction.update(newCuentaRef, {
+                'saldo': nuevoSaldoNew,
+                'fechaModificacion': FieldValue.serverTimestamp(),
+              });
+
+              // registrar movimiento en la cuenta nueva
+              final movNewRef = newCuentaRef.collection('movimientos').doc();
+              transaction.set(movNewRef, {
+                'tipo': 'gasto',
+                'monto': -monto,
+                'descripcion': 'Gasto editado: $descripcion',
+                'categoria': categoria,
+                'fecha': Timestamp.fromDate(fecha),
+                'gastoId': gastoId,
+                'fechaCreacion': FieldValue.serverTimestamp(),
+              });
+            }
+          }
+        }
       });
-      
-      return null; // Éxito - sin error
+
+      return null; // Éxito
       
     } catch (e) {
       return 'Error al actualizar gasto: $e';
