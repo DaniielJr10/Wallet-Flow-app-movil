@@ -24,8 +24,8 @@ mixin AccionesLecturaCuentas on ReferenciasCuentas {
 
       // Verificar que la cuenta pertenezca al usuario y exista
       if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>?;
-        if (data?['usuarioId'] == userId) {
+        final data = doc.data();
+        if (data != null && data['usuarioId'] == userId) {
           return doc;
         }
       }
