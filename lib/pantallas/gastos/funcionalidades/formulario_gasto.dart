@@ -253,13 +253,46 @@ class _FormularioGastoState extends State<FormularioGasto> {
         List<DropdownMenuItem<String>> items = [
           const DropdownMenuItem(value: 'ninguna', child: Text('Ninguna')),
         ];
+        bool cuentaAsociadaEnLista = false;
         if (snapshot.hasData) {
           for (var doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
             if (data['activa'] == true) {
               items.add(DropdownMenuItem(value: doc.id, child: Text('${data['banco']} - ${data['numeroCuenta']}')));
+              if (doc.id == _cuentaAsociada) cuentaAsociadaEnLista = true;
             }
           }
+        }
+        // Si la cuenta asociada no está en la lista, agregarla como opción especial
+        if (_cuentaAsociada != 'ninguna' && !cuentaAsociadaEnLista) {
+          return FutureBuilder(
+            future: _cuentasServicio.obtenerCuentaPorId(_cuentaAsociada),
+            builder: (context, snapCuenta) {
+              String texto = 'Cuenta eliminada';
+              if (snapCuenta.hasData && snapCuenta.data != null && snapCuenta.data!.exists) {
+                final data = snapCuenta.data!.data() as Map<String, dynamic>;
+                texto = '${data['banco']} - ${data['numeroCuenta']} (eliminada)';
+              }
+              items.add(DropdownMenuItem(value: _cuentaAsociada, child: Text(texto)));
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Cuenta Asociada', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: _cuentaAsociada,
+                    items: items,
+                    onChanged: (v) => setState(() => _cuentaAsociada = v!),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
         }
         // Validar que el valor actual exista en la lista
         if (!items.any((item) => item.value == _cuentaAsociada)) {
