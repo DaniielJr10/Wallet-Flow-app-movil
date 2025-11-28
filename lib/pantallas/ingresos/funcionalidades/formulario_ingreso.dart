@@ -220,22 +220,24 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
         List<DropdownMenuItem<String>> items = [
           const DropdownMenuItem(value: 'ninguna', child: Text('Ninguna')),
         ];
+        List<DropdownMenuItem<String>> dineroEnManoItems = [];
+        List<DropdownMenuItem<String>> bancariasItems = [];
         bool cuentaAsociadaEnLista = false;
         if (snapshot.hasData) {
           for (var doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
             if (data['activa'] != false) {
-              String nombreCuenta;
               if (data['tipo'] == 'dinero_en_mano') {
-                nombreCuenta = 'Dinero en mano';
+                dineroEnManoItems.add(DropdownMenuItem(value: doc.id, child: const Text('Dinero en mano')));
               } else {
-                nombreCuenta = '${data['banco']} - ${data['numeroCuenta']}';
+                bancariasItems.add(DropdownMenuItem(value: doc.id, child: Text('${data['banco']} - ${data['numeroCuenta']}')));
               }
-              items.add(DropdownMenuItem(value: doc.id, child: Text(nombreCuenta)));
               if (doc.id == _cuentaAsociada) cuentaAsociadaEnLista = true;
             }
           }
         }
+        items.addAll(dineroEnManoItems);
+        items.addAll(bancariasItems);
         // Si la cuenta asociada no está en la lista, agregarla como opción especial
         if (_cuentaAsociada != 'ninguna' && !cuentaAsociadaEnLista) {
           return FutureBuilder(
