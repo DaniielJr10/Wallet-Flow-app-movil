@@ -20,6 +20,8 @@ class CalculadoraPantalla extends StatefulWidget {
 class _CalculadoraPantallaState extends State<CalculadoraPantalla> {
   final CalculadoraController _controller = CalculadoraController();
 
+  // Esta es la API de la calculadora
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -113,3 +115,5 @@ class _CalculadoraPantallaState extends State<CalculadoraPantalla> {
     );
   }
 }
+
+// Aquí termina la API de la calculadora

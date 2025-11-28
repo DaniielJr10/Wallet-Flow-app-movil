@@ -6,6 +6,8 @@ import 'dart:math' as math;
 // Ajusta la ruta de importación según tu estructura de carpetas
 import '../../../../../../utilidades/formato_numeros.dart';
 
+// Esta es la API de la calculadora
+
 class CalculadoraController {
   String expression = '';
   String result = '0';
@@ -169,3 +171,5 @@ class CalculadoraController {
     return out;
   }
 }
+
+// Fin de la API de la calculadora
