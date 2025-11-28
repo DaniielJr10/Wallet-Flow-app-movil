@@ -111,20 +111,7 @@ class FormularioInformacion extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Campo biografía
-            CampoTextoPerfil(
-              controller: biografiaController,
-              label: 'Acerca de ti (Opcional)',
-              icono: Icons.info_outline,
-              habilitado: modoEdicion,
-              lineasMaximas: 3,
-              validador: (value) {
-                if (value != null && value.length > 200) {
-                  return 'Máximo 200 caracteres';
-                }
-                return null;
-              },
-            ),
+            // ... Campo biografía eliminado ...
 
             // Información de solo lectura (fechas)
             if (!modoEdicion) ...[
