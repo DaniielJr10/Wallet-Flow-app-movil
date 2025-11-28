@@ -1,10 +1,10 @@
 // 1. Archivo Principal - El que llaman las pantallas
 // Este servicio agrupa todas las funcionalidades distribuidas en los mixins.
 
-import 'funcionalidades/referencias_base.dart';
-import 'funcionalidades/acciones_lectura.dart';
-import 'funcionalidades/acciones_escritura.dart';
-import 'funcionalidades/calculos_estadisticas.dart';
+import 'funcionalidades/referencias_base_ingreso.dart';
+import 'funcionalidades/acciones_lectura_ingreso.dart';
+import 'funcionalidades/acciones_escritura_ingreso.dart';
+import 'funcionalidades/calculos_estadisticas_ingreso.dart';
 
 /// Servicio para gestionar ingresos en Firebase
 /// 

@@ -2,7 +2,7 @@
 // Este archivo contiene la lógica matemática y de agregación de datos.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'referencias_base.dart';
+import 'referencias_base_ingreso.dart';
 
 mixin CalculosEstadisticas on ReferenciasBase {
   /// === OBTENER TOTAL DE INGRESOS ===

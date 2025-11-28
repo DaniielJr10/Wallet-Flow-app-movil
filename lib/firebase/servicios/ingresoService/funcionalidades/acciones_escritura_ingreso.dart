@@ -2,7 +2,7 @@
 // Este archivo maneja las operaciones que modifican la base de datos y saldos.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'referencias_base.dart';
+import 'referencias_base_ingreso.dart';
 
 mixin AccionesEscritura on ReferenciasBase {
   /// === CREAR NUEVO INGRESO ===

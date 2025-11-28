@@ -2,7 +2,7 @@
 // Este archivo maneja todas las consultas de lectura (GET/Stream) de ingresos.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'referencias_base.dart';
+import 'referencias_base_ingreso.dart';
 
 mixin AccionesLectura on ReferenciasBase {
   /// === OBTENER INGRESOS DEL USUARIO ===
