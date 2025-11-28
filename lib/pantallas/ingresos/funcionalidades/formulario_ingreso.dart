@@ -220,17 +220,33 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
         List<DropdownMenuItem<String>> items = [
           const DropdownMenuItem(value: 'ninguna', child: Text('Ninguna')),
         ];
+        bool cuentaAsociadaEnLista = false;
         if (snapshot.hasData) {
           for (var doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
             if (data['activa'] != false) {
               items.add(DropdownMenuItem(value: doc.id, child: Text('${data['banco']} - ${data['numeroCuenta']}')));
+              if (doc.id == _cuentaAsociada) cuentaAsociadaEnLista = true;
             }
           }
         }
+        // Si la cuenta asociada no está en la lista, agregarla como opción especial
+        if (_cuentaAsociada != 'ninguna' && !cuentaAsociadaEnLista) {
+          return FutureBuilder(
+            future: _cuentasServicio.obtenerCuentaPorId(_cuentaAsociada),
+            builder: (context, snapCuenta) {
+              String texto = 'Cuenta eliminada';
+              if (snapCuenta.hasData && snapCuenta.data != null && snapCuenta.data!.exists) {
+                final data = snapCuenta.data!.data() as Map<String, dynamic>;
+                texto = '${data['banco']} - ${data['numeroCuenta']} (eliminada)';
+              }
+              items.add(DropdownMenuItem(value: _cuentaAsociada, child: Text(texto)));
+              return _buildDropdown('Cuenta Asociada', _cuentaAsociada, [], (v) => setState(() => _cuentaAsociada = v!), customItems: items);
+            },
+          );
+        }
         // Validar valor actual
         if (!items.any((i) => i.value == _cuentaAsociada)) _cuentaAsociada = 'ninguna';
-        
         return _buildDropdown('Cuenta Asociada', _cuentaAsociada, [], (v) => setState(() => _cuentaAsociada = v!), customItems: items);
       },
     );
