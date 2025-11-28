@@ -1,6 +1,6 @@
 // 3. Tarjeta morada de resumen de ahorros
 import 'package:flutter/material.dart';
-import '../../../firebase/servicios/ahorros_servicio.dart';
+import '../../../firebase/servicios/AhorroService/ahorros_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_ahorros.dart';
 

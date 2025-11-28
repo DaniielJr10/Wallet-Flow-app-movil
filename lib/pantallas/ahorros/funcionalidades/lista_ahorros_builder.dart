@@ -1,7 +1,7 @@
 // 5. Lógica de Stream y filtros para la lista de ahorros
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../firebase/servicios/ahorros_servicio.dart';
+import '../../../firebase/servicios/AhorroService/ahorros_servicio.dart';
 import 'tarjeta_meta.dart';
 import 'estados_ahorros.dart';
 import 'utils_ahorros.dart';

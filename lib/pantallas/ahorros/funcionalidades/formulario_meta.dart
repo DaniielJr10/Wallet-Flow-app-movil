@@ -1,7 +1,7 @@
 // 8. Formulario para crear o editar una meta de ahorro
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../firebase/servicios/ahorros_servicio.dart';
+import '../../../firebase/servicios/AhorroService/ahorros_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_ahorros.dart';
 

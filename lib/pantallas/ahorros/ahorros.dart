@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../firebase/servicios/ahorros_servicio.dart';
+import '../../firebase/servicios/AhorroService/ahorros_servicio.dart';
 
 // Importación de funcionalidades
 import 'funcionalidades/app_bar_ahorros.dart';
