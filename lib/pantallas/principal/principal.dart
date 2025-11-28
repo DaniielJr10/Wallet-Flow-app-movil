@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../firebase/autenticacion_servicio.dart';
-import '../../firebase/base_datos_servicio.dart';
+// BORRADO: import '../../firebase/base_datos_servicio.dart'; 
+// NUEVO IMPORT:
+import '../../firebase/servicios/UsuarioService/usuarios_servicio.dart'; 
+
 import '../../firebase/servicios/PrincipalService/principal_servicio.dart';
 import '../../login/iniciosesion/iniciosesion.dart';
 
@@ -35,7 +38,10 @@ class PantallaPrincipal extends StatefulWidget {
 
 class _PantallaPrincipalState extends State<PantallaPrincipal> with TickerProviderStateMixin {
   final AutenticacionServicio _authService = AutenticacionServicio();
-  final BaseDatosServicio _baseDatosService = BaseDatosServicio();
+  
+  // CAMBIO: Reemplazamos BaseDatosServicio por UsuariosServicio
+  final UsuariosServicio _usuariosServicio = UsuariosServicio();
+  
   final PrincipalServicio _principalServicio = PrincipalServicio();
   
   int _selectedIndex = 0;
@@ -55,20 +61,24 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> with TickerProvid
   Future<void> _cargarNombreUsuario() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
+      // 1. Intentar obtener nombre de Firebase Auth (Google, etc)
       if (user != null && user.displayName != null && user.displayName!.isNotEmpty) {
         setState(() => _nombreUsuario = user.displayName!.split(' ')[0]);
         return;
       }
       
-      final perfil = await _baseDatosService.obtenerPerfilUsuario();
+      // 2. Si no, buscar en Firestore usando el nuevo servicio
+      final perfil = await _usuariosServicio.obtenerPerfil();
+      
       if (perfil != null && perfil.exists) {
-        final datos = perfil.data() as Map<String, dynamic>?;
+        final datos = perfil.data();
         if (datos != null && datos['nombre'] != null) {
           setState(() => _nombreUsuario = (datos['nombre'] as String).split(' ')[0]);
         }
       }
     } catch (e) {
-      // Mantener valor por defecto
+      // Mantener valor por defecto en caso de error
+      print('Error cargando nombre: $e');
     }
   }
 

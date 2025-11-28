@@ -10,7 +10,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../firebase/base_datos_servicio.dart';
+
+// CAMBIO: Importamos el servicio correcto
+import '../../firebase/servicios/UsuarioService/usuarios_servicio.dart';
 import '../../firebase/servicios/PrincipalService/principal_servicio.dart';
 
 // Importaciones modularizadas
@@ -33,8 +35,10 @@ class PantallaPerfil extends StatefulWidget {
 }
 
 class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStateMixin {
-  final BaseDatosServicio _baseDatosService = BaseDatosServicio();
+  // CAMBIO: Usamos UsuariosServicio
+  final UsuariosServicio _usuariosServicio = UsuariosServicio();
   final PrincipalServicio _principalServicio = PrincipalServicio();
+  
   final ImagePicker _imagePicker = ImagePicker();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   
@@ -53,7 +57,6 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
   bool _modoEdicion = false;
   bool _guardando = false;
   String? _urlFotoPerfil;
-  
   
   Map<String, dynamic> _datosUsuario = {
     'nombre': '',
@@ -109,12 +112,15 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
 
     try {
       final user = FirebaseAuth.instance.currentUser;
+      // Intentamos cargar datos extras de Firestore
+      final perfilDoc = await _usuariosServicio.obtenerPerfil();
+      final datosFirestore = perfilDoc?.data() ?? {};
+
       if (user != null) {
-        // Simulación de carga de datos (Reemplazar con llamadas reales a Firestore si es necesario)
         _datosUsuario = {
-          'nombre': user.displayName ?? '',
-          'email': user.email ?? '',
-          'biografia': '', // TODO: Obtener de Firestore
+          'nombre': datosFirestore['nombre'] ?? user.displayName ?? '',
+          'email': datosFirestore['email'] ?? user.email ?? '',
+          'biografia': datosFirestore['biografia'] ?? '',
           'fechaRegistro': user.metadata.creationTime,
           'ultimoAcceso': user.metadata.lastSignInTime,
         };
@@ -122,24 +128,29 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
         _nombreController.text = _datosUsuario['nombre'];
         _emailController.text = _datosUsuario['email'];
         _biografiaController.text = _datosUsuario['biografia'];
-        _urlFotoPerfil = user.photoURL;
+        
+        // Priorizar foto de Firestore si existe, sino la de Auth
+        _urlFotoPerfil = datosFirestore['fotoUrl'] ?? user.photoURL;
 
-        // Simulaciones de datos extra (se mantienen algunas variables de UI)
-        await Future.delayed(const Duration(milliseconds: 300));
-        _limiteGastoMensual = 800000.0;
-        _categoriaFavorita = 'Alimentación';
+        // Cargar preferencias si existen
+        if (datosFirestore['limiteGastoMensual'] != null) {
+             final v = datosFirestore['limiteGastoMensual'];
+             _limiteGastoMensual = (v is num) ? v.toDouble() : double.tryParse(v.toString()) ?? 0.0;
+        }
+        if (datosFirestore['categoriaFavorita'] != null) {
+            _categoriaFavorita = datosFirestore['categoriaFavorita'];
+        }
       }
     } catch (e) {
       _mostrarMensaje('Error al cargar los datos del perfil', esError: true);
     } finally {
-      setState(() => _estaCargando = false);
+      if (mounted) setState(() => _estaCargando = false);
     }
   }
 
   Future<void> _guardarCambios() async {
     if (!_formKey.currentState!.validate()) return;
     
-    // Validación adicional
     if (_nombreController.text.trim().length < 2) {
       _mostrarMensaje('El nombre debe tener al menos 2 caracteres', esError: true);
       return;
@@ -151,19 +162,26 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
+        // Actualizar Auth (DisplayName)
         if (_nombreController.text != user.displayName) {
           await user.updateDisplayName(_nombreController.text);
         }
-        // Aquí irían las llamadas a _actualizarEmail y guardado en Firestore
         
-        // Actualizar local
+        // CAMBIO: Actualizar Firestore usando UsuariosServicio
+        await _usuariosServicio.actualizarPerfil({
+          'nombre': _nombreController.text,
+          'biografia': _biografiaController.text,
+          // 'email': _emailController.text // Generalmente el email se actualiza por otro proceso de Auth
+        });
+        
+        // Actualizar estado local
         _datosUsuario['nombre'] = _nombreController.text;
         _datosUsuario['email'] = _emailController.text;
         _datosUsuario['biografia'] = _biografiaController.text;
 
         setState(() => _modoEdicion = false);
         _mostrarMensaje('Perfil actualizado correctamente');
-        if (mounted) Navigator.pop(context, true);
+        if (mounted) Navigator.pop(context, true); // Retorna true para indicar cambio
       }
     } catch (e) {
       _mostrarMensaje('Error al guardar los cambios', esError: true);
@@ -202,7 +220,9 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
       final downloadURL = await storageRef.getDownloadURL();
 
       await user.updatePhotoURL(downloadURL);
-      await _baseDatosService.actualizarPerfilUsuario({'fotoUrl': downloadURL});
+      
+      // CAMBIO: Usamos UsuariosServicio para guardar la URL
+      await _usuariosServicio.actualizarPerfil({'fotoUrl': downloadURL});
 
       setState(() => _urlFotoPerfil = downloadURL);
       _mostrarMensaje('Foto actualizada correctamente');
@@ -216,6 +236,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
   void _eliminarFoto() {
     setState(() => _urlFotoPerfil = null);
     _mostrarMensaje('Foto de perfil eliminada');
+    // Opcional: Llamar a servicio para borrar del storage/firestore
   }
 
   void _cancelarEdicion() {
@@ -303,8 +324,9 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
                             },
                           ),
                           const SizedBox(height: 24),
+                          // CAMBIO: Usamos el stream de UsuariosServicio
                           StreamBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
-                            stream: _baseDatosService.obtenerPerfilStream(),
+                            stream: _usuariosServicio.obtenerPerfilStream(),
                             builder: (context, snapPerfil) {
                               double limite = _limiteGastoMensual;
                               String categoria = _categoriaFavorita;
@@ -329,12 +351,14 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
                                   context: context,
                                   titulo: 'Límite de Gasto Mensual',
                                   valorActual: limite,
-                                  onGuardar: (v) => _baseDatosService.actualizarPerfilUsuario({'limiteGastoMensual': v}),
+                                  // CAMBIO: Usamos UsuariosServicio para actualizar
+                                  onGuardar: (v) => _usuariosServicio.actualizarPerfil({'limiteGastoMensual': v}),
                                 ),
                                 onEditarCategoria: () => ModalesPerfil.mostrarSelectorCategoria(
                                   context: context,
                                   categoriaActual: categoria,
-                                  onSeleccionado: (v) => _baseDatosService.actualizarPerfilUsuario({'categoriaFavorita': v}),
+                                  // CAMBIO: Usamos UsuariosServicio para actualizar
+                                  onSeleccionado: (v) => _usuariosServicio.actualizarPerfil({'categoriaFavorita': v}),
                                 ),
                               );
                             },
