@@ -146,9 +146,17 @@ mixin AccionesEscritura on ReferenciasBase {
 
         transaction.update(ingresoRef, nuevosdatos);
 
+        // DEBUG: registrar información clave antes de actualizar saldos
+        try {
+          print('DEBUG actualizarIngreso: ingresoId=$ingresoId, montoAnterior=$montoAnterior, montoNuevo=$monto, cuentaAnterior=$cuentaAnterior, cuentaNueva=$cuentaAsociada');
+        } catch (_) {}
+
         if (cuentaAnterior != cuentaAsociada) {
           if (cuentaAntDoc != null && cuentaAntDoc.exists) {
             final saldoAnterior = (cuentaAntDoc.data()!['saldo'] as num?)?.toDouble() ?? 0.0;
+            try {
+              print('DEBUG actualizarIngreso: saldoAnterior en cuentaAnt=${saldoAnterior}');
+            } catch (_) {}
             transaction.update(cuentaAntDoc.reference, {
               'saldo': saldoAnterior - montoAnterior,
               'ultimaActualizacion': FieldValue.serverTimestamp(),
