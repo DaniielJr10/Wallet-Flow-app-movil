@@ -25,7 +25,7 @@ import '../perfil/perfil.dart';
 import 'preguntas_frecuentes.dart';
 import 'contactar_soporte.dart';
 import 'cambiar_contrasena.dart';
-import 'recordatorios_gastos.dart';
+
 
 /// Pantalla de configuración de la aplicación Wallet Flow
 class PantallaConfiguracion extends StatefulWidget {
@@ -317,12 +317,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
             await _guardarConfiguracion('notificaciones_activas', value);
           },
         ),
-        _buildOpcionTile(
-          titulo: 'Recordatorios de Gastos',
-          subtitulo: 'Configurar alertas de límites',
-          icono: Icons.alarm,
-          onTap: () => _configurarRecordatorios(),
-        ),
+      
       ],
     );
   }
@@ -523,12 +518,6 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   void _cambiarContrasena() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (context) => const CambiarContrasenaScreen()),
-    );
-  }
-
-  void _configurarRecordatorios() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const RecordatoriosGastosScreen()),
     );
   }
 
