@@ -91,7 +91,7 @@ class ResumenFinancieroCard extends StatelessWidget {
                   Expanded(
                     child: ItemResumen(
                       title: 'Deudas',
-                      amount: totalDeudas > 0 ? FormatoNumeros.formatearParaMostrar(totalDeudas) : 'Sin deudas',
+                      amount: FormatoNumeros.formatearParaMostrar(totalDeudas),
                       icon: Icons.credit_card_rounded,
                       color: Colors.orange.shade600,
                       onTap: () => onNavigate(5),
