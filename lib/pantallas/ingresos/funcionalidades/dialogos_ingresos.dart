@@ -2,7 +2,7 @@
 /// Muestra alertas críticas, como la confirmación antes de eliminar un registro,
 /// para evitar acciones accidentales.
 import 'package:flutter/material.dart';
-import '../../../firebase/servicios/ingresos_servicio.dart';
+import '../../../firebase/servicios/ingresoService/ingresos_servicio.dart';
 
 class DialogoEliminarIngreso extends StatelessWidget {
   final String ingresoId;

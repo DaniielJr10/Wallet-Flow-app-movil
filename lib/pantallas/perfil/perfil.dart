@@ -11,7 +11,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../firebase/base_datos_servicio.dart';
-import '../../firebase/servicios/principal_servicio.dart';
+import '../../firebase/servicios/PrincipalService/principal_servicio.dart';
 
 // Importaciones modularizadas
 import 'funcionalidades/app_bar_perfil.dart';

@@ -1,6 +1,6 @@
 // Formulario unificado para crear y editar deudas.
 import 'package:flutter/material.dart';
-import '../../../firebase/servicios/deudas_servicio.dart';
+import '../../../firebase/servicios/DeudaService/deudas_servicio.dart';
 import 'utils_deudas.dart';
 
 class FormularioDeuda extends StatefulWidget {

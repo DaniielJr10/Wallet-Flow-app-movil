@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../firebase/servicios/gastos_servicio.dart';
+import '../../firebase/servicios/gastoService/gastos_servicio.dart';
 
 // Importaciones modularizadas
 import 'funcionalidades/app_bar_gastos.dart';

@@ -7,7 +7,7 @@
 /// 4. Decidir qué estado mostrar (Lista, Error o Vacío).
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../firebase/servicios/cuentas_servicio.dart';
+import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import 'tarjeta_cuenta.dart';
 import 'lista_estados.dart';
 

@@ -1,7 +1,7 @@
 // ResumenGastos: Tarjeta que muestra el total de gastos y resumen general.
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../firebase/servicios/gastos_servicio.dart';
+import '../../../firebase/servicios/gastoService/gastos_servicio.dart';
 import 'utils_gastos.dart';
 import '../../../utilidades/formato_numeros.dart';
 

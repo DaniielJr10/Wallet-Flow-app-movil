@@ -3,7 +3,7 @@
 /// (categoría o mes) y decide qué estado mostrar (Lista, Vacío, Error).
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../firebase/servicios/ingresos_servicio.dart';
+import '../../../firebase/servicios/ingresoService/ingresos_servicio.dart';
 import 'tarjeta_ingreso.dart';
 import 'estados_ingresos.dart';
 import 'utils_ingresos.dart';

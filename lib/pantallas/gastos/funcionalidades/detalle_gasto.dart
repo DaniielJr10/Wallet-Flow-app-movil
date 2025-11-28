@@ -1,6 +1,6 @@
 // DetalleGasto: Modal que muestra los detalles completos de un gasto.
 import 'package:flutter/material.dart';
-import '../../../firebase/servicios/cuentas_servicio.dart';
+import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_gastos.dart';
 

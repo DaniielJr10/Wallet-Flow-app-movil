@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'servicios/usuarios_servicio.dart';
+import 'servicios/UsuarioService/usuarios_servicio.dart';
 
 /// Servicio que maneja toda la autenticación de usuarios
 /// Incluye: login, registro, cerrar sesión, recuperar contraseña

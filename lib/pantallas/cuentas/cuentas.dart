@@ -3,7 +3,7 @@
 /// de la pantalla (filtros, búsquedas) y coordina la navegación hacia
 /// los formularios y modales.
 import 'package:flutter/material.dart';
-import '../../firebase/servicios/cuentas_servicio.dart';
+import '../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 
 // Importación de las funcionalidades divididas
 import 'funcionalidades/app_bar_cuentas.dart';

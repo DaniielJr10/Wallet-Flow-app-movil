@@ -3,7 +3,7 @@
 /// para calcular y sumar el saldo total de todas las cuentas en tiempo real.
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../firebase/servicios/cuentas_servicio.dart';
+import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 
 class ResumenFinanciero extends StatelessWidget {

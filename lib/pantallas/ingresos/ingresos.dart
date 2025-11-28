@@ -3,7 +3,7 @@
 /// (búsqueda, modo de filtro, animaciones) y la navegación hacia los modales
 /// de creación, edición y detalle.
 import 'package:flutter/material.dart';
-import '../../firebase/servicios/ingresos_servicio.dart';
+import '../../firebase/servicios/ingresoService/ingresos_servicio.dart';
 
 // Importaciones modulares
 import 'funcionalidades/app_bar_ingresos.dart';

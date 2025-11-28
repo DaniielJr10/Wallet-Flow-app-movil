@@ -1,7 +1,7 @@
 // ListaGastosBuilder: Construye la lista de gastos usando Stream y lógica de filtrado.
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../firebase/servicios/gastos_servicio.dart';
+import '../../../firebase/servicios/gastoService/gastos_servicio.dart';
 import 'tarjeta_gasto.dart';
 import 'estados_gastos.dart';
 

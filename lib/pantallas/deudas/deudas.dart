@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../firebase/servicios/deudas_servicio.dart';
+import '../../firebase/servicios/DeudaService/deudas_servicio.dart';
 
 // Importación de funcionalidades modularizadas
 import 'funcionalidades/app_bar_deudas.dart';

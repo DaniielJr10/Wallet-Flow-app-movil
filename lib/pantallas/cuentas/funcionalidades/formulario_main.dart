@@ -5,7 +5,7 @@
 /// - La llamada al servicio de Firebase para guardar/actualizar.
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../firebase/servicios/cuentas_servicio.dart';
+import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'formulario_inputs.dart';
 

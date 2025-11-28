@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../firebase/autenticacion_servicio.dart';
 import '../../firebase/base_datos_servicio.dart';
-import '../../firebase/servicios/principal_servicio.dart';
+import '../../firebase/servicios/PrincipalService/principal_servicio.dart';
 import '../../login/iniciosesion/iniciosesion.dart';
 
 // Pantallas de navegación

@@ -2,7 +2,7 @@
 /// Widget que carga los datos financieros (ingresos, gastos, deudas, etc.)
 /// usando `PrincipalServicio` y los muestra en un grid usando `ItemResumen`.
 import 'package:flutter/material.dart';
-import '../../../firebase/servicios/principal_servicio.dart';
+import '../../../firebase/servicios/PrincipalService/principal_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'item_resumen.dart';
 

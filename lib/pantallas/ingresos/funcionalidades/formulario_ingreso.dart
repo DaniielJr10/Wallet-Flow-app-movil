@@ -3,8 +3,8 @@
 /// selectores de fecha y comunicación con los servicios de Firebase.
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../firebase/servicios/ingresos_servicio.dart';
-import '../../../firebase/servicios/cuentas_servicio.dart';
+import '../../../firebase/servicios/ingresoService/ingresos_servicio.dart';
+import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_ingresos.dart';
 

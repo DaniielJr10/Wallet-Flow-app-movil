@@ -2,7 +2,7 @@
 /// Agrupa el saludo (Header) y el resumen financiero en una vista scrolleable.
 /// Recibe la animación de desvanecimiento para una entrada suave.
 import 'package:flutter/material.dart';
-import '../../../firebase/servicios/principal_servicio.dart';
+import '../../../firebase/servicios/PrincipalService/principal_servicio.dart';
 import 'header_saludo.dart';
 import 'resumen_financiero_card.dart';
 

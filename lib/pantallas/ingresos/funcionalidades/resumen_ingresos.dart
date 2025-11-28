@@ -3,7 +3,7 @@
 /// Utiliza un gradiente verde para destacar la información financiera positiva.
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../firebase/servicios/ingresos_servicio.dart';
+import '../../../firebase/servicios/ingresoService/ingresos_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_ingresos.dart';
 

@@ -3,7 +3,7 @@
 /// Incluye la carga asíncrona del nombre de la cuenta asociada y
 /// los botones para disparar la edición o eliminación.
 import 'package:flutter/material.dart';
-import '../../../firebase/servicios/cuentas_servicio.dart';
+import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_ingresos.dart';
 

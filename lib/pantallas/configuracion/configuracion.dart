@@ -13,7 +13,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:excel/excel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../firebase/base_datos_servicio.dart';
-import '../../firebase/servicios/ingresos_servicio.dart';
+import '../../firebase/servicios/ingresoService/ingresos_servicio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../firebase/autenticacion_servicio.dart';
 import '../../login/iniciosesion/iniciosesion.dart';

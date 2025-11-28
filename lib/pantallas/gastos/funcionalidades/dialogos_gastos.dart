@@ -1,6 +1,6 @@
 // DialogoEliminarGasto: Diálogo para confirmar la eliminación de un gasto.
 import 'package:flutter/material.dart';
-import '../../../firebase/servicios/gastos_servicio.dart';
+import '../../../firebase/servicios/gastoService/gastos_servicio.dart';
 
 class DialogoEliminarGasto extends StatelessWidget {
   final String gastoId;
