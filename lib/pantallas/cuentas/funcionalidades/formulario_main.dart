@@ -47,6 +47,12 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
       'icono': Icons.account_balance_outlined,
       'color': const Color(0xFF007bff),
     },
+    {
+      'valor': 'dinero_en_mano',
+      'nombre': 'Dinero en mano',
+      'icono': Icons.attach_money,
+      'color': const Color(0xFF10B981),
+    },
   ];
 
   @override
@@ -71,7 +77,9 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
     final maxHeight = MediaQuery.of(context).size.height * 0.77;
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     final availableHeight = maxHeight - keyboardHeight;
-    
+
+    final esDineroEnMano = _tipoSeleccionado == 'dinero_en_mano';
+
     return Container(
       height: keyboardHeight > 0 ? availableHeight : maxHeight,
       decoration: const BoxDecoration(
@@ -120,7 +128,7 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
               ],
             ),
           ),
-          
+
           // Formulario limpio
           Expanded(
             child: SingleChildScrollView(
@@ -139,7 +147,7 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    
+
                     SelectorTipoCuenta(
                       tiposCuenta: _tiposCuenta,
                       tipoSeleccionado: _tipoSeleccionado,
@@ -149,31 +157,33 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
                         });
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
-                    InputFormularioCuenta(
-                      controller: _bancoController,
-                      label: 'Banco',
-                      hint: 'Ej: Banco Nacional',
-                      icon: Icons.account_balance,
-                      validator: (value) => (value == null || value.trim().isEmpty) ? 'El banco es requerido' : null,
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    InputFormularioCuenta(
-                      controller: _numeroController,
-                      label: 'Número de cuenta',
-                      hint: 'Número completo de la cuenta',
-                      icon: Icons.credit_card,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (value) => (value == null || value.trim().isEmpty) ? 'El número de cuenta es requerido' : null,
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
+
+                    if (!esDineroEnMano) ...[
+                      InputFormularioCuenta(
+                        controller: _bancoController,
+                        label: 'Banco',
+                        hint: 'Ej: Banco Nacional',
+                        icon: Icons.account_balance,
+                        validator: (value) => (value == null || value.trim().isEmpty) ? 'El banco es requerido' : null,
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      InputFormularioCuenta(
+                        controller: _numeroController,
+                        label: 'Número de cuenta',
+                        hint: 'Número completo de la cuenta',
+                        icon: Icons.credit_card,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        validator: (value) => (value == null || value.trim().isEmpty) ? 'El número de cuenta es requerido' : null,
+                      ),
+
+                      const SizedBox(height: 12),
+                    ],
+
                     InputFormularioCuenta(
                       controller: _saldoController,
                       label: 'Saldo inicial',
@@ -192,7 +202,7 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
               ),
             ),
           ),
-          
+
           // Botón guardar
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
