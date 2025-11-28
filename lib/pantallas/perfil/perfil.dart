@@ -19,7 +19,7 @@ import '../../firebase/servicios/PrincipalService/principal_servicio.dart';
 import 'funcionalidades/app_bar_perfil.dart';
 import 'funcionalidades/foto_perfil.dart';
 import 'funcionalidades/formulario_info.dart';
-import 'funcionalidades/estadisticas_perfil.dart';
+// import 'funcionalidades/estadisticas_perfil.dart';
 import 'funcionalidades/preferencias_perfil.dart';
 import 'funcionalidades/estados_perfil.dart';
 import 'funcionalidades/modales_perfil.dart';
@@ -37,7 +37,7 @@ class PantallaPerfil extends StatefulWidget {
 class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStateMixin {
   // CAMBIO: Usamos UsuariosServicio
   final UsuariosServicio _usuariosServicio = UsuariosServicio();
-  final PrincipalServicio _principalServicio = PrincipalServicio();
+  // final PrincipalServicio _principalServicio = PrincipalServicio();
   
   final ImagePicker _imagePicker = ImagePicker();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -310,20 +310,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
                             datosUsuario: _datosUsuario,
                           ),
                           const SizedBox(height: 24),
-                          StreamBuilder<Map<String, dynamic>>(
-                            stream: _principalServicio.obtenerEstadisticasPerfilStream(),
-                            builder: (context, snapshot) {
-                              final stats = snapshot.data ?? {
-                                'transaccionesTotales': 0,
-                                'gastoPromedio': 0.0,
-                                'ahorroTotal': 0.0,
-                                'categoriaMasUsada': 'General',
-                                'diasActivo': 0,
-                              };
-                              return EstadisticasPerfil(estadisticas: stats);
-                            },
-                          ),
-                          const SizedBox(height: 24),
+                          // Se eliminó la sección de estadísticas de uso
                           // CAMBIO: Usamos el stream de UsuariosServicio
                           StreamBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
                             stream: _usuariosServicio.obtenerPerfilStream(),
