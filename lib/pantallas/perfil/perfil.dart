@@ -312,44 +312,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
                           const SizedBox(height: 24),
                           // Se eliminó la sección de estadísticas de uso
                           // CAMBIO: Usamos el stream de UsuariosServicio
-                          StreamBuilder<DocumentSnapshot<Map<String, dynamic>>?>(
-                            stream: _usuariosServicio.obtenerPerfilStream(),
-                            builder: (context, snapPerfil) {
-                              double limite = _limiteGastoMensual;
-                              String categoria = _categoriaFavorita;
-
-                              if (snapPerfil.hasData && snapPerfil.data != null && snapPerfil.data!.exists) {
-                                final data = snapPerfil.data!.data() ?? {};
-                                if (data['limiteGastoMensual'] != null) {
-                                  final v = data['limiteGastoMensual'];
-                                  if (v is num) limite = v.toDouble();
-                                  else if (v is String) limite = double.tryParse(v) ?? limite;
-                                }
-                                if (data['categoriaFavorita'] != null) {
-                                  categoria = data['categoriaFavorita'].toString();
-                                }
-                              }
-
-                              return PreferenciasPerfil(
-                                limiteGastoMensual: limite,
-                                categoriaFavorita: categoria,
-                                modoEdicion: _modoEdicion,
-                                onEditarLimite: () => ModalesPerfil.mostrarDialogoNumerico(
-                                  context: context,
-                                  titulo: 'Límite de Gasto Mensual',
-                                  valorActual: limite,
-                                  // CAMBIO: Usamos UsuariosServicio para actualizar
-                                  onGuardar: (v) => _usuariosServicio.actualizarPerfil({'limiteGastoMensual': v}),
-                                ),
-                                onEditarCategoria: () => ModalesPerfil.mostrarSelectorCategoria(
-                                  context: context,
-                                  categoriaActual: categoria,
-                                  // CAMBIO: Usamos UsuariosServicio para actualizar
-                                  onSeleccionado: (v) => _usuariosServicio.actualizarPerfil({'categoriaFavorita': v}),
-                                ),
-                              );
-                            },
-                          ),
+                          // Preferencias financieras eliminadas
                           const SizedBox(height: 32),
                         ]),
                       ),
