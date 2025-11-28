@@ -225,7 +225,13 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
           for (var doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
             if (data['activa'] != false) {
-              items.add(DropdownMenuItem(value: doc.id, child: Text('${data['banco']} - ${data['numeroCuenta']}')));
+              String nombreCuenta;
+              if (data['tipo'] == 'dinero_en_mano') {
+                nombreCuenta = 'Dinero en mano';
+              } else {
+                nombreCuenta = '${data['banco']} - ${data['numeroCuenta']}';
+              }
+              items.add(DropdownMenuItem(value: doc.id, child: Text(nombreCuenta)));
               if (doc.id == _cuentaAsociada) cuentaAsociadaEnLista = true;
             }
           }
@@ -238,7 +244,11 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
               String texto = 'Cuenta eliminada';
               if (snapCuenta.hasData && snapCuenta.data != null && snapCuenta.data!.exists) {
                 final data = snapCuenta.data!.data() as Map<String, dynamic>;
-                texto = '${data['banco']} - ${data['numeroCuenta']} (eliminada)';
+                if (data['tipo'] == 'dinero_en_mano') {
+                  texto = 'Dinero en mano (eliminada)';
+                } else {
+                  texto = '${data['banco']} - ${data['numeroCuenta']} (eliminada)';
+                }
               }
               items.add(DropdownMenuItem(value: _cuentaAsociada, child: Text(texto)));
               return _buildDropdown('Cuenta Asociada', _cuentaAsociada, [], (v) => setState(() => _cuentaAsociada = v!), customItems: items);
