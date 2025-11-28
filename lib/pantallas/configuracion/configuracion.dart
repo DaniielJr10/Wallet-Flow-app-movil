@@ -55,7 +55,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
 
   // ===== ESTADOS DE CONFIGURACIÓN =====
   bool _notificacionesActivas = true;
-  bool _sincronizacionAutomatica = true;
+  // bool _sincronizacionAutomatica = true;
 
   @override
   void initState() {
@@ -328,16 +328,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       icono: Icons.data_usage,
       color: const Color(0xFF8B5CF6),
       children: [
-        _buildSwitchTile(
-          titulo: 'Sincronización Automática',
-          subtitulo: 'Mantener datos actualizados en tiempo real',
-          icono: Icons.sync,
-          valor: _sincronizacionAutomatica,
-          onChanged: (value) async {
-            setState(() => _sincronizacionAutomatica = value);
-            await _guardarConfiguracion('sincronizacion_automatica', value);
-          },
-        ),
+        // Opción de sincronización automática eliminada
         _buildOpcionTile(
           titulo: 'Exportar Datos',
           subtitulo: 'Descargar información en Excel/PDF',
