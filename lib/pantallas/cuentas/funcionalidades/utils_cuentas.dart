@@ -15,6 +15,8 @@ class UtilsCuentas {
         return const Color(0xFF8B5CF6);
       case 'inversion':
         return const Color(0xFFF59E0B);
+      case 'dinero_en_mano':
+        return const Color(0xFF10B981); // Verde para efectivo
       default:
         return const Color(0xFF6B7280);
     }
@@ -30,6 +32,8 @@ class UtilsCuentas {
         return Icons.credit_card_outlined;
       case 'inversion':
         return Icons.trending_up_outlined;
+      case 'dinero_en_mano':
+        return Icons.attach_money;
       default:
         return Icons.account_balance_wallet_outlined;
     }
@@ -41,6 +45,8 @@ class UtilsCuentas {
         return 'Cuenta de Ahorros';
       case 'corriente':
         return 'Cuenta Corriente';
+      case 'dinero_en_mano':
+        return 'Dinero en mano';
       default:
         return 'Cuenta';
     }
