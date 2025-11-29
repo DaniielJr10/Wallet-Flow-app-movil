@@ -646,7 +646,50 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
               pw.SizedBox(height: 12),
             ],
             
-            // ... (Se repite para deudas, ahorros, cuentas con la misma lógica)
+            if (deudas.isNotEmpty) ...[
+              pw.Text('Deudas', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pw.Table.fromTextArray(
+                headers: ['Acreedor', 'Monto Total', 'Monto Pagado', 'Fecha Vencimiento', 'Estado'],
+                data: deudas.map((d) => [
+                  d['acreedor'] ?? '',
+                  (d['montoTotal'] as num?)?.toStringAsFixed(2) ?? '0.00',
+                  (d['montoPagado'] as num?)?.toStringAsFixed(2) ?? '0.00',
+                  d['fechaVencimiento'].toString(),
+                  d['estado'] ?? '',
+                ]).toList(),
+              ),
+              pw.SizedBox(height: 12),
+            ],
+
+            if (ahorros.isNotEmpty) ...[
+              pw.Text('Ahorros', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pw.Table.fromTextArray(
+                headers: ['Descripción', 'Objetivo', 'Actual', 'Fecha Objetivo', 'Estado'],
+                data: ahorros.map((a) => [
+                  a['descripcion'] ?? '',
+                  (a['montoObjetivo'] as num?)?.toStringAsFixed(2) ?? '0.00',
+                  (a['montoActual'] as num?)?.toStringAsFixed(2) ?? '0.00',
+                  a['fechaObjetivo'].toString(),
+                  a['estado'] ?? '',
+                ]).toList(),
+              ),
+              pw.SizedBox(height: 12),
+            ],
+
+            if (cuentas.isNotEmpty) ...[
+              pw.Text('Cuentas', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pw.Table.fromTextArray(
+                headers: ['Banco', 'Número', 'Tipo', 'Alias', 'Saldo'],
+                data: cuentas.map((c) => [
+                  c['banco'] ?? '',
+                  c['numero'] ?? '',
+                  c['tipo'] ?? '',
+                  c['alias'] ?? '',
+                  (c['saldo'] as num?)?.toStringAsFixed(2) ?? '0.00',
+                ]).toList(),
+              ),
+              pw.SizedBox(height: 12),
+            ],
           ],
         ),
       );
@@ -719,6 +762,21 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
           d['nombreAcreedor'] ?? '',
           (d['montoTotal'] as num?)?.toStringAsFixed(2) ?? '0.00',
           d['estado'] ?? '',
+        ]);
+      }
+
+      // CUENTAS (QuerySnapshot)
+      final cuentasSnap2 = await _cuentasService.obtenerCuentas().first;
+      var cuentasSheet = excel['Cuentas'];
+      cuentasSheet.appendRow(['Banco', 'Número', 'Tipo', 'Alias', 'Saldo']);
+      for (final d in cuentasSnap2.docs) {
+        final c = d.data() as Map<String, dynamic>;
+        cuentasSheet.appendRow([
+          c['banco'] ?? c['nombreBanco'] ?? '',
+          c['numeroCuenta'] ?? '',
+          c['tipo'] ?? c['tipoCuenta'] ?? '',
+          c['alias'] ?? '',
+          (c['saldo'] as num?)?.toStringAsFixed(2) ?? '0.00',
         ]);
       }
 
