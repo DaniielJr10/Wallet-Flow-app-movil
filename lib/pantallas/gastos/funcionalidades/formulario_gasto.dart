@@ -35,6 +35,8 @@ class _FormularioGastoState extends State<FormularioGasto> {
   String _cuentaAsociada = 'ninguna';
   bool _esRecurrente = false;
   String _frecuenciaRecurrente = 'mensual';
+  bool _tieneRecordatorio = false;
+  DateTime? _fechaRecordatorio;
 
   @override
   void initState() {
@@ -49,6 +51,16 @@ class _FormularioGastoState extends State<FormularioGasto> {
       _cuentaAsociada = g['cuentaAsociada'] ?? 'ninguna';
       _esRecurrente = g['esRecurrente'] ?? false;
       _frecuenciaRecurrente = g['frecuencia'] ?? 'mensual';
+      if (g.containsKey('recordatorio') && g['recordatorio'] != null) {
+        final r = g['recordatorio'];
+        if (r is Timestamp) {
+          _tieneRecordatorio = true;
+          _fechaRecordatorio = r.toDate();
+        } else if (r is DateTime) {
+          _tieneRecordatorio = true;
+          _fechaRecordatorio = r;
+        }
+      }
     }
   }
 
@@ -133,6 +145,8 @@ class _FormularioGastoState extends State<FormularioGasto> {
                     _buildDropdown('Método de Pago', _metodoPagoSeleccionado, UtilsGastos.metodosPago, (v) => setState(() => _metodoPagoSeleccionado = v!)),
                     const SizedBox(height: 20),
                     _buildSelectorCuenta(),
+                    const SizedBox(height: 20),
+                    _buildRecordatorio(),
                     const SizedBox(height: 32),
                     Row(
                       children: [
@@ -165,6 +179,47 @@ class _FormularioGastoState extends State<FormularioGasto> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRecordatorio() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Recordatorio', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Switch(
+              value: _tieneRecordatorio,
+              onChanged: (v) => setState(() {
+                _tieneRecordatorio = v;
+                if (!v) _fechaRecordatorio = null;
+                if (v && _fechaRecordatorio == null) _fechaRecordatorio = DateTime.now().add(const Duration(days:1));
+              }),
+            ),
+          ],
+        ),
+        if (_tieneRecordatorio) ...[
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () async {
+              final pickedDate = await showDatePicker(context: context, initialDate: _fechaRecordatorio ?? DateTime.now(), firstDate: DateTime.now(), lastDate: DateTime(2100));
+              if (pickedDate == null) return;
+              final pickedTime = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_fechaRecordatorio ?? DateTime.now()));
+              if (pickedTime == null) return;
+              setState(() {
+                _fechaRecordatorio = DateTime(pickedDate.year, pickedDate.month, pickedDate.day, pickedTime.hour, pickedTime.minute);
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(12), color: Colors.grey.shade50),
+              child: Row(children: [Icon(Icons.notifications, color: UtilsGastos.colorPrincipal), const SizedBox(width:12), Text(_fechaRecordatorio != null ? '${_fechaRecordatorio!.day}/${_fechaRecordatorio!.month}/${_fechaRecordatorio!.year} ${_fechaRecordatorio!.hour.toString().padLeft(2,'0')}:${_fechaRecordatorio!.minute.toString().padLeft(2,'0')}' : 'Seleccionar fecha y hora')]),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -355,6 +410,7 @@ class _FormularioGastoState extends State<FormularioGasto> {
             esRecurrente: _esRecurrente,
             frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
             notas: '',
+            recordatorio: _tieneRecordatorio ? _fechaRecordatorio : null,
           );
         } else {
           error = await _gastosServicio.crearGasto(
@@ -367,6 +423,7 @@ class _FormularioGastoState extends State<FormularioGasto> {
             esRecurrente: _esRecurrente,
             frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
             notas: '',
+            recordatorio: _tieneRecordatorio ? _fechaRecordatorio : null,
           );
         }
 

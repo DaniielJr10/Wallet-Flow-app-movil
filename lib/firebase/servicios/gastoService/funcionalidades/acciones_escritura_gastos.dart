@@ -19,6 +19,7 @@ mixin AccionesEscrituraGastos on ReferenciasGastos, AccionesLecturaGastos {
     bool esRecurrente = false,
     String? frecuencia,
     String? notas,
+    DateTime? recordatorio,
   }) async {
     try {
       print('🔍 GastosServicio - Iniciando creación de gasto');
@@ -86,6 +87,7 @@ mixin AccionesEscrituraGastos on ReferenciasGastos, AccionesLecturaGastos {
           'descripcion': descripcion.trim(),
           'monto': monto,
           'fecha': Timestamp.fromDate(fecha),
+          'recordatorio': recordatorio != null ? Timestamp.fromDate(recordatorio) : null,
           'categoria': categoria.trim(),
           'metodoPago': metodoPago.trim(),
           'cuentaAsociada': cuentaAsociada,
@@ -158,6 +160,7 @@ mixin AccionesEscrituraGastos on ReferenciasGastos, AccionesLecturaGastos {
     bool esRecurrente = false,
     String? frecuencia,
     String? notas,
+    DateTime? recordatorio,
   }) async {
     try {
       if (userId == null) return 'Usuario no autenticado';
@@ -212,6 +215,7 @@ mixin AccionesEscrituraGastos on ReferenciasGastos, AccionesLecturaGastos {
           'descripcion': descripcion.trim(),
           'monto': monto,
           'fecha': Timestamp.fromDate(fecha),
+          'recordatorio': recordatorio != null ? Timestamp.fromDate(recordatorio) : null,
           'categoria': categoria.trim(),
           'metodoPago': metodoPago.trim(),
           'cuentaAsociada': cuentaAsociada,
