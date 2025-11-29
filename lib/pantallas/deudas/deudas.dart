@@ -180,47 +180,46 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
     final deudasFiltradas = _obtenerDeudasFiltradas();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF8FAFB),
+      appBar: const AppBarDeudas(),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SlideTransition(
           position: _slideAnimation,
           child: _estaCargando
               ? const EstadoCargandoDeudas()
-              : CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    const AppBarDeudas(),
-                    SliverPadding(
-                      padding: const EdgeInsets.all(16),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate([
-                          ResumenDeudas(
-                            totalDeudaPendiente: _totalDeudaPendiente,
-                            deudasVencidas: _deudasVencidas,
-                            pagoMinimoMensual: _pagoMinimoMensual,
-                            totalDeudas: deudasFiltradas.length,
-                            diasPromedioVencimiento: _diasPromedioVencimiento,
-                            scaleAnimation: _scaleAnimation,
-                          ),
-                          const SizedBox(height: 24),
-                          FiltrosYOrdenDeudas(
-                            filterButtonKey: _filterButtonKey,
-                            onSearchChanged: (v) => setState(() { 
-                              _textoBusqueda = v; 
-                              _calcularEstadisticas();
-                            }),
-                            onFilterPressed: _mostrarModalFiltro,
-                            onNuevaDeudaPressed: () => _mostrarFormulario(esEdicion: false),
-                          ),
-                          const SizedBox(height: 16),
-                          ListaDeudasBuilder(
-                            deudas: deudasFiltradas,
-                            filtroSeleccionado: _filtroSeleccionado,
-                            onTapDeuda: _mostrarDetalles,
-                          ),
-                          const SizedBox(height: 32),
-                        ]),
+              : Column(
+                  children: [
+                    ResumenDeudas(
+                      totalDeudaPendiente: _totalDeudaPendiente,
+                      deudasVencidas: _deudasVencidas,
+                      pagoMinimoMensual: _pagoMinimoMensual,
+                      totalDeudas: deudasFiltradas.length,
+                      diasPromedioVencimiento: _diasPromedioVencimiento,
+                      scaleAnimation: _scaleAnimation,
+                    ),
+                    const SizedBox(height: 24),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: FiltrosYOrdenDeudas(
+                        filterButtonKey: _filterButtonKey,
+                        onSearchChanged: (v) => setState(() {
+                          _textoBusqueda = v;
+                          _calcularEstadisticas();
+                        }),
+                        onFilterPressed: _mostrarModalFiltro,
+                        onNuevaDeudaPressed: () => _mostrarFormulario(esEdicion: false),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: ListaDeudasBuilder(
+                          deudas: deudasFiltradas,
+                          filtroSeleccionado: _filtroSeleccionado,
+                          onTapDeuda: _mostrarDetalles,
+                        ),
                       ),
                     ),
                   ],

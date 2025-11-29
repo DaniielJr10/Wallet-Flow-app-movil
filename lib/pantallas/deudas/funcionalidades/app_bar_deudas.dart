@@ -1,40 +1,57 @@
-// Header naranja con SliverAppBar personalizado para la sección de deudas.
+// Barra principal para la sección de deudas, estilo similar a la de ahorros.
 import 'package:flutter/material.dart';
 import 'utils_deudas.dart';
 
-class AppBarDeudas extends StatelessWidget {
+class AppBarDeudas extends StatelessWidget implements PreferredSizeWidget {
   const AppBarDeudas({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: 96,
-      floating: false,
-      pinned: true,
-      backgroundColor: UtilsDeudas.colorPrincipal,
+    return AppBar(
       elevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        title: const Text(
-          'Gestión de Deudas',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                UtilsDeudas.colorPrincipal,
-                UtilsDeudas.colorSecundario,
+      backgroundColor: Colors.transparent,
+      toolbarHeight: 120,
+      title: Padding(
+        padding: const EdgeInsets.only(top: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: UtilsDeudas.colorPrincipal,
+                  size: 28,
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'DEUDAS',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: UtilsDeudas.colorPrincipal,
+                  ),
+                ),
               ],
             ),
-          ),
+            const SizedBox(height: 2),
+            const Text(
+              'Gestiona tus deudas y pagos pendientes',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       ),
+      centerTitle: true,
     );
   }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(120);
 }

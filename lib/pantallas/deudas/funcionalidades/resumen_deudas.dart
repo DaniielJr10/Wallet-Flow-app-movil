@@ -26,7 +26,8 @@ class ResumenDeudas extends StatelessWidget {
     return ScaleTransition(
       scale: scaleAnimation,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
@@ -41,84 +42,86 @@ class ResumenDeudas extends StatelessWidget {
             BoxShadow(
               color: UtilsDeudas.colorPrincipal.withOpacity(0.3),
               blurRadius: 20,
-              offset: const Offset(0, 8),
+              offset: const Offset(0, 10),
             ),
           ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Total deuda pendiente
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(
-                  Icons.account_balance_wallet,
-                  color: Colors.white,
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  children: [
-                    const Text(
-                      'Total Deuda Pendiente',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      '\$${FormatoNumeros.formatearParaMostrar(totalDeudaPendiente)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            
-            // Estadísticas en grid
-            Row(
-              children: [
-                Expanded(
-                  child: _buildEstadisticaResumen(
-                    'Deudas Vencidas',
-                    '$deudasVencidas',
-                    Icons.warning,
+                const Text(
+                  'Total Deuda Pendiente',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildEstadisticaResumen(
-                    'Pago Mínimo',
-                    '\$${FormatoNumeros.formatearParaMostrar(pagoMinimoMensual)}',
-                    Icons.payment,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '$totalDeudas deuda${totalDeudas != 1 ? 's' : ''}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
             ),
-            
-            const SizedBox(height: 12),
-            
+            const SizedBox(height: 8),
+            Text(
+              FormatoNumeros.formatearParaMostrar(totalDeudaPendiente),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: _buildEstadisticaResumen(
-                    'Total Deudas',
-                    '$totalDeudas',
-                    Icons.list_alt,
+                  child: _buildSmallCard(
+                    icon: Icons.warning,
+                    label: 'Deudas Vencidas',
+                    value: '$deudasVencidas',
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildEstadisticaResumen(
-                    'Promedio Vencimiento',
-                    '$diasPromedioVencimiento días',
-                    Icons.schedule,
+                  child: _buildSmallCard(
+                    icon: Icons.payment,
+                    label: 'Pago Mínimo',
+                    value: '\$${FormatoNumeros.formatearParaMostrar(pagoMinimoMensual)}',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSmallCard(
+                    icon: Icons.list_alt,
+                    label: 'Total Deudas',
+                    value: '$totalDeudas',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildSmallCard(
+                    icon: Icons.schedule,
+                    label: 'Promedio Vencimiento',
+                    value: '$diasPromedioVencimiento días',
                   ),
                 ),
               ],
@@ -129,38 +132,38 @@ class ResumenDeudas extends StatelessWidget {
     );
   }
 
-  Widget _buildEstadisticaResumen(String titulo, String valor, IconData icono) {
+  Widget _buildSmallCard({required IconData icon, required String label, required String value}) {
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icono,
-            color: Colors.white,
-            size: 18,
+          Row(
+            children: [
+              Icon(icon, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 8),
           Text(
-            valor,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          Text(
-            titulo,
+            label,
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
