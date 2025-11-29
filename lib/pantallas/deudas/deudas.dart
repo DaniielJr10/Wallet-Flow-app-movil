@@ -38,9 +38,8 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
   String _ordenSeleccionado = 'Vencimiento';
 
   double _totalDeudaPendiente = 0.0;
-  int _diasPromedioVencimiento = 0;
-  int _deudasVencidas = 0;
-  double _pagoMinimoMensual = 0.0;
+  int _deudasPorPagar = 0;
+  int _deudasPagadas = 0;
 
   @override
   void initState() {
@@ -103,27 +102,21 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
 
   void _calcularEstadisticas() {
     _totalDeudaPendiente = 0.0;
-    _pagoMinimoMensual = 0.0;
-    _deudasVencidas = 0;
-    int diasTotales = 0;
-    int deudasConVencimiento = 0;
+    _deudasPorPagar = 0;
+    _deudasPagadas = 0;
+    // ya no se calculan el promedio de días a vencimiento ni el pago mínimo global
 
     final filtradas = _obtenerDeudasFiltradas();
 
     for (var deuda in filtradas) {
       _totalDeudaPendiente += deuda['montoPendiente'];
-      _pagoMinimoMensual += deuda['pagoMinimo'];
-      if (deuda['estado'] == 'Vencida') _deudasVencidas++;
       
-      if (deuda['fechaVencimiento'] != null && deuda['estado'] != 'Vencida') {
-        final dias = deuda['fechaVencimiento'].difference(DateTime.now()).inDays as int;
-        if (dias >= 0) {
-          diasTotales += dias;
-          deudasConVencimiento++;
-        }
-      }
+      if (deuda['estado'] == 'Pendiente') _deudasPorPagar++;
+      if (deuda['estado'] == 'Pagada') _deudasPagadas++;
+      
+      
     }
-    _diasPromedioVencimiento = deudasConVencimiento > 0 ? (diasTotales / deudasConVencimiento).round() : 0;
+    // El promedio de vencimiento ya no se muestra en el resumen principal.
   }
 
   List<Map<String, dynamic>> _obtenerDeudasFiltradas() {
@@ -141,7 +134,6 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
 
     switch (_filtroSeleccionado) {
       case 'Pendientes': lista = lista.where((d) => d['estado'] == 'Pendiente').toList(); break;
-      case 'Vencidas': lista = lista.where((d) => d['estado'] == 'Vencida').toList(); break;
       case 'Pagadas': lista = lista.where((d) => d['estado'] == 'Pagada').toList(); break;
       case 'Próximas a Vencer':
         lista = lista.where((d) {
@@ -192,10 +184,9 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
                   children: [
                     ResumenDeudas(
                       totalDeudaPendiente: _totalDeudaPendiente,
-                      deudasVencidas: _deudasVencidas,
-                      pagoMinimoMensual: _pagoMinimoMensual,
+                      deudasPorPagar: _deudasPorPagar,
+                      deudasPagadas: _deudasPagadas,
                       totalDeudas: deudasFiltradas.length,
-                      diasPromedioVencimiento: _diasPromedioVencimiento,
                       scaleAnimation: _scaleAnimation,
                     ),
                     const SizedBox(height: 24),
@@ -239,9 +230,9 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
     showMenu<String>(
       context: context,
       position: RelativeRect.fromLTRB(offset.dx, offset.dy + size.height, offset.dx + size.width, offset.dy),
-      items: [
+        items: [
         const PopupMenuItem(enabled: false, child: Text('Filtrar por:', style: TextStyle(fontWeight: FontWeight.bold, color: UtilsDeudas.colorPrincipal))),
-        ...['Todas', 'Pendientes', 'Vencidas', 'Próximas a Vencer', 'Pagadas'].map((f) => 
+        ...['Todas', 'Pendientes', 'Próximas a Vencer', 'Pagadas'].map((f) => 
           PopupMenuItem(value: f, child: Row(children: [
             Expanded(child: Text(f)),
             if (_filtroSeleccionado == f) const Icon(Icons.check, color: UtilsDeudas.colorPrincipal, size: 18),

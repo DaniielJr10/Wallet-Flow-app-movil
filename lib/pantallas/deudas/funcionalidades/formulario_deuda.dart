@@ -25,7 +25,6 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
   
   late TextEditingController _tituloCtrl;
   late TextEditingController _montoCtrl;
-  late TextEditingController _pagoMinCtrl;
   late TextEditingController _acreedorCtrl;
   late String _tipoSeleccionado;
   late DateTime _fechaVenc;
@@ -37,7 +36,6 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
     
     _tituloCtrl = TextEditingController(text: deuda['titulo'] ?? '');
     _montoCtrl = TextEditingController(text: (deuda['montoOriginal'] ?? deuda['montoPendiente'] ?? '').toString());
-    _pagoMinCtrl = TextEditingController(text: (deuda['pagoMinimo'] ?? '').toString());
     _acreedorCtrl = TextEditingController(text: deuda['acreedor'] ?? '');
     _tipoSeleccionado = deuda['tipo'] ?? 'Préstamo Personal';
     _fechaVenc = deuda['fechaVencimiento'] ?? DateTime.now().add(const Duration(days: 30));
@@ -47,7 +45,6 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
   void dispose() {
     _tituloCtrl.dispose();
     _montoCtrl.dispose();
-    _pagoMinCtrl.dispose();
     _acreedorCtrl.dispose();
     super.dispose();
   }
@@ -157,19 +154,6 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Pago mínimo
-                    const Text('Pago mínimo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _pagoMinCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: _fieldDecoration(label: 'Pago mínimo', prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.payments_rounded, color: primary))),
-                      validator: (v) {
-                        final n = double.tryParse(v ?? '');
-                        return (n == null || n < 0) ? 'Ingresa un pago mínimo válido' : null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
 
                     // Acreedor
                     const Text('Acreedor / Banco', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
@@ -253,14 +237,13 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
   Future<void> _guardar() async {
     if (_formKey.currentState?.validate() ?? false) {
       final monto = double.tryParse(_montoCtrl.text) ?? 0.0;
-      final pagoMin = double.tryParse(_pagoMinCtrl.text) ?? 0.0;
+      // Pago mínimo ya no se solicita en el formulario
       
       if (widget.esEdicion) {
         final datosActualizados = {
           'titulo': _tituloCtrl.text.trim(),
           'montoOriginal': monto,
           'montoPendiente': monto, // Nota: Esto resetea el pendiente al original si se edita, ajustar según lógica deseada
-          'pagoMinimo': pagoMin,
           'acreedor': _acreedorCtrl.text.trim(),
           'tipo': _tipoSeleccionado,
           'fechaVencimiento': _fechaVenc,
@@ -274,7 +257,6 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
           'montoPendiente': monto,
           'tasaInteres': 0.0,
           'fechaVencimiento': _fechaVenc,
-          'pagoMinimo': pagoMin,
           'estado': 'Pendiente',
           'fechaCreacion': DateTime.now(),
           'acreedor': _acreedorCtrl.text.trim(),

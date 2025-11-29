@@ -5,19 +5,17 @@ import 'utils_deudas.dart';
 
 class ResumenDeudas extends StatelessWidget {
   final double totalDeudaPendiente;
-  final int deudasVencidas;
-  final double pagoMinimoMensual;
+  final int deudasPorPagar;
+  final int deudasPagadas;
   final int totalDeudas;
-  final int diasPromedioVencimiento;
   final Animation<double> scaleAnimation;
 
   const ResumenDeudas({
     super.key,
     required this.totalDeudaPendiente,
-    required this.deudasVencidas,
-    required this.pagoMinimoMensual,
+    required this.deudasPorPagar,
+    required this.deudasPagadas,
     required this.totalDeudas,
-    required this.diasPromedioVencimiento,
     required this.scaleAnimation,
   });
 
@@ -91,17 +89,17 @@ class ResumenDeudas extends StatelessWidget {
               children: [
                 Expanded(
                   child: _buildSmallCard(
-                    icon: Icons.warning,
-                    label: 'Deudas Vencidas',
-                    value: '$deudasVencidas',
+                    icon: Icons.payments,
+                    label: 'Deudas por pagar',
+                    value: '$deudasPorPagar',
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildSmallCard(
-                    icon: Icons.payment,
-                    label: 'Pago Mínimo',
-                    value: '\$${FormatoNumeros.formatearParaMostrar(pagoMinimoMensual)}',
+                    icon: Icons.check_circle_outline,
+                    label: 'Deudas pagadas',
+                    value: '$deudasPagadas',
                   ),
                 ),
               ],
@@ -117,13 +115,7 @@ class ResumenDeudas extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _buildSmallCard(
-                    icon: Icons.schedule,
-                    label: 'Promedio Vencimiento',
-                    value: '$diasPromedioVencimiento días',
-                  ),
-                ),
+                Expanded(child: SizedBox.shrink()),
               ],
             ),
           ],
