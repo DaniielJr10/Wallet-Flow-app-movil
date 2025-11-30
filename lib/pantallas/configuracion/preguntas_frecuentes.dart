@@ -11,7 +11,6 @@ class _PreguntasFrecuentesScreenState extends State<PreguntasFrecuentesScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
 
   final List<Map<String, String>> _faqs = [
-    // Removed two questions per user request
     {
       'q': '¿Puedo pagar deudas desde la app?',
       'a': 'Sí: al ver una deuda, pulsa "Pagar", selecciona la cuenta desde la que pagar y confirma. El saldo de la cuenta se actualizará automáticamente.'
