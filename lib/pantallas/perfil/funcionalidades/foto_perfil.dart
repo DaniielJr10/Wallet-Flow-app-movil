@@ -24,8 +24,10 @@ class FotoPerfil extends StatelessWidget {
     return ScaleTransition(
       scale: scaleAnimation,
       child: Center(
-        child: Stack(
-          children: [
+        child: GestureDetector(
+          onTap: onCambiarFoto,
+          child: Stack(
+            children: [
             // Foto de perfil
             Container(
               width: 120,
@@ -81,6 +83,7 @@ class FotoPerfil extends StatelessWidget {
                 ),
               ),
           ],
+        ),
         ),
       ),
     );
