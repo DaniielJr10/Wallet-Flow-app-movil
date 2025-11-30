@@ -322,11 +322,17 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
-          title: const Text('Registrar pago'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          titlePadding: const EdgeInsets.only(top: 18, bottom: 8),
+          title: Center(
+            child: Text('Registrar pago', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Saldo pendiente: ${FormatoNumeros.formatearParaMostrar(deuda['montoPendiente'] ?? 0)}'),
+              Center(child: Text('Saldo pendiente: ${FormatoNumeros.formatearParaMostrar(deuda['montoPendiente'] ?? 0)}', style: const TextStyle(fontWeight: FontWeight.w600))),
               const SizedBox(height: 12),
               // Selector de cuentas
               StreamBuilder<QuerySnapshot>(
@@ -346,11 +352,32 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
                     }
                   }
 
-                  return DropdownButtonFormField<String>(
-                    value: items.any((i) => i.value == _cuentaSeleccionada) ? _cuentaSeleccionada : 'ninguna',
-                    items: items,
-                    onChanged: (v) => setStateDialog(() => _cuentaSeleccionada = v ?? 'ninguna'),
-                    decoration: const InputDecoration(labelText: 'Cuenta desde la que pagar'),
+                  // mostrar saldo disponible de la cuenta seleccionada
+                  String? saldoCuentaTexto;
+                  if (snapshot.hasData && _cuentaSeleccionada != 'ninguna') {
+                    try {
+                      final doc = snapshot.data!.docs.firstWhere((d) => d.id == _cuentaSeleccionada);
+                      final data = doc.data() as Map<String, dynamic>;
+                      saldoCuentaTexto = FormatoNumeros.formatearParaMostrar((data['saldo'] ?? 0).toDouble());
+                    } catch (_) {
+                      saldoCuentaTexto = null;
+                    }
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        value: items.any((i) => i.value == _cuentaSeleccionada) ? _cuentaSeleccionada : 'ninguna',
+                        items: items,
+                        onChanged: (v) => setStateDialog(() => _cuentaSeleccionada = v ?? 'ninguna'),
+                        decoration: const InputDecoration(labelText: 'Cuenta desde la que pagar'),
+                      ),
+                      if (saldoCuentaTexto != null) ...[
+                        const SizedBox(height: 6),
+                        Text('Saldo disponible: $saldoCuentaTexto', style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+                      ],
+                    ],
                   );
                 },
               ),
@@ -358,13 +385,27 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
               TextField(
                 controller: _montoCtrl,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Monto a pagar', prefixText: '\$'),
+                decoration: InputDecoration(
+                  labelText: 'Monto a pagar',
+                  prefixText: '\$',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
               ),
             ],
           ),
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancelar', style: TextStyle(color: Colors.purple[700])),
+            ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: UtilsDeudas.colorPrincipal,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                elevation: 4,
+              ),
               onPressed: () async {
                 final raw = _montoCtrl.text.replaceAll(',', '.').replaceAll('\$', '').trim();
                 final pago = double.tryParse(raw) ?? 0.0;

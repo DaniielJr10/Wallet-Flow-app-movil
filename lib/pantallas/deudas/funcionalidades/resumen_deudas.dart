@@ -24,8 +24,8 @@ class ResumenDeudas extends StatelessWidget {
     return ScaleTransition(
       scale: scaleAnimation,
       child: Container(
-        margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
-        padding: const EdgeInsets.all(24),
+        margin: const EdgeInsets.only(top: 12, left: 14, right: 14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
@@ -38,9 +38,9 @@ class ResumenDeudas extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: UtilsDeudas.colorPrincipal.withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+              color: UtilsDeudas.colorPrincipal.withOpacity(0.22),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -54,12 +54,12 @@ class ResumenDeudas extends StatelessWidget {
                   'Total Deuda Pendiente',
                   style: TextStyle(
                     color: Colors.white70,
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -68,23 +68,23 @@ class ResumenDeudas extends StatelessWidget {
                     '$totalDeudas deuda${totalDeudas != 1 ? 's' : ''}',
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               FormatoNumeros.formatearParaMostrar(totalDeudaPendiente),
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 32,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -94,7 +94,7 @@ class ResumenDeudas extends StatelessWidget {
                     value: '$deudasPorPagar',
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _buildSmallCard(
                     icon: Icons.check_circle_outline,
@@ -104,7 +104,7 @@ class ResumenDeudas extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
@@ -114,7 +114,7 @@ class ResumenDeudas extends StatelessWidget {
                     value: '$totalDeudas',
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(child: SizedBox.shrink()),
               ],
             ),
@@ -126,7 +126,7 @@ class ResumenDeudas extends StatelessWidget {
 
   Widget _buildSmallCard({required IconData icon, required String label, required String value}) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
@@ -136,24 +136,24 @@ class ResumenDeudas extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: Colors.white, size: 18),
-              const SizedBox(width: 8),
+              Icon(icon, color: Colors.white, size: 16),
+              const SizedBox(width: 6),
               Text(
                 value,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             label,
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
           ),
