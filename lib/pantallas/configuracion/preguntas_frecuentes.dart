@@ -65,6 +65,7 @@ class _PreguntasFrecuentesScreenState extends State<PreguntasFrecuentesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Preguntas Frecuentes'),
         elevation: 0,
@@ -73,7 +74,7 @@ class _PreguntasFrecuentesScreenState extends State<PreguntasFrecuentesScreen> {
       body: Column(
         children: [
           Container(
-            color: const Color(0xFFF8FAFC),
+            color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Column(
               children: [
