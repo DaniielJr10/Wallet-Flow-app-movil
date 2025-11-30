@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../firebase/servicios/DeudaService/deudas_servicio.dart';
+import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
+import '../../utilidades/formato_numeros.dart';
 
 // Importación de funcionalidades modularizadas
 import 'funcionalidades/app_bar_deudas.dart';
@@ -28,6 +30,7 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
   late Animation<double> _scaleAnimation;
 
   final DeudasServicio _deudasServicio = DeudasServicio();
+  final CuentasServicio _cuentasServicio = CuentasServicio();
   final GlobalKey _filterButtonKey = GlobalKey();
 
   List<Map<String, dynamic>> _deudas = [];
@@ -210,6 +213,7 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
                           deudas: deudasFiltradas,
                           filtroSeleccionado: _filtroSeleccionado,
                           onTapDeuda: _mostrarDetalles,
+                          onPagar: _mostrarDialogoPago,
                         ),
                       ),
                     ),
@@ -305,6 +309,132 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
           _cargarDeudas();
           _mostrarMensaje('Deuda eliminada', esError: false);
         },
+      ),
+    );
+  }
+
+  void _mostrarDialogoPago(Map<String, dynamic> deuda) {
+    final TextEditingController _montoCtrl = TextEditingController();
+
+    String _cuentaSeleccionada = 'ninguna';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog) => AlertDialog(
+          title: const Text('Registrar pago'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Saldo pendiente: ${FormatoNumeros.formatearParaMostrar(deuda['montoPendiente'] ?? 0)}'),
+              const SizedBox(height: 12),
+              // Selector de cuentas
+              StreamBuilder<QuerySnapshot>(
+                stream: _cuentasServicio.obtenerCuentas(),
+                builder: (context, snapshot) {
+                  final items = <DropdownMenuItem<String>>[];
+                  items.add(const DropdownMenuItem(value: 'ninguna', child: Text('Selecciona una cuenta')));
+                  if (snapshot.hasData) {
+                    for (var doc in snapshot.data!.docs) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      if (data['activa'] == true) {
+                        final label = data['tipo'] == 'dinero_en_mano'
+                            ? (data['alias'] ?? 'Dinero en mano')
+                            : '${data['banco'] ?? ''} - ${data['numeroCuenta'] ?? ''}';
+                        items.add(DropdownMenuItem(value: doc.id, child: Text(label)));
+                      }
+                    }
+                  }
+
+                  return DropdownButtonFormField<String>(
+                    value: items.any((i) => i.value == _cuentaSeleccionada) ? _cuentaSeleccionada : 'ninguna',
+                    items: items,
+                    onChanged: (v) => setStateDialog(() => _cuentaSeleccionada = v ?? 'ninguna'),
+                    decoration: const InputDecoration(labelText: 'Cuenta desde la que pagar'),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _montoCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'Monto a pagar', prefixText: '\$'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+            ElevatedButton(
+              onPressed: () async {
+                final raw = _montoCtrl.text.replaceAll(',', '.').replaceAll('\$', '').trim();
+                final pago = double.tryParse(raw) ?? 0.0;
+                if (pago <= 0) {
+                  _mostrarMensaje('Ingresa un monto válido', esError: true);
+                  return;
+                }
+                if (_cuentaSeleccionada == 'ninguna') {
+                  _mostrarMensaje('Selecciona una cuenta para pagar', esError: true);
+                  return;
+                }
+
+                Navigator.of(context).pop();
+                setState(() { _estaCargando = true; });
+                try {
+                  // Verificar cuenta y saldo
+                  final cuentaDoc = await _cuentasServicio.obtenerCuentaPorId(_cuentaSeleccionada);
+                  if (cuentaDoc == null) {
+                    _mostrarMensaje('Cuenta no encontrada', esError: true);
+                    return;
+                  }
+                  final cuentaData = cuentaDoc.data() as Map<String, dynamic>;
+                  final saldoActual = (cuentaData['saldo'] ?? 0).toDouble();
+
+                  // No permitir pagar más que la deuda: ajustar pago al pendiente
+                  final montoPend = (deuda['montoPendiente'] ?? 0).toDouble();
+                  final pagoFinal = pago > montoPend ? montoPend : pago;
+
+                  if (pagoFinal > saldoActual) {
+                    _mostrarMensaje('Saldo insuficiente en la cuenta seleccionada', esError: true);
+                    return;
+                  }
+
+                  // Actualizar saldo de la cuenta con el pagoFinal
+                  final nuevoSaldoCuenta = saldoActual - pagoFinal;
+                  final cuentaError = await _cuentasServicio.actualizarSaldo(cuentaId: _cuentaSeleccionada, nuevoSaldo: nuevoSaldoCuenta);
+                  if (cuentaError != null) {
+                    _mostrarMensaje('Error al actualizar cuenta: $cuentaError', esError: true);
+                    return;
+                  }
+
+                  // Actualizar deuda
+                  double nuevoPend = montoPend - pagoFinal;
+                  String nuevoEstado = deuda['estado'] ?? 'Pendiente';
+                  if (nuevoPend <= 0) {
+                    nuevoPend = 0.0;
+                    nuevoEstado = 'Pagada';
+                  }
+
+                  final historial = List<Map<String, dynamic>>.from(deuda['historialPagos'] ?? []);
+                  historial.add({'monto': pago, 'fecha': DateTime.now(), 'cuenta': _cuentaSeleccionada});
+
+                  await _deudasServicio.editarDeuda(deuda['id'], {
+                    'montoPendiente': nuevoPend,
+                    'estado': nuevoEstado,
+                    'historialPagos': historial,
+                  });
+
+                  _cargarDeudas();
+                  _mostrarMensaje('Pago registrado', esError: false);
+                } catch (e) {
+                  _mostrarMensaje('Error al registrar pago', esError: true);
+                } finally {
+                  setState(() { _estaCargando = false; });
+                }
+              },
+              child: const Text('Confirmar'),
+            ),
+          ],
+        ),
       ),
     );
   }

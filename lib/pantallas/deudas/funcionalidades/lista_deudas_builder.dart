@@ -6,12 +6,14 @@ import 'estados_deudas.dart';
 class ListaDeudasBuilder extends StatelessWidget {
   final List<Map<String, dynamic>> deudas;
   final Function(Map<String, dynamic>) onTapDeuda;
+  final void Function(Map<String, dynamic>)? onPagar;
   final String filtroSeleccionado;
 
   const ListaDeudasBuilder({
     super.key,
     required this.deudas,
     required this.onTapDeuda,
+    this.onPagar,
     required this.filtroSeleccionado,
   });
 
@@ -31,6 +33,9 @@ class ListaDeudasBuilder extends StatelessWidget {
           deuda: deuda,
           index: index,
           onTap: () => onTapDeuda(deuda),
+          onPagar: (d) {
+            if (onPagar != null) onPagar!(d);
+          },
         );
       },
     );
