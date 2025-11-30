@@ -151,8 +151,6 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
                   delegate: SliverChildListDelegate([
                     _buildPerfilCard(),
                     const SizedBox(height: 24),
-                    _buildSeccionSeguridad(),
-                    const SizedBox(height: 24),
                     _buildSeccionNotificaciones(),
                     const SizedBox(height: 24),
                     _buildSeccionDatos(),
@@ -285,21 +283,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
     );
   }
 
-  Widget _buildSeccionSeguridad() {
-    return _buildSeccion(
-      titulo: 'Seguridad',
-      icono: Icons.security,
-      color: const Color(0xFFEF4444),
-      children: [
-        _buildOpcionTile(
-          titulo: 'Cambiar Contraseña',
-          subtitulo: 'Actualizar contraseña de tu cuenta',
-          icono: Icons.lock,
-          onTap: () => _cambiarContrasena(),
-        ),
-      ],
-    );
-  }
+  // Seguridad section removed; related options moved to 'Datos y Privacidad'.
 
   Widget _buildSeccionNotificaciones() {
     return _buildSeccion(
@@ -328,6 +312,13 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       icono: Icons.data_usage,
       color: const Color(0xFF8B5CF6),
       children: [
+        _buildOpcionTile(
+          titulo: 'Cambiar Contraseña',
+          subtitulo: 'Actualizar contraseña de tu cuenta',
+          icono: Icons.lock,
+          onTap: () => _cambiarContrasena(),
+        ),
+        const SizedBox(height: 8),
         // Opción de sincronización automática eliminada
         _buildOpcionTile(
           titulo: 'Exportar Datos',
