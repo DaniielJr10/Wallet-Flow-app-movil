@@ -21,7 +21,7 @@ import '../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import '../../firebase/servicios/UsuarioService/usuarios_servicio.dart';
 
 import '../../login/iniciosesion/iniciosesion.dart';
-import '../perfil/perfil.dart';
+// import '../perfil/perfil.dart'; // removed: profile not shown in settings
 import 'preguntas_frecuentes.dart';
 import 'contactar_soporte.dart';
 import 'cambiar_contrasena.dart';
@@ -149,8 +149,6 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
                 padding: const EdgeInsets.all(16),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    _buildPerfilCard(),
-                    const SizedBox(height: 24),
                     _buildSeccionNotificaciones(),
                     const SizedBox(height: 24),
                     _buildSeccionDatos(),
@@ -211,77 +209,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
     );
   }
 
-  Widget _buildPerfilCard() {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.displayName ?? 'Usuario';
-    final email = user?.email ?? 'correo@ejemplo.com';
-    final primerNombre = displayName.split(' ')[0];
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF10B981),
-            Color(0xFF059669),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF10B981).withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: const Icon(Icons.person, color: Colors.white, size: 32),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Hola, $primerNombre',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  email,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: () => _navegarAPerfil(),
-            icon: const Icon(Icons.edit, color: Colors.white),
-            tooltip: 'Editar perfil',
-          ),
-        ],
-      ),
-    );
-  }
+  // Perfil card removed from UI. Kept code removed to avoid unused-widget warnings.
 
   // Seguridad section removed; related options moved to 'Datos y Privacidad'.
 
@@ -483,19 +411,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
     );
   }
 
-  Future<void> _navegarAPerfil() async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (context) => const PantallaPerfil(iniciarEnEdicion: true)),
-    );
-    if (result == true && mounted) {
-      try {
-        await FirebaseAuth.instance.currentUser?.reload();
-      } catch (e) {
-        debugPrint('Error al recargar usuario: $e');
-      }
-      setState(() {});
-    }
-  }
+  // Perfil navigation removed because profile card is not shown in configuration screen.
 
   void _cambiarContrasena() {
     Navigator.of(context).push(
