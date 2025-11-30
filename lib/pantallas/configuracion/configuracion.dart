@@ -835,12 +835,19 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Logo
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.transparent,
+                    backgroundImage: const AssetImage('images/logo.png'),
+                  ),
+                  const SizedBox(height: 12),
                   const Text('Wallet Flow', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   const Text('Versión 1.0.0', style: TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 14),
                   const _SmallInfo(title: 'Desarrollador', subtitle: 'Wallet Flow Team'),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 14),
                   TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar')),
                 ],
               ),
