@@ -231,38 +231,137 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
     final offset = renderBox.localToGlobal(Offset.zero);
     final size = renderBox.size;
 
-    showMenu<String>(
+    showDialog(
       context: context,
-      position: RelativeRect.fromLTRB(offset.dx, offset.dy + size.height, offset.dx + size.width, offset.dy),
-        items: [
-        const PopupMenuItem(enabled: false, child: Text('Filtrar por:', style: TextStyle(fontWeight: FontWeight.bold, color: UtilsDeudas.colorPrincipal))),
-        ...['Todas', 'Pendientes', 'Próximas a Vencer', 'Pagadas'].map((f) => 
-          PopupMenuItem(value: f, child: Row(children: [
-            Expanded(child: Text(f)),
-            if (_filtroSeleccionado == f) const Icon(Icons.check, color: UtilsDeudas.colorPrincipal, size: 18),
-          ]))
+      barrierColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Stack(
+          children: [
+            // Tap fuera del modal para cerrar
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+            // Modal posicionado cerca del botón
+            Positioned(
+              top: offset.dy + size.height - 50,
+              right: MediaQuery.of(context).size.width - offset.dx - size.width,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  width: 220,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: UtilsDeudas.colorPrincipal.withOpacity(0.3), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Título
+                        const Row(
+                          children: [
+                            Icon(Icons.filter_list, color: UtilsDeudas.colorPrincipal, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Modo de búsqueda',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: UtilsDeudas.colorPrincipal,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        // Opción: Por categoría
+                        _buildOpcionFiltro(
+                          icon: Icons.category_outlined,
+                          texto: 'Por categoría',
+                          seleccionado: _modoBusqueda == 'categoría',
+                          onTap: () {
+                            setState(() => _modoBusqueda = 'categoría');
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        // Opción: Por mes
+                        _buildOpcionFiltro(
+                          icon: Icons.calendar_today_outlined,
+                          texto: 'Por mes',
+                          seleccionado: _modoBusqueda == 'mes',
+                          onTap: () {
+                            setState(() => _modoBusqueda = 'mes');
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildOpcionFiltro({
+    required IconData icon,
+    required String texto,
+    required bool seleccionado,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        decoration: BoxDecoration(
+          color: seleccionado ? UtilsDeudas.colorPrincipal.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
         ),
-        const PopupMenuDivider(),
-        const PopupMenuItem(enabled: false, child: Text('Ordenar por:', style: TextStyle(fontWeight: FontWeight.bold, color: UtilsDeudas.colorPrincipal))),
-        ...['Vencimiento', 'Monto Mayor', 'Monto Menor', 'Alfabético', 'Fecha Creación'].map((o) => 
-          PopupMenuItem(value: 'ORDEN_$o', child: Row(children: [
-            Expanded(child: Text(o)),
-            if (_ordenSeleccionado == o) const Icon(Icons.check, color: UtilsDeudas.colorPrincipal, size: 18),
-          ]))
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: seleccionado ? UtilsDeudas.colorPrincipal : Colors.grey[700],
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                texto,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: seleccionado ? FontWeight.w600 : FontWeight.normal,
+                  color: seleccionado ? UtilsDeudas.colorPrincipal : Colors.grey[800],
+                ),
+              ),
+            ),
+            if (seleccionado)
+              const Icon(
+                Icons.check_circle,
+                color: UtilsDeudas.colorPrincipal,
+                size: 20,
+              ),
+          ],
         ),
-      ],
-    ).then((value) {
-      if (value != null) {
-        setState(() {
-          if (value.startsWith('ORDEN_')) {
-            _ordenSeleccionado = value.substring(6);
-          } else {
-            _filtroSeleccionado = value;
-          }
-          _calcularEstadisticas();
-        });
-      }
-    });
+      ),
+    );
   }
 
   void _mostrarFormulario({required bool esEdicion, Map<String, dynamic>? deuda}) {
