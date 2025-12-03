@@ -25,32 +25,49 @@ class FiltrosIngresos extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: modoBusqueda == 'categoría' 
-                  ? 'Buscar por categoría...' 
-                  : 'Buscar por mes (ej: noviembre)...',
-              prefixIcon: const Icon(Icons.search_rounded),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: UtilsIngresos.colorPrincipal, width: 1.2),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: UtilsIngresos.colorSecundario, width: 2),
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-              suffixIcon: controller.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.close_rounded, color: Colors.grey),
-                      onPressed: onClear,
-                    )
-                  : null,
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x11000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
-            onChanged: onChanged,
+            child: TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                hintText: modoBusqueda == 'categoría' 
+                    ? 'Buscar por categoría...' 
+                    : 'Buscar por mes (ej: noviembre)...',
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6B7280)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: const BorderSide(color: UtilsIngresos.colorPrincipal, width: 2),
+                ),
+                filled: true,
+                fillColor: const Color(0xFFF3F4F6),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                suffixIcon: controller.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.close_rounded, color: Color(0xFF9CA3AF)),
+                        onPressed: onClear,
+                      )
+                    : null,
+              ),
+              onChanged: onChanged,
+            ),
           ),
         ),
         const SizedBox(width: 8),
