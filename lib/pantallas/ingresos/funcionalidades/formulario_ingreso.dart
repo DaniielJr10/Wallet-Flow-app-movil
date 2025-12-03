@@ -48,6 +48,38 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
       _metodoPagoSeleccionado = ing['metodoPago'];
       _cuentaAsociada = ing['cuentaAsociada'] ?? 'ninguna';
     }
+    // Validar que la cuenta asociada existe después de inicializar
+    _validarCuentaAsociada();
+  }
+
+  // Método para validar que la cuenta asociada aún existe
+  void _validarCuentaAsociada() async {
+    if (_cuentaAsociada != 'ninguna') {
+      try {
+        final cuentaDoc = await _cuentasServicio.obtenerCuentaPorId(_cuentaAsociada);
+        if (cuentaDoc == null || !cuentaDoc.exists) {
+          // Si la cuenta no existe, cambiar a 'ninguna'
+          if (mounted) {
+            setState(() {
+              _cuentaAsociada = 'ninguna';
+            });
+          }
+        } else {
+          final data = cuentaDoc.data() as Map<String, dynamic>?;
+          if (data != null && data['activa'] == false) {
+            // Si la cuenta está inactiva, mantener el ID para mostrar como eliminada
+            // El dropdown manejará esto adecuadamente
+          }
+        }
+      } catch (e) {
+        // En caso de error, cambiar a 'ninguna'
+        if (mounted) {
+          setState(() {
+            _cuentaAsociada = 'ninguna';
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -223,6 +255,7 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
         List<DropdownMenuItem<String>> dineroEnManoItems = [];
         List<DropdownMenuItem<String>> bancariasItems = [];
         bool cuentaAsociadaEnLista = false;
+        
         if (snapshot.hasData) {
           for (var doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
@@ -236,29 +269,60 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
             }
           }
         }
+        
         items.addAll(dineroEnManoItems);
         items.addAll(bancariasItems);
-        // Si la cuenta asociada no está en la lista, agregarla como opción especial
+        
+        // Si la cuenta asociada no está en la lista de cuentas activas, verificar si fue eliminada
         if (_cuentaAsociada != 'ninguna' && !cuentaAsociadaEnLista) {
           return FutureBuilder(
             future: _cuentasServicio.obtenerCuentaPorId(_cuentaAsociada),
             builder: (context, snapCuenta) {
-              String texto = 'Cuenta eliminada';
+              if (snapCuenta.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              
               if (snapCuenta.hasData && snapCuenta.data != null && snapCuenta.data!.exists) {
+                // La cuenta existe pero está inactiva o eliminada
                 final data = snapCuenta.data!.data() as Map<String, dynamic>;
+                String texto;
                 if (data['tipo'] == 'dinero_en_mano') {
                   texto = 'Dinero en mano (eliminada)';
                 } else {
                   texto = '${data['banco']} - ${data['numeroCuenta']} (eliminada)';
                 }
+                items.add(DropdownMenuItem(
+                  value: _cuentaAsociada, 
+                  child: Text(
+                    texto,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ));
+              } else {
+                // La cuenta no existe, cambiar a 'ninguna' automáticamente
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    setState(() {
+                      _cuentaAsociada = 'ninguna';
+                    });
+                  }
+                });
+                _cuentaAsociada = 'ninguna';
               }
-              items.add(DropdownMenuItem(value: _cuentaAsociada, child: Text(texto)));
+              
               return _buildDropdown('Cuenta Asociada', _cuentaAsociada, [], (v) => setState(() => _cuentaAsociada = v!), customItems: items);
             },
           );
         }
-        // Validar valor actual
-        if (!items.any((i) => i.value == _cuentaAsociada)) _cuentaAsociada = 'ninguna';
+        
+        // Validar que el valor actual existe en la lista
+        if (!items.any((i) => i.value == _cuentaAsociada)) {
+          _cuentaAsociada = 'ninguna';
+        }
+        
         return _buildDropdown('Cuenta Asociada', _cuentaAsociada, [], (v) => setState(() => _cuentaAsociada = v!), customItems: items);
       },
     );
