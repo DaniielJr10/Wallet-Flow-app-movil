@@ -112,7 +112,7 @@ class _ContactarSoporteScreenState extends State<ContactarSoporteScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 elevation: 1,
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -125,8 +125,10 @@ class _ContactarSoporteScreenState extends State<ContactarSoporteScreen> {
                               labelText: 'Mensaje',
                               alignLabelWithHint: true,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              hintText: 'Cuéntanos tu problema o pregunta con detalle',
+                              hintText: 'Cuéntanos tu problema o pregunta',
+                              hintStyle: const TextStyle(fontSize: 14),
                             ),
+                            style: const TextStyle(fontSize: 14),
                             maxLines: null,
                             expands: true,
                             validator: (v) => v == null || v.trim().isEmpty ? 'Escribe un mensaje' : null,
