@@ -8,6 +8,8 @@ import '../../firebase/autenticacion_servicio.dart';
 // BORRADO: import '../../firebase/base_datos_servicio.dart'; 
 // NUEVO IMPORT:
 import '../../firebase/servicios/UsuarioService/usuarios_servicio.dart'; 
+import '../../firebase/servicios/IngresoService/ingresos_servicio.dart';
+import '../../firebase/servicios/gastoService/gastos_servicio.dart';
 
 import '../../firebase/servicios/PrincipalService/principal_servicio.dart';
 import '../../login/iniciosesion/iniciosesion.dart';
@@ -56,6 +58,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> with TickerProvid
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
     _animationController.forward();
     _cargarNombreUsuario();
+    _procesarEntradaSautomaticas(); // Procesar ingresos y gastos automáticos al inicio
   }
 
   Future<void> _cargarNombreUsuario() async {
@@ -79,6 +82,43 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> with TickerProvid
     } catch (e) {
       // Mantener valor por defecto en caso de error
       print('Error cargando nombre: $e');
+    }
+  }
+
+  /// Procesa ingresos y gastos automáticos según frecuencias configuradas
+  Future<void> _procesarEntradaSautomaticas() async {
+    try {
+      final ingresosServicio = IngresosServicio();
+      final gastosServicio = GastosServicio();
+
+      // Procesar ingresos automáticos
+      final ingresosCreados = await ingresosServicio.procesarIngresosAutomaticos();
+      
+      // Procesar gastos automáticos  
+      final gastosCreados = await gastosServicio.procesarGastosAutomaticos();
+
+      // Mostrar notificación solo si se crearon entradas
+      if (mounted && (ingresosCreados > 0 || gastosCreados > 0)) {
+        String mensaje = '';
+        if (ingresosCreados > 0 && gastosCreados > 0) {
+          mensaje = 'Se crearon $ingresosCreados ingresos y $gastosCreados gastos automáticos';
+        } else if (ingresosCreados > 0) {
+          mensaje = 'Se crearon $ingresosCreados ingresos automáticos';
+        } else {
+          mensaje = 'Se crearon $gastosCreados gastos automáticos';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(mensaje),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error procesando entradas automáticas: $e');
+      // No mostrar error al usuario para no interrumpir la experiencia
     }
   }
 

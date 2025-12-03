@@ -5,6 +5,7 @@ import '../../../firebase/servicios/gastoService/gastos_servicio.dart';
 import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_gastos.dart';
+import 'frecuencia.dart';
 
 class FormularioGasto extends StatefulWidget {
   final bool esEdicion;
@@ -33,8 +34,8 @@ class _FormularioGastoState extends State<FormularioGasto> {
   String _categoriaSeleccionada = 'alimentación';
   String _metodoPagoSeleccionado = 'efectivo';
   String _cuentaAsociada = 'ninguna';
-  bool _esRecurrente = false;
-  String _frecuenciaRecurrente = 'mensual';
+  TipoFrecuencia _frecuencia = TipoFrecuencia.ninguna;
+  TipoFrecuencia _frecuenciaOriginal = TipoFrecuencia.ninguna;
   bool _tieneRecordatorio = false;
   DateTime? _fechaRecordatorio;
 
@@ -49,8 +50,13 @@ class _FormularioGastoState extends State<FormularioGasto> {
       _categoriaSeleccionada = g['categoria'] ?? 'alimentación';
       _metodoPagoSeleccionado = g['metodoPago'] ?? 'efectivo';
       _cuentaAsociada = g['cuentaAsociada'] ?? 'ninguna';
-      _esRecurrente = g['esRecurrente'] ?? false;
-      _frecuenciaRecurrente = g['frecuencia'] ?? 'mensual';
+      // Obtener frecuencia del gasto existente
+      if (g.containsKey('frecuencia') && g['frecuencia'] != null) {
+        _frecuencia = FrecuenciaUtils.desdeString(g['frecuencia']) ?? TipoFrecuencia.ninguna;
+      } else {
+        _frecuencia = TipoFrecuencia.ninguna;
+      }
+      _frecuenciaOriginal = _frecuencia;
       if (g.containsKey('recordatorio') && g['recordatorio'] != null) {
         final r = g['recordatorio'];
         if (r is Timestamp) {
@@ -177,6 +183,15 @@ class _FormularioGastoState extends State<FormularioGasto> {
                     _buildDropdown('Método de Pago', _metodoPagoSeleccionado, UtilsGastos.metodosPago, (v) => setState(() => _metodoPagoSeleccionado = v!)),
                     const SizedBox(height: 20),
                     _buildSelectorCuenta(),
+                    const SizedBox(height: 20),
+                    SelectorFrecuencia(
+                      frecuenciaActual: _frecuencia,
+                      onCambio: (frecuencia) {
+                        setState(() {
+                          _frecuencia = frecuencia;
+                        });
+                      },
+                    ),
                     const SizedBox(height: 20),
                     _buildRecordatorio(),
                     const SizedBox(height: 32),
@@ -460,32 +475,43 @@ class _FormularioGastoState extends State<FormularioGasto> {
       try {
         String? error;
         if (widget.esEdicion && widget.gastoExistente != null) {
-          error = await _gastosServicio.actualizarGasto(
+          // Para edición, usar el nuevo sistema de frecuencias
+          error = await _gastosServicio.actualizarGastoConFrecuencia(
             gastoId: widget.gastoExistente!['id'],
-            descripcion: _descripcionController.text.trim(),
             monto: monto,
             fecha: _fechaSeleccionada,
+            descripcion: _descripcionController.text.trim(),
             categoria: _categoriaSeleccionada,
             metodoPago: _metodoPagoSeleccionado,
+            frecuenciaActual: _frecuenciaOriginal,
+            nuevaFrecuencia: _frecuencia,
             cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
-            esRecurrente: _esRecurrente,
-            frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
-            notas: '',
-            recordatorio: _tieneRecordatorio ? _fechaRecordatorio : null,
           );
         } else {
-          error = await _gastosServicio.crearGasto(
-            descripcion: _descripcionController.text.trim(),
-            monto: monto,
-            fecha: _fechaSeleccionada,
-            categoria: _categoriaSeleccionada,
-            metodoPago: _metodoPagoSeleccionado,
-            cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
-            esRecurrente: _esRecurrente,
-            frecuencia: _esRecurrente ? _frecuenciaRecurrente : null,
-            notas: '',
-            recordatorio: _tieneRecordatorio ? _fechaRecordatorio : null,
-          );
+          // Para creación, verificar si tiene frecuencia
+          if (_frecuencia != TipoFrecuencia.ninguna) {
+            error = await _gastosServicio.crearGastoConFrecuencia(
+              monto: monto,
+              fechaInicial: _fechaSeleccionada,
+              descripcion: _descripcionController.text.trim(),
+              categoria: _categoriaSeleccionada,
+              metodoPago: _metodoPagoSeleccionado,
+              frecuencia: _frecuencia,
+              cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+            );
+          } else {
+            // Crear gasto normal sin frecuencia usando el método original
+            error = await _gastosServicio.crearGasto(
+              descripcion: _descripcionController.text.trim(),
+              monto: monto,
+              fecha: _fechaSeleccionada,
+              categoria: _categoriaSeleccionada,
+              metodoPago: _metodoPagoSeleccionado,
+              cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+              notas: '',
+              recordatorio: _tieneRecordatorio ? _fechaRecordatorio : null,
+            );
+          }
         }
 
         if (mounted) {

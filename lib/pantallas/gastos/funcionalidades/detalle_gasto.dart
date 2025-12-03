@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_gastos.dart';
+import 'frecuencia.dart';
 
 class DetalleGasto extends StatelessWidget {
   final Map<String, dynamic> gasto;
@@ -96,6 +97,8 @@ class DetalleGasto extends StatelessWidget {
                   const SizedBox(height: 20),
                   _detalleItem('Fecha', '${gasto['fecha'].day} de ${UtilsGastos.getNombreMes(gasto['fecha'].month)} de ${gasto['fecha'].year}', Icons.calendar_today_outlined),
                   const SizedBox(height: 20),
+                  _buildFrecuenciaInfo(),
+                  const SizedBox(height: 20),
                   _buildCuentaAsociada(),
                 ],
               ),
@@ -159,6 +162,35 @@ class DetalleGasto extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildFrecuenciaInfo() {
+    // Verificar si el gasto tiene frecuencia configurada
+    if (!gasto.containsKey('frecuencia') || gasto['frecuencia'] == null) {
+      return _detalleItem('Frecuencia', 'Sin repetición automática', Icons.event_repeat_outlined);
+    }
+
+    final frecuenciaStr = gasto['frecuencia'] as String;
+    final frecuencia = FrecuenciaUtils.desdeString(frecuenciaStr);
+    
+    if (frecuencia == null || frecuencia == TipoFrecuencia.ninguna) {
+      return _detalleItem('Frecuencia', 'Sin repetición automática', Icons.event_repeat_outlined);
+    }
+
+    // Mostrar información de la frecuencia
+    String textoFrecuencia = FrecuenciaUtils.obtenerNombre(frecuencia);
+    IconData icono = FrecuenciaUtils.obtenerIcono(frecuencia);
+
+    // Si tiene próxima creación, mostrar la fecha
+    if (gasto.containsKey('proximaCreacion') && gasto['proximaCreacion'] != null) {
+      final proximaFecha = gasto['proximaCreacion'] is DateTime 
+          ? gasto['proximaCreacion'] as DateTime
+          : (gasto['proximaCreacion'] as dynamic).toDate() as DateTime;
+      
+      textoFrecuencia += ' (próximo: ${proximaFecha.day}/${proximaFecha.month}/${proximaFecha.year})';
+    }
+
+    return _detalleItem('Frecuencia', textoFrecuencia, icono);
   }
 
   Widget _buildCuentaAsociada() {
