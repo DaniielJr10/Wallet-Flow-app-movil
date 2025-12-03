@@ -308,6 +308,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
                             biografiaController: _biografiaController,
                             modoEdicion: _modoEdicion,
                             datosUsuario: _datosUsuario,
+                            onRequestEdit: () => setState(() => _modoEdicion = true),
                           ),
                           const SizedBox(height: 24),
                           // Se eliminó la sección de estadísticas de uso

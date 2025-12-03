@@ -62,13 +62,8 @@ class AppBarPerfil extends StatelessWidget {
               icon: const Icon(Icons.save, color: Colors.white),
               tooltip: 'Guardar cambios',
             ),
-        ] else
-          // Botón editar
-          IconButton(
-            onPressed: onEditar,
-            icon: const Icon(Icons.edit, color: Colors.white),
-            tooltip: 'Editar perfil',
-          ),
+        ],
+        // Note: edit entry removed; editing is triggered by tapping fields/avatar
       ],
       flexibleSpace: FlexibleSpaceBar(
         title: Text(

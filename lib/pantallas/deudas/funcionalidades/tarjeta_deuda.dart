@@ -7,12 +7,14 @@ class TarjetaDeuda extends StatelessWidget {
   final Map<String, dynamic> deuda;
   final int index;
   final VoidCallback onTap;
+  final void Function(Map<String, dynamic>)? onPagar;
 
   const TarjetaDeuda({
     super.key,
     required this.deuda,
     required this.index,
     required this.onTap,
+    this.onPagar,
   });
 
   @override
@@ -102,11 +104,28 @@ class TarjetaDeuda extends StatelessWidget {
                   maxLines: 1,
                 ),
                 const SizedBox(height: 6),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: Colors.grey.shade400,
-                ),
+                // Mostrar botón de pagar si la deuda no está pagada y tiene monto pendiente
+                if ((deuda['estado'] ?? '') != 'Pagada' && (deuda['montoPendiente'] ?? 0) > 0)
+                  SizedBox(
+                    height: 30,
+                    child: TextButton(
+                      onPressed: () {
+                        if (onPagar != null) onPagar!(deuda);
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: UtilsDeudas.colorPrincipal,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Pagar', style: TextStyle(color: Colors.white, fontSize: 12)),
+                    ),
+                  )
+                else
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 14,
+                    color: Colors.grey.shade400,
+                  ),
               ],
             ),
           ),

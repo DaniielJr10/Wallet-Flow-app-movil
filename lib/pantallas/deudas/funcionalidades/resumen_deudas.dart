@@ -5,19 +5,17 @@ import 'utils_deudas.dart';
 
 class ResumenDeudas extends StatelessWidget {
   final double totalDeudaPendiente;
-  final int deudasVencidas;
-  final double pagoMinimoMensual;
+  final int deudasPorPagar;
+  final int deudasPagadas;
   final int totalDeudas;
-  final int diasPromedioVencimiento;
   final Animation<double> scaleAnimation;
 
   const ResumenDeudas({
     super.key,
     required this.totalDeudaPendiente,
-    required this.deudasVencidas,
-    required this.pagoMinimoMensual,
+    required this.deudasPorPagar,
+    required this.deudasPagadas,
     required this.totalDeudas,
-    required this.diasPromedioVencimiento,
     required this.scaleAnimation,
   });
 
@@ -26,6 +24,7 @@ class ResumenDeudas extends StatelessWidget {
     return ScaleTransition(
       scale: scaleAnimation,
       child: Container(
+        margin: const EdgeInsets.only(top: 12, left: 14, right: 14),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -39,88 +38,84 @@ class ResumenDeudas extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: UtilsDeudas.colorPrincipal.withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: UtilsDeudas.colorPrincipal.withOpacity(0.22),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Total deuda pendiente
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(
-                  Icons.account_balance_wallet,
-                  color: Colors.white,
-                  size: 22,
+                const Text(
+                  'Total Deuda Pendiente',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '$totalDeudas deuda${totalDeudas != 1 ? 's' : ''}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              FormatoNumeros.formatearParaMostrar(totalDeudaPendiente),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSmallCard(
+                    icon: Icons.payments,
+                    label: 'Deudas por pagar',
+                    value: '$deudasPorPagar',
+                  ),
                 ),
                 const SizedBox(width: 8),
-                Column(
-                  children: [
-                    const Text(
-                      'Total Deuda Pendiente',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      '\$${FormatoNumeros.formatearParaMostrar(totalDeudaPendiente)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            
-            // Estadísticas en grid
-            Row(
-              children: [
                 Expanded(
-                  child: _buildEstadisticaResumen(
-                    'Deudas Vencidas',
-                    '$deudasVencidas',
-                    Icons.warning,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildEstadisticaResumen(
-                    'Pago Mínimo',
-                    '\$${FormatoNumeros.formatearParaMostrar(pagoMinimoMensual)}',
-                    Icons.payment,
+                  child: _buildSmallCard(
+                    icon: Icons.check_circle_outline,
+                    label: 'Deudas pagadas',
+                    value: '$deudasPagadas',
                   ),
                 ),
               ],
             ),
-            
-            const SizedBox(height: 12),
-            
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
-                  child: _buildEstadisticaResumen(
-                    'Total Deudas',
-                    '$totalDeudas',
-                    Icons.list_alt,
+                  child: _buildSmallCard(
+                    icon: Icons.list_alt,
+                    label: 'Total Deudas',
+                    value: '$totalDeudas',
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildEstadisticaResumen(
-                    'Promedio Vencimiento',
-                    '$diasPromedioVencimiento días',
-                    Icons.schedule,
-                  ),
-                ),
+                const SizedBox(width: 8),
+                Expanded(child: SizedBox.shrink()),
               ],
             ),
           ],
@@ -129,7 +124,7 @@ class ResumenDeudas extends StatelessWidget {
     );
   }
 
-  Widget _buildEstadisticaResumen(String titulo, String valor, IconData icono) {
+  Widget _buildSmallCard({required IconData icon, required String label, required String value}) {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -137,30 +132,30 @@ class ResumenDeudas extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icono,
-            color: Colors.white,
-            size: 18,
+          Row(
+            children: [
+              Icon(icon, color: Colors.white, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 6),
           Text(
-            valor,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          Text(
-            titulo,
+            label,
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),

@@ -21,7 +21,7 @@ import '../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import '../../firebase/servicios/UsuarioService/usuarios_servicio.dart';
 
 import '../../login/iniciosesion/iniciosesion.dart';
-import '../perfil/perfil.dart';
+// import '../perfil/perfil.dart'; // removed: profile not shown in settings
 import 'preguntas_frecuentes.dart';
 import 'contactar_soporte.dart';
 import 'cambiar_contrasena.dart';
@@ -149,10 +149,6 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
                 padding: const EdgeInsets.all(16),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    _buildPerfilCard(),
-                    const SizedBox(height: 24),
-                    _buildSeccionSeguridad(),
-                    const SizedBox(height: 24),
                     _buildSeccionNotificaciones(),
                     const SizedBox(height: 24),
                     _buildSeccionDatos(),
@@ -213,93 +209,9 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
     );
   }
 
-  Widget _buildPerfilCard() {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.displayName ?? 'Usuario';
-    final email = user?.email ?? 'correo@ejemplo.com';
-    final primerNombre = displayName.split(' ')[0];
+  // Perfil card removed from UI. Kept code removed to avoid unused-widget warnings.
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF10B981),
-            Color(0xFF059669),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF10B981).withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: const Icon(Icons.person, color: Colors.white, size: 32),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Hola, $primerNombre',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  email,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: () => _navegarAPerfil(),
-            icon: const Icon(Icons.edit, color: Colors.white),
-            tooltip: 'Editar perfil',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSeccionSeguridad() {
-    return _buildSeccion(
-      titulo: 'Seguridad',
-      icono: Icons.security,
-      color: const Color(0xFFEF4444),
-      children: [
-        _buildOpcionTile(
-          titulo: 'Cambiar Contraseña',
-          subtitulo: 'Actualizar contraseña de tu cuenta',
-          icono: Icons.lock,
-          onTap: () => _cambiarContrasena(),
-        ),
-      ],
-    );
-  }
+  // Seguridad section removed; related options moved to 'Datos y Privacidad'.
 
   Widget _buildSeccionNotificaciones() {
     return _buildSeccion(
@@ -328,6 +240,13 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       icono: Icons.data_usage,
       color: const Color(0xFF8B5CF6),
       children: [
+        _buildOpcionTile(
+          titulo: 'Cambiar Contraseña',
+          subtitulo: 'Actualizar contraseña de tu cuenta',
+          icono: Icons.lock,
+          onTap: () => _cambiarContrasena(),
+        ),
+        const SizedBox(height: 8),
         // Opción de sincronización automática eliminada
         _buildOpcionTile(
           titulo: 'Exportar Datos',
@@ -492,19 +411,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
     );
   }
 
-  Future<void> _navegarAPerfil() async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (context) => const PantallaPerfil(iniciarEnEdicion: true)),
-    );
-    if (result == true && mounted) {
-      try {
-        await FirebaseAuth.instance.currentUser?.reload();
-      } catch (e) {
-        debugPrint('Error al recargar usuario: $e');
-      }
-      setState(() {});
-    }
-  }
+  // Perfil navigation removed because profile card is not shown in configuration screen.
 
   void _cambiarContrasena() {
     Navigator.of(context).push(
@@ -646,7 +553,50 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
               pw.SizedBox(height: 12),
             ],
             
-            // ... (Se repite para deudas, ahorros, cuentas con la misma lógica)
+            if (deudas.isNotEmpty) ...[
+              pw.Text('Deudas', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pw.Table.fromTextArray(
+                headers: ['Acreedor', 'Monto Total', 'Monto Pagado', 'Fecha Vencimiento', 'Estado'],
+                data: deudas.map((d) => [
+                  d['acreedor'] ?? '',
+                  (d['montoTotal'] as num?)?.toStringAsFixed(2) ?? '0.00',
+                  (d['montoPagado'] as num?)?.toStringAsFixed(2) ?? '0.00',
+                  d['fechaVencimiento'].toString(),
+                  d['estado'] ?? '',
+                ]).toList(),
+              ),
+              pw.SizedBox(height: 12),
+            ],
+
+            if (ahorros.isNotEmpty) ...[
+              pw.Text('Ahorros', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pw.Table.fromTextArray(
+                headers: ['Descripción', 'Objetivo', 'Actual', 'Fecha Objetivo', 'Estado'],
+                data: ahorros.map((a) => [
+                  a['descripcion'] ?? '',
+                  (a['montoObjetivo'] as num?)?.toStringAsFixed(2) ?? '0.00',
+                  (a['montoActual'] as num?)?.toStringAsFixed(2) ?? '0.00',
+                  a['fechaObjetivo'].toString(),
+                  a['estado'] ?? '',
+                ]).toList(),
+              ),
+              pw.SizedBox(height: 12),
+            ],
+
+            if (cuentas.isNotEmpty) ...[
+              pw.Text('Cuentas', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              pw.Table.fromTextArray(
+                headers: ['Banco', 'Número', 'Tipo', 'Alias', 'Saldo'],
+                data: cuentas.map((c) => [
+                  c['banco'] ?? '',
+                  c['numero'] ?? '',
+                  c['tipo'] ?? '',
+                  c['alias'] ?? '',
+                  (c['saldo'] as num?)?.toStringAsFixed(2) ?? '0.00',
+                ]).toList(),
+              ),
+              pw.SizedBox(height: 12),
+            ],
           ],
         ),
       );
@@ -722,6 +672,21 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
         ]);
       }
 
+      // CUENTAS (QuerySnapshot)
+      final cuentasSnap2 = await _cuentasService.obtenerCuentas().first;
+      var cuentasSheet = excel['Cuentas'];
+      cuentasSheet.appendRow(['Banco', 'Número', 'Tipo', 'Alias', 'Saldo']);
+      for (final d in cuentasSnap2.docs) {
+        final c = d.data() as Map<String, dynamic>;
+        cuentasSheet.appendRow([
+          c['banco'] ?? c['nombreBanco'] ?? '',
+          c['numeroCuenta'] ?? '',
+          c['tipo'] ?? c['tipoCuenta'] ?? '',
+          c['alias'] ?? '',
+          (c['saldo'] as num?)?.toStringAsFixed(2) ?? '0.00',
+        ]);
+      }
+
       final bytes = excel.encode();
       if (bytes == null) throw Exception('No se pudo generar el archivo Excel');
       await _guardarArchivo(Uint8List.fromList(bytes), 'xlsx');
@@ -777,12 +742,19 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Logo
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.transparent,
+                    backgroundImage: const AssetImage('images/logo.png'),
+                  ),
+                  const SizedBox(height: 12),
                   const Text('Wallet Flow', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   const Text('Versión 1.0.0', style: TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 14),
                   const _SmallInfo(title: 'Desarrollador', subtitle: 'Wallet Flow Team'),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 14),
                   TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar')),
                 ],
               ),

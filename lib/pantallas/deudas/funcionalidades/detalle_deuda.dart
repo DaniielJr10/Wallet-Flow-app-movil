@@ -114,8 +114,7 @@ class DetalleHistorialDeuda extends StatelessWidget {
                   const SizedBox(height: 12),
                   _buildDetalleRow('Fecha vencimiento', deuda['fechaVencimiento'] != null ? UtilsDeudas.formatearFecha(deuda['fechaVencimiento']) : '—', Icons.calendar_today_outlined),
                   const SizedBox(height: 12),
-                  _buildDetalleRow('Pago mínimo', '\$${FormatoNumeros.formatearParaMostrar(deuda['pagoMinimo'] ?? 0.0)}', Icons.payment_outlined),
-                  const SizedBox(height: 12),
+                  
                   _buildDetalleRow('Tasa interés', '${deuda['tasaInteres'] ?? 0}% anual', Icons.percent),
                   const SizedBox(height: 18),
 

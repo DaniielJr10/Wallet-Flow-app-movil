@@ -12,20 +12,24 @@ class _PreguntasFrecuentesScreenState extends State<PreguntasFrecuentesScreen> {
 
   final List<Map<String, String>> _faqs = [
     {
-      'q': '¿Cómo añado una cuenta bancaria?',
-      'a': 'Ve a Cuentas > Añadir cuenta y completa los datos solicitados.'
+      'q': '¿Puedo pagar deudas desde la app?',
+      'a': 'Sí: al ver una deuda, pulsa "Pagar", selecciona la cuenta desde la que pagar y confirma. El saldo de la cuenta se actualizará automáticamente.'
     },
     {
-      'q': '¿Cómo exporto mis transacciones?',
-      'a': 'En Herramientas selecciona Exportar Datos y elige el formato.'
+      'q': '¿Cómo recupero mi contraseña?',
+      'a': 'En la pantalla de inicio de sesión usa "Recuperar contraseña" para recibir un enlace por correo.'
     },
     {
-      'q': 'Olvidé mi contraseña, ¿qué hago?',
-      'a': 'Usa la función de recuperación desde la pantalla de inicio de sesión.'
+      'q': '¿Puedo exportar o hacer copia de mis datos?',
+      'a': 'Sí: en Herramientas > Exportar Datos puedes generar y descargar tus transacciones en formatos comunes (CSV/PDF).'
     },
     {
-      'q': '¿Es seguro usar mi banca con la app?',
-      'a': 'La app utiliza Firebase y prácticas estándar de seguridad, evita compartir tus credenciales.'
+      'q': '¿Cómo contacto soporte directamente?',
+      'a': 'En Configuración > Contactar Soporte escribe tu mensaje; se enviará al equipo desde la app.'
+    },
+    {
+      'q': '¿Cómo elimino mi cuenta y datos?',
+      'a': 'En Configuración > Datos y Privacidad encontrarás la opción para eliminar tu cuenta. Esto borra tus datos de nuestra base y no se puede deshacer.'
     },
   ];
 
@@ -61,6 +65,7 @@ class _PreguntasFrecuentesScreenState extends State<PreguntasFrecuentesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Preguntas Frecuentes'),
         elevation: 0,
@@ -69,7 +74,7 @@ class _PreguntasFrecuentesScreenState extends State<PreguntasFrecuentesScreen> {
       body: Column(
         children: [
           Container(
-            color: const Color(0xFFF8FAFC),
+            color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Column(
               children: [

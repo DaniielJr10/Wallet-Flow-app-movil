@@ -1,5 +1,6 @@
 // Formulario unificado para crear y editar deudas.
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../firebase/servicios/DeudaService/deudas_servicio.dart';
 import 'utils_deudas.dart';
 
@@ -25,10 +26,11 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
   
   late TextEditingController _tituloCtrl;
   late TextEditingController _montoCtrl;
-  late TextEditingController _pagoMinCtrl;
   late TextEditingController _acreedorCtrl;
   late String _tipoSeleccionado;
   late DateTime _fechaVenc;
+  bool _tieneRecordatorio = false;
+  DateTime? _fechaRecordatorio;
 
   @override
   void initState() {
@@ -37,17 +39,21 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
     
     _tituloCtrl = TextEditingController(text: deuda['titulo'] ?? '');
     _montoCtrl = TextEditingController(text: (deuda['montoOriginal'] ?? deuda['montoPendiente'] ?? '').toString());
-    _pagoMinCtrl = TextEditingController(text: (deuda['pagoMinimo'] ?? '').toString());
     _acreedorCtrl = TextEditingController(text: deuda['acreedor'] ?? '');
     _tipoSeleccionado = deuda['tipo'] ?? 'Préstamo Personal';
     _fechaVenc = deuda['fechaVencimiento'] ?? DateTime.now().add(const Duration(days: 30));
+    if (deuda.containsKey('recordatorio') && deuda['recordatorio'] != null) {
+      final r = deuda['recordatorio'];
+      if (r is Timestamp) _fechaRecordatorio = r.toDate();
+      else if (r is DateTime) _fechaRecordatorio = r;
+      if (_fechaRecordatorio != null) _tieneRecordatorio = true;
+    }
   }
 
   @override
   void dispose() {
     _tituloCtrl.dispose();
     _montoCtrl.dispose();
-    _pagoMinCtrl.dispose();
     _acreedorCtrl.dispose();
     super.dispose();
   }
@@ -157,19 +163,6 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Pago mínimo
-                    const Text('Pago mínimo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _pagoMinCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: _fieldDecoration(label: 'Pago mínimo', prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.payments_rounded, color: primary))),
-                      validator: (v) {
-                        final n = double.tryParse(v ?? '');
-                        return (n == null || n < 0) ? 'Ingresa un pago mínimo válido' : null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
 
                     // Acreedor
                     const Text('Acreedor / Banco', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
@@ -211,6 +204,55 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                     ),
 
                     const SizedBox(height: 28),
+                    // Recordatorio
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Recordatorio', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                        Switch(value: _tieneRecordatorio, onChanged: (v) => setState(() { _tieneRecordatorio = v; if (!v) _fechaRecordatorio = null; if (v && _fechaRecordatorio == null) _fechaRecordatorio = DateTime.now().add(const Duration(days:1)); })),
+                      ],
+                    ),
+                    if (_tieneRecordatorio) ...[
+                      const SizedBox(height:8),
+                      GestureDetector(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _fechaRecordatorio ?? DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime(2100),
+                          );
+                          if (picked == null) return;
+                          final time = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.fromDateTime(_fechaRecordatorio ?? DateTime.now()),
+                          );
+                          if (time == null) return;
+                          setState(() {
+                            _fechaRecordatorio = DateTime(picked.year, picked.month, picked.day, time.hour, time.minute);
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.grey.shade50,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.notifications, color: primary),
+                              const SizedBox(width: 12),
+                              Text(
+                                _fechaRecordatorio != null
+                                    ? '${_fechaRecordatorio!.day}/${_fechaRecordatorio!.month}/${_fechaRecordatorio!.year} ${_fechaRecordatorio!.hour.toString().padLeft(2, '0')}:${_fechaRecordatorio!.minute.toString().padLeft(2, '0')}'
+                                    : 'Seleccionar fecha y hora',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                     Row(
                       children: [
                         Expanded(
@@ -253,17 +295,17 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
   Future<void> _guardar() async {
     if (_formKey.currentState?.validate() ?? false) {
       final monto = double.tryParse(_montoCtrl.text) ?? 0.0;
-      final pagoMin = double.tryParse(_pagoMinCtrl.text) ?? 0.0;
+      // Pago mínimo ya no se solicita en el formulario
       
       if (widget.esEdicion) {
         final datosActualizados = {
           'titulo': _tituloCtrl.text.trim(),
           'montoOriginal': monto,
           'montoPendiente': monto, // Nota: Esto resetea el pendiente al original si se edita, ajustar según lógica deseada
-          'pagoMinimo': pagoMin,
           'acreedor': _acreedorCtrl.text.trim(),
           'tipo': _tipoSeleccionado,
           'fechaVencimiento': _fechaVenc,
+          if (_tieneRecordatorio && _fechaRecordatorio != null) 'recordatorio': _fechaRecordatorio,
         };
         await _deudasServicio.editarDeuda(widget.deudaExistente!['id'], datosActualizados);
       } else {
@@ -274,7 +316,7 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
           'montoPendiente': monto,
           'tasaInteres': 0.0,
           'fechaVencimiento': _fechaVenc,
-          'pagoMinimo': pagoMin,
+          if (_tieneRecordatorio && _fechaRecordatorio != null) 'recordatorio': _fechaRecordatorio,
           'estado': 'Pendiente',
           'fechaCreacion': DateTime.now(),
           'acreedor': _acreedorCtrl.text.trim(),

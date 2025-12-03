@@ -92,7 +92,7 @@ class _CambiarContrasenaScreenState extends State<CambiarContrasenaScreen> {
     final primaryGreen = const Color(0xFF10B981);
     return Scaffold(
       appBar: AppBar(backgroundColor: primaryGreen, elevation: 0, iconTheme: const IconThemeData(color: Colors.white), title: const Text('Cambiar contraseña')),
-      backgroundColor: const Color(0xFFF1F7F4),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Column(
