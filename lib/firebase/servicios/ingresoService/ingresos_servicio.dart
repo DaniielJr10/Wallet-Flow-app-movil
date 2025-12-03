@@ -5,34 +5,34 @@ import 'funcionalidades/referencias_base_ingreso.dart';
 import 'funcionalidades/acciones_lectura_ingreso.dart';
 import 'funcionalidades/acciones_escritura_ingreso.dart';
 import 'funcionalidades/calculos_estadisticas_ingreso.dart';
-import 'funcionalidades/recurrencia_servicio.dart';
+import 'funcionalidades/frecuencia_servicio.dart';
 
 /// Servicio para gestionar ingresos en Firebase
 /// 
-/// Combina las funcionalidades de lectura, escritura, estadística y recurrencia
+/// Combina las funcionalidades de lectura, escritura y estadísticas
 /// manteniendo el código organizado en módulos.
 class IngresosServicio extends ReferenciasBase 
     with AccionesLectura, AccionesEscritura, CalculosEstadisticas {
   
-  final RecurrenciaServicio recurrencia = RecurrenciaServicio();
+  final FrecuenciaServicio _frecuenciaServicio = FrecuenciaServicio();
   
-  /// Inicializa los ingresos recurrentes al crear el servicio
+  /// Inicializa y procesa ingresos automáticos pendientes
   IngresosServicio() {
-    _inicializarRecurrencia();
+    _procesarIngresosAutomaticos();
   }
   
-  /// Verifica y genera ingresos recurrentes pendientes
-  Future<void> _inicializarRecurrencia() async {
+  /// Procesa ingresos automáticos al inicializar
+  Future<void> _procesarIngresosAutomaticos() async {
     try {
-      await recurrencia.generarIngresosPendientes();
+      await _frecuenciaServicio.procesarIngresosAutomaticos();
     } catch (e) {
-      print('Error al inicializar recurrencia: $e');
+      print('Error procesando ingresos automáticos: $e');
     }
   }
   
-  /// Genera manualmente ingresos recurrentes pendientes
-  Future<int> procesarIngresosRecurrentes() async {
-    return await recurrencia.generarIngresosPendientes();
+  /// Procesa manualmente los ingresos automáticos
+  Future<int> procesarIngresosAutomaticos() async {
+    return await _frecuenciaServicio.procesarIngresosAutomaticos();
   }
   
   // No se requiere código adicional aquí.

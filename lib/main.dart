@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase/firebase_options.dart';
 import 'auth_wrapper.dart';
-import 'utilidades/inicializador_recurrencia.dart';
 
 void main() async {
   // Asegurar que los widgets estén inicializados
@@ -13,9 +12,6 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
-  // Procesar ingresos recurrentes pendientes al iniciar la app
-  InicializadorRecurrencia.procesarIngresosAlIniciar();
   
   runApp(const WalletFlowApp());
 }

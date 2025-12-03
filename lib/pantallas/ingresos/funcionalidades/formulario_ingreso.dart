@@ -3,9 +3,8 @@
 /// selectores de fecha y comunicación con los servicios de Firebase.
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../firebase/servicios/ingresoService/ingresos_servicio.dart';
 import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
-import '../../../firebase/servicios/ingresoService/funcionalidades/recurrencia_servicio.dart';
+import '../../../firebase/servicios/ingresoService/funcionalidades/frecuencia_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_ingresos.dart';
 import 'frecuencia.dart';
@@ -30,15 +29,15 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
   final _formKey = GlobalKey<FormState>();
   final _montoController = TextEditingController();
   final _descripcionController = TextEditingController();
-  final IngresosServicio _ingresosServicio = IngresosServicio();
   final CuentasServicio _cuentasServicio = CuentasServicio();
-  final RecurrenciaServicio _recurrenciaServicio = RecurrenciaServicio();
+  final FrecuenciaServicio _frecuenciaServicio = FrecuenciaServicio();
 
   DateTime _fechaSeleccionada = DateTime.now();
   String _categoriaSeleccionada = 'trabajo';
   String _metodoPagoSeleccionado = 'Efectivo';
   String _cuentaAsociada = 'ninguna';
-  late TipoFrecuencia _frecuenciaSeleccionada;
+  TipoFrecuencia _frecuenciaSeleccionada = TipoFrecuencia.ninguna;
+  TipoFrecuencia _frecuenciaOriginal = TipoFrecuencia.ninguna;
 
   @override
   void initState() {
@@ -52,17 +51,18 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
       _metodoPagoSeleccionado = ing['metodoPago'];
       _cuentaAsociada = ing['cuentaAsociada'] ?? 'ninguna';
 
-      // Inicializar frecuencia - los ingresos normales no tienen este campo
-      if (ing.containsKey('frecuencia') && ing['frecuencia'] != null) {
-        _frecuenciaSeleccionada =
-            FrecuenciaUtils.desdeString(ing['frecuencia']) ??
-            TipoFrecuencia.ninguna;
+      // En edición, verificar si tiene frecuencia
+      if (ing.containsKey('tieneRepeticion') && ing['tieneRepeticion'] == true) {
+        _frecuenciaSeleccionada = FrecuenciaUtils.desdeString(ing['frecuencia']) ?? TipoFrecuencia.ninguna;
+        _frecuenciaOriginal = _frecuenciaSeleccionada;
       } else {
         _frecuenciaSeleccionada = TipoFrecuencia.ninguna;
+        _frecuenciaOriginal = TipoFrecuencia.ninguna;
       }
     } else {
-      // Para nuevos ingresos, inicializar como no recurrente
+      // Para nuevos ingresos, inicializar sin frecuencia
       _frecuenciaSeleccionada = TipoFrecuencia.ninguna;
+      _frecuenciaOriginal = TipoFrecuencia.ninguna;
     }
     // Validar que la cuenta asociada existe después de inicializar
     _validarCuentaAsociada();
@@ -518,24 +518,26 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
       try {
         String? error;
 
-        // Si es recurrente, usar el servicio de recurrencia
-        if (_frecuenciaSeleccionada != TipoFrecuencia.ninguna) {
-          if (widget.esEdicion) {
-            // Para edición, mantener el ingreso normal y actualizar
-            error = await _ingresosServicio.actualizarIngreso(
-              ingresoId: widget.ingresoExistente!['id'],
-              monto: monto,
-              fecha: _fechaSeleccionada,
-              descripcion: _descripcionController.text.trim(),
-              categoria: _categoriaSeleccionada,
-              metodoPago: _metodoPagoSeleccionado,
-              cuentaAsociada: _cuentaAsociada != 'ninguna'
-                  ? _cuentaAsociada
-                  : null,
-            );
-          } else {
-            // Crear ingreso recurrente
-            error = await _recurrenciaServicio.registrarIngresoRecurrente(
+        if (widget.esEdicion) {
+          // Para edición, usar el método que maneja frecuencias
+          error = await _frecuenciaServicio.actualizarIngresoConFrecuencia(
+            ingresoId: widget.ingresoExistente!['id'],
+            monto: monto,
+            fecha: _fechaSeleccionada,
+            descripcion: _descripcionController.text.trim(),
+            categoria: _categoriaSeleccionada,
+            metodoPago: _metodoPagoSeleccionado,
+            frecuenciaActual: _frecuenciaOriginal,
+            nuevaFrecuencia: _frecuenciaSeleccionada,
+            cuentaAsociada: _cuentaAsociada != 'ninguna'
+                ? _cuentaAsociada
+                : null,
+          );
+        } else {
+          // Para nuevos ingresos
+          if (_frecuenciaSeleccionada != TipoFrecuencia.ninguna) {
+            // Crear ingreso con repetición automática
+            error = await _frecuenciaServicio.crearIngresoConFrecuencia(
               monto: monto,
               fechaInicial: _fechaSeleccionada,
               descripcion: _descripcionController.text.trim(),
@@ -546,37 +548,9 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
                   ? _cuentaAsociada
                   : null,
             );
-
-            // También crear el primer ingreso normal
-            if (error == null) {
-              error = await _ingresosServicio.registrarIngreso(
-                monto: monto,
-                fecha: _fechaSeleccionada,
-                descripcion: _descripcionController.text.trim(),
-                categoria: _categoriaSeleccionada,
-                metodoPago: _metodoPagoSeleccionado,
-                cuentaAsociada: _cuentaAsociada != 'ninguna'
-                    ? _cuentaAsociada
-                    : null,
-              );
-            }
-          }
-        } else {
-          // Ingreso normal (no recurrente)
-          if (widget.esEdicion && widget.ingresoExistente != null) {
-            error = await _ingresosServicio.actualizarIngreso(
-              ingresoId: widget.ingresoExistente!['id'],
-              monto: monto,
-              fecha: _fechaSeleccionada,
-              descripcion: _descripcionController.text.trim(),
-              categoria: _categoriaSeleccionada,
-              metodoPago: _metodoPagoSeleccionado,
-              cuentaAsociada: _cuentaAsociada != 'ninguna'
-                  ? _cuentaAsociada
-                  : null,
-            );
           } else {
-            error = await _ingresosServicio.registrarIngreso(
+            // Crear un solo ingreso normal
+            error = await _frecuenciaServicio.crearIngresoNormal(
               monto: monto,
               fecha: _fechaSeleccionada,
               descripcion: _descripcionController.text.trim(),
@@ -595,13 +569,46 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
             Navigator.pop(context); // Cerrar form
             widget.onGuardar();
 
-            // Mostrar mensaje de éxito si es recurrente
-            if (_frecuenciaSeleccionada != TipoFrecuencia.ninguna &&
-                !widget.esEdicion) {
+            // Mostrar mensajes de éxito
+            if (widget.esEdicion) {
+              // Mensajes para edición
+              if (_frecuenciaOriginal != _frecuenciaSeleccionada) {
+                if (_frecuenciaSeleccionada == TipoFrecuencia.ninguna) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Ingreso actualizado y frecuencia eliminada'),
+                      backgroundColor: Colors.orange,
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                } else if (_frecuenciaOriginal == TipoFrecuencia.ninguna) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Ingreso actualizado con nueva frecuencia ${FrecuenciaUtils.obtenerNombre(_frecuenciaSeleccionada).toLowerCase()}',
+                      ),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Ingreso actualizado. Frecuencia cambiada a ${FrecuenciaUtils.obtenerNombre(_frecuenciaSeleccionada).toLowerCase()}',
+                      ),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 4),
+                    ),
+                  );
+                }
+              }
+            } else if (_frecuenciaSeleccionada != TipoFrecuencia.ninguna) {
+              // Mensaje para nuevo ingreso con frecuencia
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Ingreso recurrente creado. Se generará automáticamente cada ${FrecuenciaUtils.obtenerNombre(_frecuenciaSeleccionada).toLowerCase()}',
+                    'Ingreso creado con repetición ${FrecuenciaUtils.obtenerNombre(_frecuenciaSeleccionada).toLowerCase()}. Se generará automáticamente.',
                   ),
                   backgroundColor: Colors.green,
                   duration: const Duration(seconds: 4),
@@ -615,7 +622,12 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
           }
         }
       } catch (e) {
-        if (mounted) Navigator.pop(context);
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error inesperado: $e'), backgroundColor: Colors.red),
+          );
+        }
       }
     }
   }
