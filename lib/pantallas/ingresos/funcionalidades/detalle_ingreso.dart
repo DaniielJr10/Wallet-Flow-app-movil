@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_ingresos.dart';
+import 'frecuencia.dart';
 
 class DetalleIngreso extends StatelessWidget {
   final Map<String, dynamic> ingreso;
@@ -96,6 +97,8 @@ class DetalleIngreso extends StatelessWidget {
                   _buildDetalleItem('Fecha', '${ingreso['fecha'].day} de ${UtilsIngresos.getNombreMes(ingreso['fecha'].month)} de ${ingreso['fecha'].year}', Icons.calendar_today_outlined),
                   const SizedBox(height: 20),
                   _buildCuentaAsociada(),
+                  const SizedBox(height: 20),
+                  _buildFrecuenciaInfo(),
                 ],
               ),
             ),
@@ -181,6 +184,38 @@ class DetalleIngreso extends StatelessWidget {
         }
         return _buildDetalleItem('Cuenta Asociada', texto, Icons.account_balance_outlined);
       },
+    );
+  }
+
+  Widget _buildFrecuenciaInfo() {
+    // Verificar si el ingreso tiene frecuencia configurada
+    if (!ingreso.containsKey('tieneRepeticion') || 
+        ingreso['tieneRepeticion'] != true ||
+        ingreso['frecuencia'] == null) {
+      return _buildDetalleItem(
+        'Frecuencia', 
+        'Ingreso único', 
+        Icons.event_outlined
+      );
+    }
+
+    // Si tiene frecuencia, mostrar la información
+    final frecuencia = FrecuenciaUtils.desdeString(ingreso['frecuencia']);
+    String textoFrecuencia = FrecuenciaUtils.obtenerNombre(frecuencia ?? TipoFrecuencia.ninguna);
+    
+    // Información adicional sobre la próxima creación
+    if (ingreso.containsKey('proximaCreacion')) {
+      final proximaFecha = ingreso['proximaCreacion'] is DateTime 
+          ? ingreso['proximaCreacion'] as DateTime
+          : (ingreso['proximaCreacion']).toDate();
+      
+      textoFrecuencia += ' - Próximo: ${proximaFecha.day}/${proximaFecha.month}/${proximaFecha.year}';
+    }
+
+    return _buildDetalleItem(
+      'Frecuencia',
+      textoFrecuencia,
+      Icons.repeat
     );
   }
 }
