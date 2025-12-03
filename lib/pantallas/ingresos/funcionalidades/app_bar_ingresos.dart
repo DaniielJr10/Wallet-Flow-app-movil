@@ -26,20 +26,36 @@ class AppBarIngresos extends StatelessWidget implements PreferredSizeWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
         ),
       ),
-      title: const Text(
-        'INGRESOS',
-        style: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.w900,
-          color: UtilsIngresos.colorSecundario,
-          letterSpacing: 2.2,
-          fontFamily: 'Montserrat',
-          height: 1.1,
-          shadows: [
-            Shadow(
-              color: Colors.black12,
-              blurRadius: 8,
-              offset: Offset(0, 2),
+      title: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: const [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.attach_money_rounded, color: UtilsIngresos.colorPrincipal, size: 28),
+                SizedBox(width: 8),
+                Text(
+                  'INGRESOS',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: UtilsIngresos.colorPrincipal,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 2),
+            Text(
+              'Administra y visualiza todos tus ingresos',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
