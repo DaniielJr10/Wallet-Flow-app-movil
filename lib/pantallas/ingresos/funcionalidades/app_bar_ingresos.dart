@@ -12,10 +12,19 @@ class AppBarIngresos extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      automaticallyImplyLeading: true,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded, color: UtilsIngresos.colorSecundario),
-        onPressed: () => Navigator.pop(context),
+      automaticallyImplyLeading: false,
+      leading: Semantics(
+        label: 'Regresar',
+        button: true,
+        child: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_rounded),
+          color: UtilsIngresos.colorPrincipal,
+          tooltip: 'Regresar',
+          iconSize: 26,
+          splashRadius: 24,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
       ),
       title: const Text(
         'INGRESOS',

@@ -10,6 +10,15 @@ class AppBarDeudas extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       elevation: 0,
       backgroundColor: Colors.transparent,
+      leading: IconButton(
+        onPressed: () => Navigator.pop(context),
+        icon: const Icon(Icons.arrow_back_rounded),
+        color: UtilsDeudas.colorPrincipal,
+        tooltip: 'Regresar',
+        iconSize: 26,
+        splashRadius: 24,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+      ),
       toolbarHeight: 120,
       title: Padding(
         padding: const EdgeInsets.only(top: 20),

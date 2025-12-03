@@ -1,5 +1,6 @@
 // AppBarGastos: AppBar personalizada para la sección de gastos, con título e icono principal.
 import 'package:flutter/material.dart';
+import 'utils_gastos.dart';
 
 class AppBarGastos extends StatelessWidget implements PreferredSizeWidget {
   const AppBarGastos({super.key});
@@ -19,16 +20,12 @@ class AppBarGastos extends StatelessWidget implements PreferredSizeWidget {
       ),
       leading: IconButton(
         onPressed: () => Navigator.pop(context),
-        icon: const Icon(
-          Icons.arrow_back_ios_rounded,
-          color: Color(0xFF1F2937),
-        ),
-        style: IconButton.styleFrom(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+        icon: const Icon(Icons.arrow_back_rounded),
+        color: UtilsGastos.colorPrincipal,
+        tooltip: 'Regresar',
+        iconSize: 26,
+        splashRadius: 24,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
       ),
     );
   }
