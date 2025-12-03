@@ -97,9 +97,11 @@ class _FormularioMetaState extends State<FormularioMeta> {
                       controller: _nombreController,
                       validator: (value) => value == null || value.isEmpty ? 'Ingresa el nombre del ahorro' : null,
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: UtilsAhorros.colorPrincipal, width: 2)),
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -116,9 +118,11 @@ class _FormularioMetaState extends State<FormularioMeta> {
                         return null;
                       },
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: UtilsAhorros.colorPrincipal, width: 2)),
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -135,9 +139,11 @@ class _FormularioMetaState extends State<FormularioMeta> {
                         return null;
                       },
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: UtilsAhorros.colorPrincipal, width: 2)),
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -175,9 +181,11 @@ class _FormularioMetaState extends State<FormularioMeta> {
                     DropdownButtonFormField<String>(
                       value: _categoriaAhorro,
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: UtilsAhorros.colorPrincipal, width: 2)),
                         filled: true,
-                        fillColor: Colors.grey.shade50,
+                        fillColor: Colors.white,
                       ),
                       items: UtilsAhorros.categorias.map((cat) => DropdownMenuItem<String>(
                         value: cat['valor'] as String,

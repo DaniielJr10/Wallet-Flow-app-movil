@@ -61,15 +61,15 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
   @override
   Widget build(BuildContext context) {
     final primary = UtilsDeudas.colorPrincipal;
-    final primaryDark = UtilsDeudas.colorSecundario;
+    // final primaryDark = UtilsDeudas.colorSecundario; // no usado tras estandarizar bordes
 
     InputDecoration _fieldDecoration({String? label, Widget? prefix}) => InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primary, width: 2)),
-          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primary, width: 2)),
-          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primaryDark, width: 3)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primary, width: 2)),
           filled: true,
-          fillColor: Colors.grey.shade50,
+          fillColor: Colors.white,
           prefixIcon: prefix,
         );
 

@@ -46,11 +46,11 @@ class FiltrosIngresos extends StatelessWidget {
                 prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6B7280)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide.none,
+                  borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
