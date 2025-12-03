@@ -3,6 +3,7 @@
 /// Mantiene el estilo visual consistente con el resto de la aplicación.
 import 'package:flutter/material.dart';
 import 'utils_ingresos.dart';
+import 'gestion_recurrencias.dart';
 
 class AppBarIngresos extends StatelessWidget implements PreferredSizeWidget {
   const AppBarIngresos({super.key});
@@ -61,6 +62,24 @@ class AppBarIngresos extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       centerTitle: true,
+      actions: [
+        IconButton(
+          icon: const Icon(
+            Icons.autorenew_rounded,
+            color: UtilsIngresos.colorSecundario,
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PantallaGestionRecurrencias(),
+              ),
+            );
+          },
+          tooltip: 'Gestionar Automáticos',
+        ),
+        const SizedBox(width: 8),
+      ],
     );
   }
 

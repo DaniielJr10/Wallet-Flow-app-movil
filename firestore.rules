@@ -1,0 +1,66 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Función para verificar que el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Función para verificar que el documento pertenece al usuario
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Reglas para la colección de ingresos (incluye recurrentes)
+    match /ingresos/{ingresoId} {
+      allow read, write: if isAuthenticated() && 
+                          isOwner(resource.data.usuarioId);
+      allow create: if isAuthenticated() && 
+                      isOwner(request.resource.data.usuarioId);
+    }
+    
+    // Reglas para la colección de gastos
+    match /gastos/{gastoId} {
+      allow read, write: if isAuthenticated() && 
+                          isOwner(resource.data.usuarioId);
+      allow create: if isAuthenticated() && 
+                      isOwner(request.resource.data.usuarioId);
+    }
+    
+    // Reglas para la colección de cuentas
+    match /cuentas/{cuentaId} {
+      allow read, write: if isAuthenticated() && 
+                          isOwner(resource.data.usuarioId);
+      allow create: if isAuthenticated() && 
+                      isOwner(request.resource.data.usuarioId);
+    }
+    
+    // Reglas para la colección de ahorros
+    match /ahorros/{ahorroId} {
+      allow read, write: if isAuthenticated() && 
+                          isOwner(resource.data.usuarioId);
+      allow create: if isAuthenticated() && 
+                      isOwner(request.resource.data.usuarioId);
+    }
+    
+    // Reglas para la colección de deudas
+    match /deudas/{deudaId} {
+      allow read, write: if isAuthenticated() && 
+                          isOwner(resource.data.usuarioId);
+      allow create: if isAuthenticated() && 
+                      isOwner(request.resource.data.usuarioId);
+    }
+    
+    // Reglas para usuarios (perfil)
+    match /usuarios/{userId} {
+      allow read, write: if isAuthenticated() && 
+                          isOwner(userId);
+    }
+    
+    // Denegar acceso a cualquier otra colección
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
