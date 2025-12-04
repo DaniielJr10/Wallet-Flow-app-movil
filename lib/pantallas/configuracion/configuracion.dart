@@ -9,7 +9,7 @@ import 'funcionalidades/cambiar_contraseña/cambiar_contrasena.dart';
 
 // ===== IMPORTS DE ARCHIVOS MODULARES =====
 import 'funcionalidades/configuracion_secciones.dart';
-import 'funcionalidades/configuracion_exportar.dart';
+import 'funcionalidades/exportar_pdf_excel/configuracion_exportar.dart';
 import 'funcionalidades/configuracion_cuenta.dart';
 import 'funcionalidades/configuracion_dialogs.dart';
 
