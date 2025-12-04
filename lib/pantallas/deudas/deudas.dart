@@ -122,17 +122,66 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
     // El promedio de vencimiento ya no se muestra en el resumen principal.
   }
 
+  String _obtenerNombreMes(int mes) {
+    const meses = [
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ];
+    return mes >= 1 && mes <= 12 ? meses[mes - 1] : '';
+  }
+
   List<Map<String, dynamic>> _obtenerDeudasFiltradas() {
     var lista = List<Map<String, dynamic>>.from(_deudas);
     
     if (_textoBusqueda.isNotEmpty) {
       final q = _textoBusqueda.toLowerCase();
-      lista = lista.where((d) {
-        final titulo = (d['titulo'] ?? '').toString().toLowerCase();
-        final tipo = (d['tipo'] ?? '').toString().toLowerCase();
-        final acreedor = (d['acreedor'] ?? '').toString().toLowerCase();
-        return titulo.contains(q) || tipo.contains(q) || acreedor.contains(q);
-      }).toList();
+      
+      if (_modoBusqueda == 'categoría') {
+        // Buscar por categoría (tipo, título, acreedor)
+        lista = lista.where((d) {
+          final titulo = (d['titulo'] ?? '').toString().toLowerCase();
+          final tipo = (d['tipo'] ?? '').toString().toLowerCase();
+          final acreedor = (d['acreedor'] ?? '').toString().toLowerCase();
+          return titulo.contains(q) || tipo.contains(q) || acreedor.contains(q);
+        }).toList();
+      } else if (_modoBusqueda == 'mes') {
+        // Buscar por mes/año (formato: "enero 2024", "01/2024", "enero", etc.)
+        lista = lista.where((d) {
+          final fechaVenc = d['fechaVencimiento'] as DateTime?;
+          final fechaCreacion = d['fechaCreacion'] as DateTime?;
+          
+          if (fechaVenc != null) {
+            final mesNombre = _obtenerNombreMes(fechaVenc.month).toLowerCase();
+            final anio = fechaVenc.year.toString();
+            final mesNumero = fechaVenc.month.toString().padLeft(2, '0');
+            
+            // Buscar por nombre de mes, numero de mes, anio, o combinacion
+            if (mesNombre.contains(q) || 
+                anio.contains(q) || 
+                mesNumero.contains(q) ||
+                '$mesNombre $anio'.contains(q) ||
+                '$mesNumero/$anio'.contains(q)) {
+              return true;
+            }
+          }
+          
+          if (fechaCreacion != null) {
+            final mesNombre = _obtenerNombreMes(fechaCreacion.month).toLowerCase();
+            final anio = fechaCreacion.year.toString();
+            final mesNumero = fechaCreacion.month.toString().padLeft(2, '0');
+            
+            if (mesNombre.contains(q) || 
+                anio.contains(q) || 
+                mesNumero.contains(q) ||
+                '$mesNombre $anio'.contains(q) ||
+                '$mesNumero/$anio'.contains(q)) {
+              return true;
+            }
+          }
+          
+          return false;
+        }).toList();
+      }
     }
 
     switch (_filtroSeleccionado) {
@@ -197,6 +246,7 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: FiltrosYOrdenDeudas(
                         filterButtonKey: _filterButtonKey,
+                        modoBusqueda: _modoBusqueda,
                         onSearchChanged: (v) => setState(() {
                           _textoBusqueda = v;
                           _calcularEstadisticas();
