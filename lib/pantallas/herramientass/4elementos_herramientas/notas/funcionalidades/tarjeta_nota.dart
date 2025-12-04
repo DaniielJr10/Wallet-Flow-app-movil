@@ -26,18 +26,25 @@ class TarjetaNota extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: UtilsNotas.colorCardBg,
-          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              UtilsNotas.colorInputBg,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: UtilsNotas.colorSombra,
-              blurRadius: 14,
+              color: UtilsNotas.colorPrincipal.withOpacity(0.1),
+              blurRadius: 20,
               offset: const Offset(0, 8),
-            )
+            ),
           ],
-          border: Border.all(color: UtilsNotas.colorBorde),
+          border: Border.all(color: UtilsNotas.colorBorde, width: 2),
         ),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -46,22 +53,27 @@ class TarjetaNota extends StatelessWidget {
               children: [
                 if (tags.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                     decoration: BoxDecoration(
-                      color: UtilsNotas.colorTagBg,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: UtilsNotas.colorBorde),
+                      gradient: LinearGradient(
+                        colors: [
+                          UtilsNotas.colorPrincipal.withOpacity(0.1),
+                          UtilsNotas.colorSecundario.withOpacity(0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: UtilsNotas.colorPrincipal.withOpacity(0.3)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.label, size: 14, color: UtilsNotas.colorPrincipal),
+                        Icon(Icons.label_rounded, size: 14, color: UtilsNotas.colorPrincipal),
                         const SizedBox(width: 6),
                         Text(
                           '#${tags.first}',
-                          style: const TextStyle(
-                            color: UtilsNotas.colorPrincipal,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12, // Añadido fontSize para evitar error de layout
+                          style: TextStyle(
+                            color: UtilsNotas.colorAccento,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
                           ),
                         ),
                       ],
@@ -70,43 +82,58 @@ class TarjetaNota extends StatelessWidget {
                 else
                   Container(),
                 const Spacer(),
-                IconButton(
-                  onPressed: onDelete,
-                  icon: const Icon(
-                    Icons.delete_outline_rounded,
-                    color: UtilsNotas.colorDelete,
-                    size: 20,
+                Container(
+                  decoration: BoxDecoration(
+                    color: UtilsNotas.colorDelete.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                  child: IconButton(
+                    onPressed: onDelete,
+                    icon: Icon(
+                      Icons.delete_rounded,
+                      color: UtilsNotas.colorDelete,
+                      size: 20,
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 14),
             // Note Content
             Expanded(
               child: Text(
                 text,
-                style: const TextStyle(
-                  fontSize: 14,
+                style: TextStyle(
+                  fontSize: 15,
                   color: UtilsNotas.colorTextoOscuro,
                   fontWeight: FontWeight.w600,
+                  height: 1.5,
                 ),
-                maxLines: 4, // Limitado para que no desborde
+                maxLines: 4,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(height: 8),
-            // Date Footer
-            Align(
-              alignment: Alignment.bottomLeft,
-              child: Text(
-                UtilsNotas.formatDate(date),
-                style: const TextStyle(
-                  fontSize: 12,
+            const SizedBox(height: 12),
+            // Date Footer with icon
+            Row(
+              children: [
+                Icon(
+                  Icons.access_time_rounded,
+                  size: 14,
                   color: UtilsNotas.colorTextoGris,
                 ),
-              ),
+                const SizedBox(width: 6),
+                Text(
+                  UtilsNotas.formatDate(date),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: UtilsNotas.colorTextoGris,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
