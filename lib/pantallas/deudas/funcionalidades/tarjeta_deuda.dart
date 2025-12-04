@@ -21,113 +21,173 @@ class TarjetaDeuda extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorEstado = UtilsDeudas.obtenerColorEstado(deuda);
     final fechaVenc = deuda['fechaVencimiento'] as DateTime?;
+    final esPagada = (deuda['estado'] ?? '') == 'Pagada';
+    final montoPendiente = (deuda['montoPendiente'] ?? 0).toDouble();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         onTap: onTap,
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          leading: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: colorEstado.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              UtilsDeudas.obtenerIconoTipoDeuda(deuda['tipo']),
-              color: colorEstado,
-              size: 20,
-            ),
-          ),
-          title: Text(
-            deuda['titulo'],
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF0F172A),
-            ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
             children: [
-              const SizedBox(height: 4),
-              Text(
-                '${deuda['tipo']} • ${deuda['acreedor']}',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[600],
+              // Icono de categoría
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorEstado.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                fechaVenc != null ? '${fechaVenc.day}/${fechaVenc.month}/${fechaVenc.year}' : '',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[500],
+                child: Icon(
+                  UtilsDeudas.obtenerIconoTipoDeuda(deuda['tipo']),
+                  color: colorEstado,
+                  size: 24,
                 ),
               ),
-            ],
-          ),
-          trailing: SizedBox(
-            width: 120,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '-${FormatoNumeros.formatearParaMostrar(deuda['montoPendiente'])}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: colorEstado == const Color(0xFF10B981) ? Colors.green : Colors.red,
+              const SizedBox(width: 16),
+              
+              // Información de la deuda
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      deuda['titulo'],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF0F172A),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${deuda['tipo']} • ${deuda['acreedor']}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          fechaVenc != null
+                              ? '${fechaVenc.day}/${fechaVenc.month}/${fechaVenc.year}'
+                              : 'Sin fecha',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(width: 12),
+              
+              // Monto y botón de acción
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '-\$${FormatoNumeros.formatearParaMostrar(montoPendiente)}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: esPagada ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
-                  textAlign: TextAlign.right,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                const SizedBox(height: 6),
-                // Mostrar botón de pagar si la deuda no está pagada y tiene monto pendiente
-                if ((deuda['estado'] ?? '') != 'Pagada' && (deuda['montoPendiente'] ?? 0) > 0)
-                  SizedBox(
-                    height: 30,
-                    child: TextButton(
+                  const SizedBox(height: 8),
+                  
+                  // Botón de pagar o indicador de pagada
+                  if (!esPagada && montoPendiente > 0)
+                    ElevatedButton.icon(
                       onPressed: () {
                         if (onPagar != null) onPagar!(deuda);
                       },
-                      style: TextButton.styleFrom(
-                        backgroundColor: UtilsDeudas.colorPrincipal,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      icon: const Icon(Icons.payment, size: 14),
+                      label: const Text(
+                        'Pagar',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
                       ),
-                      child: const Text('Pagar', style: TextStyle(color: Colors.white, fontSize: 12)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: UtilsDeudas.colorPrincipal,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        minimumSize: Size.zero,
+                      ),
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            size: 14,
+                            color: Color(0xFF10B981),
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Pagada',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF10B981),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  )
-                else
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: Colors.grey.shade400,
-                  ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
