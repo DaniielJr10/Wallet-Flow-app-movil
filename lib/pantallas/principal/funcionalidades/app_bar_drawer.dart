@@ -2,7 +2,7 @@
 /// Contiene la navegación secundaria de la app, con un header personalizado
 /// y la lista de opciones organizadas por secciones (Acceso Rápido, Gestión, etc.).
 import 'package:flutter/material.dart';
-import '../../configuracion/ayuda_soporte.dart';
+import '../../configuracion/funcionalidades/ayuda_soporte.dart';
 
 class PrincipalDrawer extends StatelessWidget {
   final Function(int) onNavigate;
