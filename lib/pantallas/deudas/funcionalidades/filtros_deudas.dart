@@ -7,6 +7,7 @@ class FiltrosYOrdenDeudas extends StatelessWidget {
   final VoidCallback onFilterPressed;
   final VoidCallback onNuevaDeudaPressed;
   final GlobalKey filterButtonKey;
+  final String modoBusqueda;
 
   const FiltrosYOrdenDeudas({
     super.key,
@@ -14,6 +15,7 @@ class FiltrosYOrdenDeudas extends StatelessWidget {
     required this.onFilterPressed,
     required this.onNuevaDeudaPressed,
     required this.filterButtonKey,
+    required this.modoBusqueda,
   });
 
   @override
@@ -39,8 +41,10 @@ class FiltrosYOrdenDeudas extends StatelessWidget {
                     Expanded(
                       child: TextField(
                         onChanged: onSearchChanged,
-                        decoration: const InputDecoration(
-                          hintText: 'Buscar por categoría...',
+                        decoration: InputDecoration(
+                          hintText: modoBusqueda == 'categoría' 
+                              ? 'Buscar por categoría...' 
+                              : 'Buscar por mes (ej: enero 2024)...',
                           border: InputBorder.none,
                           isDense: true,
                         ),

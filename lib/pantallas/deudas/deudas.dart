@@ -122,17 +122,66 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
     // El promedio de vencimiento ya no se muestra en el resumen principal.
   }
 
+  String _obtenerNombreMes(int mes) {
+    const meses = [
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ];
+    return mes >= 1 && mes <= 12 ? meses[mes - 1] : '';
+  }
+
   List<Map<String, dynamic>> _obtenerDeudasFiltradas() {
     var lista = List<Map<String, dynamic>>.from(_deudas);
     
     if (_textoBusqueda.isNotEmpty) {
       final q = _textoBusqueda.toLowerCase();
-      lista = lista.where((d) {
-        final titulo = (d['titulo'] ?? '').toString().toLowerCase();
-        final tipo = (d['tipo'] ?? '').toString().toLowerCase();
-        final acreedor = (d['acreedor'] ?? '').toString().toLowerCase();
-        return titulo.contains(q) || tipo.contains(q) || acreedor.contains(q);
-      }).toList();
+      
+      if (_modoBusqueda == 'categoría') {
+        // Buscar por categoría (tipo, título, acreedor)
+        lista = lista.where((d) {
+          final titulo = (d['titulo'] ?? '').toString().toLowerCase();
+          final tipo = (d['tipo'] ?? '').toString().toLowerCase();
+          final acreedor = (d['acreedor'] ?? '').toString().toLowerCase();
+          return titulo.contains(q) || tipo.contains(q) || acreedor.contains(q);
+        }).toList();
+      } else if (_modoBusqueda == 'mes') {
+        // Buscar por mes/año (formato: "enero 2024", "01/2024", "enero", etc.)
+        lista = lista.where((d) {
+          final fechaVenc = d['fechaVencimiento'] as DateTime?;
+          final fechaCreacion = d['fechaCreacion'] as DateTime?;
+          
+          if (fechaVenc != null) {
+            final mesNombre = _obtenerNombreMes(fechaVenc.month).toLowerCase();
+            final anio = fechaVenc.year.toString();
+            final mesNumero = fechaVenc.month.toString().padLeft(2, '0');
+            
+            // Buscar por nombre de mes, numero de mes, anio, o combinacion
+            if (mesNombre.contains(q) || 
+                anio.contains(q) || 
+                mesNumero.contains(q) ||
+                '$mesNombre $anio'.contains(q) ||
+                '$mesNumero/$anio'.contains(q)) {
+              return true;
+            }
+          }
+          
+          if (fechaCreacion != null) {
+            final mesNombre = _obtenerNombreMes(fechaCreacion.month).toLowerCase();
+            final anio = fechaCreacion.year.toString();
+            final mesNumero = fechaCreacion.month.toString().padLeft(2, '0');
+            
+            if (mesNombre.contains(q) || 
+                anio.contains(q) || 
+                mesNumero.contains(q) ||
+                '$mesNombre $anio'.contains(q) ||
+                '$mesNumero/$anio'.contains(q)) {
+              return true;
+            }
+          }
+          
+          return false;
+        }).toList();
+      }
     }
 
     switch (_filtroSeleccionado) {
@@ -197,6 +246,7 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: FiltrosYOrdenDeudas(
                         filterButtonKey: _filterButtonKey,
+                        modoBusqueda: _modoBusqueda,
                         onSearchChanged: (v) => setState(() {
                           _textoBusqueda = v;
                           _calcularEstadisticas();
@@ -420,160 +470,388 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          titlePadding: const EdgeInsets.only(top: 18, bottom: 8),
-          title: Center(
-            child: Text('Registrar pago', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(child: Text('Saldo pendiente: ${FormatoNumeros.formatearParaMostrar(deuda['montoPendiente'] ?? 0)}', style: const TextStyle(fontWeight: FontWeight.w600))),
-              const SizedBox(height: 12),
-              // Selector de cuentas
-              StreamBuilder<QuerySnapshot>(
-                stream: _cuentasServicio.obtenerCuentas(),
-                builder: (context, snapshot) {
-                  final items = <DropdownMenuItem<String>>[];
-                  items.add(const DropdownMenuItem(value: 'ninguna', child: Text('Selecciona una cuenta')));
-                  if (snapshot.hasData) {
-                    for (var doc in snapshot.data!.docs) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      if (data['activa'] == true) {
-                        final label = data['tipo'] == 'dinero_en_mano'
-                            ? (data['alias'] ?? 'Dinero en mano')
-                            : '${data['banco'] ?? ''} - ${data['numeroCuenta'] ?? ''}';
-                        items.add(DropdownMenuItem(value: doc.id, child: Text(label)));
-                      }
-                    }
-                  }
-
-                  // mostrar saldo disponible de la cuenta seleccionada
-                  String? saldoCuentaTexto;
-                  if (snapshot.hasData && _cuentaSeleccionada != 'ninguna') {
-                    try {
-                      final doc = snapshot.data!.docs.firstWhere((d) => d.id == _cuentaSeleccionada);
-                      final data = doc.data() as Map<String, dynamic>;
-                      saldoCuentaTexto = FormatoNumeros.formatearParaMostrar((data['saldo'] ?? 0).toDouble());
-                    } catch (_) {
-                      saldoCuentaTexto = null;
-                    }
-                  }
-
-                  return Column(
+        builder: (context, setStateDialog) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header con gradiente
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFF97316), Color(0xFFEA580C)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.payment,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          'Registrar pago',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Contenido
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      DropdownButtonFormField<String>(
-                        value: items.any((i) => i.value == _cuentaSeleccionada) ? _cuentaSeleccionada : 'ninguna',
-                        items: items,
-                        onChanged: (v) => setStateDialog(() => _cuentaSeleccionada = v ?? 'ninguna'),
-                        decoration: const InputDecoration(labelText: 'Cuenta desde la que pagar'),
+                      // Saldo pendiente destacado
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF97316).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.account_balance_wallet,
+                                color: Color(0xFFF97316),
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Saldo pendiente',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '\$${FormatoNumeros.formatearParaMostrar(deuda['montoPendiente'] ?? 0)}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      if (saldoCuentaTexto != null) ...[
-                        const SizedBox(height: 6),
-                        Text('Saldo disponible: $saldoCuentaTexto', style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-                      ],
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Selector de cuentas
+                      StreamBuilder<QuerySnapshot>(
+                        stream: _cuentasServicio.obtenerCuentas(),
+                        builder: (context, snapshot) {
+                          final items = <DropdownMenuItem<String>>[];
+                          items.add(const DropdownMenuItem(
+                            value: 'ninguna',
+                            child: Text('Selecciona una cuenta'),
+                          ));
+                          if (snapshot.hasData) {
+                            for (var doc in snapshot.data!.docs) {
+                              final data = doc.data() as Map<String, dynamic>;
+                              if (data['activa'] == true) {
+                                final label = data['tipo'] == 'dinero_en_mano'
+                                    ? (data['alias'] ?? 'Dinero en mano')
+                                    : '${data['banco'] ?? ''} - ${data['numeroCuenta'] ?? ''}';
+                                items.add(DropdownMenuItem(
+                                  value: doc.id,
+                                  child: Text(label),
+                                ));
+                              }
+                            }
+                          }
+
+                          // mostrar saldo disponible de la cuenta seleccionada
+                          String? saldoCuentaTexto;
+                          if (snapshot.hasData && _cuentaSeleccionada != 'ninguna') {
+                            try {
+                              final doc = snapshot.data!.docs.firstWhere(
+                                (d) => d.id == _cuentaSeleccionada,
+                              );
+                              final data = doc.data() as Map<String, dynamic>;
+                              saldoCuentaTexto = FormatoNumeros.formatearParaMostrar(
+                                (data['saldo'] ?? 0).toDouble(),
+                              );
+                            } catch (_) {
+                              saldoCuentaTexto = null;
+                            }
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Cuenta desde la que pagar',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF374151),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey.shade300),
+                                ),
+                                child: DropdownButtonFormField<String>(
+                                  value: items.any((i) => i.value == _cuentaSeleccionada)
+                                      ? _cuentaSeleccionada
+                                      : 'ninguna',
+                                  items: items,
+                                  onChanged: (v) => setStateDialog(
+                                    () => _cuentaSeleccionada = v ?? 'ninguna',
+                                  ),
+                                  decoration: const InputDecoration(
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.arrow_drop_down),
+                                ),
+                              ),
+                              if (saldoCuentaTexto != null) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.account_balance_wallet,
+                                      size: 14,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Saldo disponible: \$$saldoCuentaTexto',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          );
+                        },
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Campo de monto
+                      const Text(
+                        'Monto a pagar',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF374151),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _montoCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: InputDecoration(
+                          prefixIcon: const Icon(Icons.attach_money, color: Color(0xFFF97316)),
+                          hintText: '0.00',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFF97316),
+                              width: 2,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Botones de acción
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.grey.shade700,
+                                side: BorderSide(color: Colors.grey.shade300),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Cancelar',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                final raw = _montoCtrl.text.replaceAll(',', '.').replaceAll('\$', '').trim();
+                                final pago = double.tryParse(raw) ?? 0.0;
+                                if (pago <= 0) {
+                                  _mostrarMensaje('Ingresa un monto válido', esError: true);
+                                  return;
+                                }
+                                if (_cuentaSeleccionada == 'ninguna') {
+                                  _mostrarMensaje('Selecciona una cuenta para pagar', esError: true);
+                                  return;
+                                }
+
+                                Navigator.of(context).pop();
+                                setState(() { _estaCargando = true; });
+                                try {
+                                  // Verificar cuenta y saldo
+                                  final cuentaDoc = await _cuentasServicio.obtenerCuentaPorId(_cuentaSeleccionada);
+                                  if (cuentaDoc == null) {
+                                    _mostrarMensaje('Cuenta no encontrada', esError: true);
+                                    return;
+                                  }
+                                  final cuentaData = cuentaDoc.data() as Map<String, dynamic>;
+                                  final saldoActual = (cuentaData['saldo'] ?? 0).toDouble();
+
+                                  // No permitir pagar más que la deuda: ajustar pago al pendiente
+                                  final montoPend = (deuda['montoPendiente'] ?? 0).toDouble();
+                                  final pagoFinal = pago > montoPend ? montoPend : pago;
+
+                                  if (pagoFinal > saldoActual) {
+                                    _mostrarMensaje('Saldo insuficiente en la cuenta seleccionada', esError: true);
+                                    return;
+                                  }
+
+                                  // Actualizar saldo de la cuenta con el pagoFinal
+                                  final nuevoSaldoCuenta = saldoActual - pagoFinal;
+                                  final cuentaError = await _cuentasServicio.actualizarSaldo(cuentaId: _cuentaSeleccionada, nuevoSaldo: nuevoSaldoCuenta);
+                                  if (cuentaError != null) {
+                                    _mostrarMensaje('Error al actualizar cuenta: $cuentaError', esError: true);
+                                    return;
+                                  }
+
+                                  // Actualizar deuda
+                                  double nuevoPend = montoPend - pagoFinal;
+                                  String nuevoEstado = deuda['estado'] ?? 'Pendiente';
+                                  if (nuevoPend <= 0) {
+                                    nuevoPend = 0.0;
+                                    nuevoEstado = 'Pagada';
+                                  }
+
+                                  final historial = List<Map<String, dynamic>>.from(deuda['historialPagos'] ?? []);
+                                  historial.add({'monto': pago, 'fecha': DateTime.now(), 'cuenta': _cuentaSeleccionada});
+
+                                  await _deudasServicio.editarDeuda(deuda['id'], {
+                                    'montoPendiente': nuevoPend,
+                                    'estado': nuevoEstado,
+                                    'historialPagos': historial,
+                                  });
+
+                                  _cargarDeudas();
+                                  _mostrarMensaje('Pago registrado', esError: false);
+                                } catch (e) {
+                                  _mostrarMensaje('Error al registrar pago', esError: true);
+                                } finally {
+                                  setState(() { _estaCargando = false; });
+                                }
+                              },
+                              icon: const Icon(Icons.check_circle, size: 18),
+                              label: const Text(
+                                'Confirmar',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFF97316),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _montoCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: 'Monto a pagar',
-                  prefixText: '\$',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancelar', style: TextStyle(color: Colors.purple[700])),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: UtilsDeudas.colorPrincipal,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                elevation: 4,
-              ),
-              onPressed: () async {
-                final raw = _montoCtrl.text.replaceAll(',', '.').replaceAll('\$', '').trim();
-                final pago = double.tryParse(raw) ?? 0.0;
-                if (pago <= 0) {
-                  _mostrarMensaje('Ingresa un monto válido', esError: true);
-                  return;
-                }
-                if (_cuentaSeleccionada == 'ninguna') {
-                  _mostrarMensaje('Selecciona una cuenta para pagar', esError: true);
-                  return;
-                }
-
-                Navigator.of(context).pop();
-                setState(() { _estaCargando = true; });
-                try {
-                  // Verificar cuenta y saldo
-                  final cuentaDoc = await _cuentasServicio.obtenerCuentaPorId(_cuentaSeleccionada);
-                  if (cuentaDoc == null) {
-                    _mostrarMensaje('Cuenta no encontrada', esError: true);
-                    return;
-                  }
-                  final cuentaData = cuentaDoc.data() as Map<String, dynamic>;
-                  final saldoActual = (cuentaData['saldo'] ?? 0).toDouble();
-
-                  // No permitir pagar más que la deuda: ajustar pago al pendiente
-                  final montoPend = (deuda['montoPendiente'] ?? 0).toDouble();
-                  final pagoFinal = pago > montoPend ? montoPend : pago;
-
-                  if (pagoFinal > saldoActual) {
-                    _mostrarMensaje('Saldo insuficiente en la cuenta seleccionada', esError: true);
-                    return;
-                  }
-
-                  // Actualizar saldo de la cuenta con el pagoFinal
-                  final nuevoSaldoCuenta = saldoActual - pagoFinal;
-                  final cuentaError = await _cuentasServicio.actualizarSaldo(cuentaId: _cuentaSeleccionada, nuevoSaldo: nuevoSaldoCuenta);
-                  if (cuentaError != null) {
-                    _mostrarMensaje('Error al actualizar cuenta: $cuentaError', esError: true);
-                    return;
-                  }
-
-                  // Actualizar deuda
-                  double nuevoPend = montoPend - pagoFinal;
-                  String nuevoEstado = deuda['estado'] ?? 'Pendiente';
-                  if (nuevoPend <= 0) {
-                    nuevoPend = 0.0;
-                    nuevoEstado = 'Pagada';
-                  }
-
-                  final historial = List<Map<String, dynamic>>.from(deuda['historialPagos'] ?? []);
-                  historial.add({'monto': pago, 'fecha': DateTime.now(), 'cuenta': _cuentaSeleccionada});
-
-                  await _deudasServicio.editarDeuda(deuda['id'], {
-                    'montoPendiente': nuevoPend,
-                    'estado': nuevoEstado,
-                    'historialPagos': historial,
-                  });
-
-                  _cargarDeudas();
-                  _mostrarMensaje('Pago registrado', esError: false);
-                } catch (e) {
-                  _mostrarMensaje('Error al registrar pago', esError: true);
-                } finally {
-                  setState(() { _estaCargando = false; });
-                }
-              },
-              child: const Text('Confirmar'),
-            ),
-          ],
         ),
       ),
     );
