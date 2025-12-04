@@ -247,7 +247,7 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          esEdicion ? 'Actualizar Cuenta' : 'Crear Cuenta',
+                          esEdicion ? 'Actualizar cambios' : 'Guardar',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

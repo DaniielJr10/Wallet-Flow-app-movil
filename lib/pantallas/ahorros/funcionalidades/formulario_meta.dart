@@ -220,7 +220,7 @@ class _FormularioMetaState extends State<FormularioMeta> {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               elevation: 0,
                             ),
-                            child: const Text('Guardar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                            child: Text(widget.esEdicion ? 'Actualizar cambios' : 'Guardar', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                           ),
                         ),
                       ],

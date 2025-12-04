@@ -497,7 +497,7 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: Text(widget.esEdicion ? 'Actualizar' : 'Guardar'),
+            child: Text(widget.esEdicion ? 'Actualizar cambios' : 'Guardar'),
           ),
         ),
       ],

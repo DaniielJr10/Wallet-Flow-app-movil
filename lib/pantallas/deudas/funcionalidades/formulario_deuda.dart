@@ -277,7 +277,7 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                               elevation: 0,
                             ),
-                            child: Text(widget.esEdicion ? 'Guardar Cambios' : 'Crear', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                            child: Text(widget.esEdicion ? 'Actualizar cambios' : 'Guardar', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                           ),
                         ),
                       ],
