@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase/firebase_options.dart';
+import 'firebase/servicios/NotificacionesService/notificaciones_servicio.dart';
 import 'auth_wrapper.dart';
 
 void main() async {
@@ -12,6 +13,19 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Inicializar servicio de notificaciones
+  try {
+    final notificacionesInicializadas = await NotificacionesServicio.instance.inicializar();
+    if (notificacionesInicializadas) {
+      print('✅ Servicio de notificaciones inicializado correctamente');
+      await NotificacionesServicio.instance.verificarPermisos();
+    } else {
+      print('⚠️ No se pudo inicializar el servicio de notificaciones');
+    }
+  } catch (e) {
+    print('❌ Error inicializando notificaciones: $e');
+  }
   
   runApp(const WalletFlowApp());
 }

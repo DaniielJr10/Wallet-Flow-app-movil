@@ -4,6 +4,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../pantallas/ingresos/funcionalidades/frecuencia.dart';
+import '../../NotificacionesService/notificaciones_servicio.dart';
 
 class FrecuenciaServicio {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -38,6 +39,8 @@ class FrecuenciaServicio {
       if (monto <= 0) return 'El monto debe ser mayor a 0';
       if (descripcion.trim().isEmpty) return 'La descripción es requerida';
 
+      String? ingresoId; // Variable para guardar el ID del ingreso creado
+
       await _firestore.runTransaction((transaction) async {
         // === FASE DE LECTURAS ===
         DocumentSnapshot<Map<String, dynamic>>? cuentaDoc;
@@ -55,6 +58,7 @@ class FrecuenciaServicio {
 
         // === FASE DE ESCRITURAS ===
         final ingresoRef = _ingresosRef().doc();
+        ingresoId = ingresoRef.id; // Guardar el ID para usar después
 
         final ingresoData = {
           'monto': monto,
@@ -94,6 +98,23 @@ class FrecuenciaServicio {
           });
         }
       });
+
+      // === PROGRAMAR NOTIFICACIÓN DE RECORDATORIO ===
+      if (frecuencia != TipoFrecuencia.ninguna) {
+        try {
+          final proximaFecha = FrecuenciaUtils.calcularProximaFecha(fechaInicial, frecuencia);
+          await NotificacionesServicio.instance.programarRecordatorioIngreso(
+            ingresoId: ingresoId!,
+            monto: monto,
+            descripcion: descripcion,
+            fechaRecordatorio: proximaFecha,
+          );
+          print('Notificación programada para: ${proximaFecha.toString()}');
+        } catch (e) {
+          print('Error programando notificación: $e');
+          // No fallar la creación del ingreso si falla la notificación
+        }
+      }
 
       return null;
     } catch (e) {

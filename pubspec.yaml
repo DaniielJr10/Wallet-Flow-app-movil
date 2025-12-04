@@ -38,6 +38,10 @@ dependencies:
   http: ^1.6.0
   shared_preferences: ^2.5.3
   
+  # Notificaciones locales
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+  
   # Internacionalización y formateo
   intl: ^0.20.2
   # Export / sharing utilities

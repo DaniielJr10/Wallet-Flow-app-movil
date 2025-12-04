@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+// Importación del servicio de notificaciones
+import '../../firebase/servicios/NotificacionesService/notificaciones_servicio.dart';
 
 
 // import '../perfil/perfil.dart'; // removed: profile not shown in settings
@@ -72,7 +74,16 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   Future<void> _cargarConfiguracion() async {
     try {
       await Future.delayed(const Duration(milliseconds: 500));
-      // Aquí se cargarían las preferencias reales
+      
+      // Cargar configuración de notificaciones
+      final notificacionesActivas = await NotificacionesServicio.instance.notificacionesActivas();
+      
+      if (mounted) {
+        setState(() {
+          _notificacionesActivas = notificacionesActivas;
+        });
+      }
+      
     } catch (e) {
       debugPrint('Error al cargar configuración: $e');
     }
@@ -81,6 +92,13 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   Future<void> _guardarConfiguracion(String key, dynamic value) async {
     try {
       debugPrint('Guardando configuración: $key = $value');
+      
+      // Si se cambia la configuración de notificaciones, aplicar al servicio
+      if (key == 'notificaciones_activas') {
+        await NotificacionesServicio.instance.configurarNotificaciones(value);
+        debugPrint('Configuración de notificaciones aplicada: $value');
+      }
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
