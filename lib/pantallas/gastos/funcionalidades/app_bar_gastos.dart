@@ -19,7 +19,7 @@ class AppBarGastos extends StatelessWidget implements PreferredSizeWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.receipt_long_rounded, color: UtilsGastos.colorPrincipal, size: 28),
+                Icon(Icons.trending_down, color: UtilsGastos.colorPrincipal, size: 28),
                 const SizedBox(width: 8),
                 Text(
                   'GASTOS',

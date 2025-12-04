@@ -16,15 +16,15 @@ La pantalla principal ahora cuenta con un **sistema de menús súper organizado*
    - Estadísticas del mes anterior
 
 2. **⚡ Acciones Rápidas** (4 botones principales)
-   - **💰 Nuevo Ingreso** → Navega a Ingresos
-   - **💸 Añadir Gasto** → Navega a Gastos  
+   - **📈 Nuevo Ingreso** → Navega a Ingresos
+   - **📉 Añadir Gasto** → Navega a Gastos  
    - **🏦 Nuevo Ahorro** → Navega a Ahorros
 
 
 3. **🔧 Servicios Financieros** (Grid 3x2)
-   - **💳 Deudas** - Gestionar deudas pendientes
+   - **🧾 Deudas** - Gestionar deudas pendientes
 
-   - **🏦 Cuentas** - Cuentas bancarias
+   - **💳 Cuentas** - Cuentas bancarias
 
    - **🛠️ Herramientas** - Calculadoras
    - **⚙️ Configuración** - Ajustes de la app
@@ -32,24 +32,24 @@ La pantalla principal ahora cuenta con un **sistema de menús súper organizado*
 4. **📊 Análisis Rápido** (3 tarjetas de estadísticas)
    - **📈 Balance** - Cambio vs mes anterior (+$2,337.65)
    - **📉 Gastos** - Porcentaje de reducción (-15.2%)
-   - **💰 Ahorros** - Progreso de metas (+8.5%)
+   - **🏦 Ahorros** - Progreso de metas (+8.5%)
 
 5. **💼 Resumen Financiero** (5 tarjetas principales)
-   - **💰 Ingresos del Mes** - $4,230.00
+   - **📈 Ingresos del Mes** - $4,230.00
    - **🏦 Ahorros Totales** - $5,240.00  
-   - **💸 Gastos del Mes** - $1,892.35
+   - **📉 Gastos del Mes** - $1,892.35
 
-   - **💳 Deudas Pendientes** - $2,340.80
+   - **🧾 Deudas Pendientes** - $2,340.80
 
 ---
 
 ## 🧭 **Navegación Bottom (5 pestañas)**
 
 | Posición | Ícono | Título | Función |
-|----------|-------|--------|---------|
+|----------|-------|--------|---------||
 | 1 | 🏠 | **Inicio** | Dashboard principal |
-| 2 | 💰 | **Ingresos** | Gestión de ingresos |
-| 3 | 💸 | **Gastos** | Control de gastos |
+| 2 | 📈 | **Ingresos** | Gestión de ingresos |
+| 3 | 📉 | **Gastos** | Control de gastos |
 | 4 | 🏦 | **Ahorros** | Objetivos de ahorro |
 | 5 | ⋯ | **Más** | Abre drawer lateral |
 
@@ -70,9 +70,9 @@ La pantalla principal ahora cuenta con un **sistema de menús súper organizado*
 - **📊 Reportes** - Análisis financiero
 
 #### 💼 **Gestión Financiera**
-- **💳 Deudas** - Con badge "2" (2 pendientes)
+- **🧾 Deudas** - Con badge "2" (2 pendientes)
 
-- **🏦 Cuentas Bancarias** - Administración
+- **💳 Cuentas Bancarias** - Administración
 
 #### 🛠️ **Herramientas**
 
