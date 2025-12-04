@@ -36,8 +36,6 @@ class _FormularioGastoState extends State<FormularioGasto> {
   String _cuentaAsociada = 'ninguna';
   TipoFrecuencia _frecuencia = TipoFrecuencia.ninguna;
   TipoFrecuencia _frecuenciaOriginal = TipoFrecuencia.ninguna;
-  bool _tieneRecordatorio = false;
-  DateTime? _fechaRecordatorio;
 
   @override
   void initState() {
@@ -52,21 +50,13 @@ class _FormularioGastoState extends State<FormularioGasto> {
       _cuentaAsociada = g['cuentaAsociada'] ?? 'ninguna';
       // Obtener frecuencia del gasto existente
       if (g.containsKey('frecuencia') && g['frecuencia'] != null) {
-        _frecuencia = FrecuenciaUtils.desdeString(g['frecuencia']) ?? TipoFrecuencia.ninguna;
+        _frecuencia =
+            FrecuenciaUtils.desdeString(g['frecuencia']) ??
+            TipoFrecuencia.ninguna;
       } else {
         _frecuencia = TipoFrecuencia.ninguna;
       }
       _frecuenciaOriginal = _frecuencia;
-      if (g.containsKey('recordatorio') && g['recordatorio'] != null) {
-        final r = g['recordatorio'];
-        if (r is Timestamp) {
-          _tieneRecordatorio = true;
-          _fechaRecordatorio = r.toDate();
-        } else if (r is DateTime) {
-          _tieneRecordatorio = true;
-          _fechaRecordatorio = r;
-        }
-      }
     }
     // Validar que la cuenta asociada existe después de inicializar
     _validarCuentaAsociada();
@@ -76,7 +66,9 @@ class _FormularioGastoState extends State<FormularioGasto> {
   void _validarCuentaAsociada() async {
     if (_cuentaAsociada != 'ninguna') {
       try {
-        final cuentaDoc = await _cuentasServicio.obtenerCuentaPorId(_cuentaAsociada);
+        final cuentaDoc = await _cuentasServicio.obtenerCuentaPorId(
+          _cuentaAsociada,
+        );
         if (cuentaDoc == null || !cuentaDoc.exists) {
           // Si la cuenta no existe, cambiar a 'ninguna'
           if (mounted) {
@@ -128,7 +120,10 @@ class _FormularioGastoState extends State<FormularioGasto> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [UtilsGastos.colorPrincipal, UtilsGastos.colorSecundario],
+                colors: [
+                  UtilsGastos.colorPrincipal,
+                  UtilsGastos.colorSecundario,
+                ],
               ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(25),
@@ -137,18 +132,28 @@ class _FormularioGastoState extends State<FormularioGasto> {
             ),
             child: Row(
               children: [
-                Icon(widget.esEdicion ? Icons.edit_rounded : Icons.payment_rounded, color: Colors.white, size: 28),
+                Icon(
+                  widget.esEdicion ? Icons.edit_rounded : Icons.payment_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     widget.esEdicion ? 'Editar Gasto' : 'Nuevo Gasto',
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.close_rounded, color: Colors.white),
-                  style: IconButton.styleFrom(backgroundColor: Colors.white.withOpacity(0.2)),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.2),
+                  ),
                 ),
               ],
             ),
@@ -178,9 +183,19 @@ class _FormularioGastoState extends State<FormularioGasto> {
                     const SizedBox(height: 20),
                     _buildSelectorFecha(),
                     const SizedBox(height: 20),
-                    _buildDropdown('Categoría', _categoriaSeleccionada, UtilsGastos.categorias, (v) => setState(() => _categoriaSeleccionada = v!)),
+                    _buildDropdown(
+                      'Categoría',
+                      _categoriaSeleccionada,
+                      UtilsGastos.categorias,
+                      (v) => setState(() => _categoriaSeleccionada = v!),
+                    ),
                     const SizedBox(height: 20),
-                    _buildDropdown('Método de Pago', _metodoPagoSeleccionado, UtilsGastos.metodosPago, (v) => setState(() => _metodoPagoSeleccionado = v!)),
+                    _buildDropdown(
+                      'Método de Pago',
+                      _metodoPagoSeleccionado,
+                      UtilsGastos.metodosPago,
+                      (v) => setState(() => _metodoPagoSeleccionado = v!),
+                    ),
                     const SizedBox(height: 20),
                     _buildSelectorCuenta(),
                     const SizedBox(height: 20),
@@ -192,16 +207,23 @@ class _FormularioGastoState extends State<FormularioGasto> {
                         });
                       },
                     ),
-                    const SizedBox(height: 20),
-                    _buildRecordatorio(),
                     const SizedBox(height: 32),
                     Row(
                       children: [
                         Expanded(
                           child: TextButton(
                             onPressed: () => Navigator.pop(context),
-                            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                            child: Text('Cancelar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: Text(
+                              'Cancelar',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -212,9 +234,19 @@ class _FormularioGastoState extends State<FormularioGasto> {
                               backgroundColor: UtilsGastos.colorPrincipal,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            child: Text(widget.esEdicion ? 'Actualizar cambios' : 'Guardar', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                            child: Text(
+                              widget.esEdicion
+                                  ? 'Actualizar cambios'
+                                  : 'Guardar',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -229,52 +261,24 @@ class _FormularioGastoState extends State<FormularioGasto> {
     );
   }
 
-  Widget _buildRecordatorio() {
+  Widget _buildInput({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    bool isNumber = false,
+    required IconData icon,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Recordatorio', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            Switch(
-              value: _tieneRecordatorio,
-              onChanged: (v) => setState(() {
-                _tieneRecordatorio = v;
-                if (!v) _fechaRecordatorio = null;
-                if (v && _fechaRecordatorio == null) _fechaRecordatorio = DateTime.now().add(const Duration(days:1));
-              }),
-            ),
-          ],
-        ),
-        if (_tieneRecordatorio) ...[
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () async {
-              final pickedDate = await showDatePicker(context: context, initialDate: _fechaRecordatorio ?? DateTime.now(), firstDate: DateTime.now(), lastDate: DateTime(2100));
-              if (pickedDate == null) return;
-              final pickedTime = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_fechaRecordatorio ?? DateTime.now()));
-              if (pickedTime == null) return;
-              setState(() {
-                _fechaRecordatorio = DateTime(pickedDate.year, pickedDate.month, pickedDate.day, pickedTime.hour, pickedTime.minute);
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(border: Border.all(color: Colors.grey.shade300), borderRadius: BorderRadius.circular(12), color: Colors.grey.shade50),
-              child: Row(children: [Icon(Icons.notifications, color: UtilsGastos.colorPrincipal), const SizedBox(width:12), Text(_fechaRecordatorio != null ? '${_fechaRecordatorio!.day}/${_fechaRecordatorio!.month}/${_fechaRecordatorio!.year} ${_fechaRecordatorio!.hour.toString().padLeft(2,'0')}:${_fechaRecordatorio!.minute.toString().padLeft(2,'0')}' : 'Seleccionar fecha y hora')]),
-            ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade800,
           ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildInput({required TextEditingController controller, required String label, required String hint, bool isNumber = false, required IconData icon}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+        ),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -282,15 +286,34 @@ class _FormularioGastoState extends State<FormularioGasto> {
           inputFormatters: isNumber ? [FormateadorNumeros()] : [],
           validator: (v) {
             if (v == null || v.isEmpty) return 'Campo requerido';
-            if (isNumber && (FormatoNumeros.convertirANumero(v) ?? 0) <= 0) return 'Monto inválido';
+            if (isNumber && (FormatoNumeros.convertirANumero(v) ?? 0) <= 0)
+              return 'Monto inválido';
             return null;
           },
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: Icon(icon, color: UtilsGastos.colorPrincipal),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: UtilsGastos.colorPrincipal, width: 2)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: UtilsGastos.colorPrincipal,
+                width: 2,
+              ),
+            ),
             filled: true,
             fillColor: Colors.white,
           ),
@@ -299,20 +322,57 @@ class _FormularioGastoState extends State<FormularioGasto> {
     );
   }
 
-  Widget _buildDropdown(String label, String value, List<String> items, Function(String?) onChanged) {
+  Widget _buildDropdown(
+    String label,
+    String value,
+    List<String> items,
+    Function(String?) onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade800,
+          ),
+        ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: value,
-          items: items.map((e) => DropdownMenuItem(value: e, child: Text(UtilsGastos.capitalizar(e)))).toList(),
+          items: items
+              .map(
+                (e) => DropdownMenuItem(
+                  value: e,
+                  child: Text(UtilsGastos.capitalizar(e)),
+                ),
+              )
+              .toList(),
           onChanged: onChanged,
           decoration: InputDecoration(
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: UtilsGastos.colorPrincipal, width: 2)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: UtilsGastos.colorPrincipal,
+                width: 2,
+              ),
+            ),
             filled: true,
             fillColor: Colors.white,
           ),
@@ -325,11 +385,23 @@ class _FormularioGastoState extends State<FormularioGasto> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Fecha', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+        Text(
+          'Fecha',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade800,
+          ),
+        ),
         const SizedBox(height: 8),
         GestureDetector(
           onTap: () async {
-            final picked = await showDatePicker(context: context, initialDate: _fechaSeleccionada, firstDate: DateTime(2020), lastDate: DateTime(2030));
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: _fechaSeleccionada,
+              firstDate: DateTime(2020),
+              lastDate: DateTime(2030),
+            );
             if (picked != null) setState(() => _fechaSeleccionada = picked);
           },
           child: Container(
@@ -341,9 +413,14 @@ class _FormularioGastoState extends State<FormularioGasto> {
             ),
             child: Row(
               children: [
-                Icon(Icons.calendar_today_rounded, color: UtilsGastos.colorPrincipal),
+                Icon(
+                  Icons.calendar_today_rounded,
+                  color: UtilsGastos.colorPrincipal,
+                ),
                 const SizedBox(width: 12),
-                Text('${_fechaSeleccionada.day}/${_fechaSeleccionada.month}/${_fechaSeleccionada.year}'),
+                Text(
+                  '${_fechaSeleccionada.day}/${_fechaSeleccionada.month}/${_fechaSeleccionada.year}',
+                ),
               ],
             ),
           ),
@@ -367,9 +444,19 @@ class _FormularioGastoState extends State<FormularioGasto> {
             final data = doc.data() as Map<String, dynamic>;
             if (data['activa'] == true) {
               if (data['tipo'] == 'dinero_en_mano') {
-                dineroEnManoItems.add(DropdownMenuItem(value: doc.id, child: const Text('Dinero en mano')));
+                dineroEnManoItems.add(
+                  DropdownMenuItem(
+                    value: doc.id,
+                    child: const Text('Dinero en mano'),
+                  ),
+                );
               } else {
-                bancariasItems.add(DropdownMenuItem(value: doc.id, child: Text('${data['banco']} - ${data['numeroCuenta']}')));
+                bancariasItems.add(
+                  DropdownMenuItem(
+                    value: doc.id,
+                    child: Text('${data['banco']} - ${data['numeroCuenta']}'),
+                  ),
+                );
               }
               if (doc.id == _cuentaAsociada) cuentaAsociadaEnLista = true;
             }
@@ -385,26 +472,31 @@ class _FormularioGastoState extends State<FormularioGasto> {
               if (snapCuenta.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
-              
-              if (snapCuenta.hasData && snapCuenta.data != null && snapCuenta.data!.exists) {
+
+              if (snapCuenta.hasData &&
+                  snapCuenta.data != null &&
+                  snapCuenta.data!.exists) {
                 // La cuenta existe pero está inactiva o eliminada
                 final data = snapCuenta.data!.data() as Map<String, dynamic>;
                 String texto;
                 if (data['tipo'] == 'dinero_en_mano') {
                   texto = 'Dinero en mano (eliminada)';
                 } else {
-                  texto = '${data['banco']} - ${data['numeroCuenta']} (eliminada)';
+                  texto =
+                      '${data['banco']} - ${data['numeroCuenta']} (eliminada)';
                 }
-                items.add(DropdownMenuItem(
-                  value: _cuentaAsociada, 
-                  child: Text(
-                    texto,
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontStyle: FontStyle.italic,
+                items.add(
+                  DropdownMenuItem(
+                    value: _cuentaAsociada,
+                    child: Text(
+                      texto,
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
-                ));
+                );
               } else {
                 // La cuenta no existe, cambiar a 'ninguna' automáticamente
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -416,18 +508,27 @@ class _FormularioGastoState extends State<FormularioGasto> {
                 });
                 _cuentaAsociada = 'ninguna';
               }
-              
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Cuenta Asociada', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+                  Text(
+                    'Cuenta Asociada',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     value: _cuentaAsociada,
                     items: items,
                     onChanged: (v) => setState(() => _cuentaAsociada = v!),
                     decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       filled: true,
                       fillColor: Colors.grey.shade50,
                     ),
@@ -444,14 +545,23 @@ class _FormularioGastoState extends State<FormularioGasto> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Cuenta Asociada', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+            Text(
+              'Cuenta Asociada',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade800,
+              ),
+            ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: _cuentaAsociada,
               items: items,
               onChanged: (v) => setState(() => _cuentaAsociada = v!),
               decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 filled: true,
                 fillColor: Colors.grey.shade50,
               ),
@@ -465,7 +575,7 @@ class _FormularioGastoState extends State<FormularioGasto> {
   Future<void> _guardar() async {
     if (_formKey.currentState!.validate()) {
       final monto = FormatoNumeros.convertirANumero(_montoController.text) ?? 0;
-      
+
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -485,7 +595,9 @@ class _FormularioGastoState extends State<FormularioGasto> {
             metodoPago: _metodoPagoSeleccionado,
             frecuenciaActual: _frecuenciaOriginal,
             nuevaFrecuencia: _frecuencia,
-            cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+            cuentaAsociada: _cuentaAsociada != 'ninguna'
+                ? _cuentaAsociada
+                : null,
           );
         } else {
           // Para creación, verificar si tiene frecuencia
@@ -497,7 +609,9 @@ class _FormularioGastoState extends State<FormularioGasto> {
               categoria: _categoriaSeleccionada,
               metodoPago: _metodoPagoSeleccionado,
               frecuencia: _frecuencia,
-              cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+              cuentaAsociada: _cuentaAsociada != 'ninguna'
+                  ? _cuentaAsociada
+                  : null,
             );
           } else {
             // Crear gasto normal sin frecuencia usando el método original
@@ -507,9 +621,10 @@ class _FormularioGastoState extends State<FormularioGasto> {
               fecha: _fechaSeleccionada,
               categoria: _categoriaSeleccionada,
               metodoPago: _metodoPagoSeleccionado,
-              cuentaAsociada: _cuentaAsociada != 'ninguna' ? _cuentaAsociada : null,
+              cuentaAsociada: _cuentaAsociada != 'ninguna'
+                  ? _cuentaAsociada
+                  : null,
               notas: '',
-              recordatorio: _tieneRecordatorio ? _fechaRecordatorio : null,
             );
           }
         }
@@ -520,13 +635,17 @@ class _FormularioGastoState extends State<FormularioGasto> {
             Navigator.pop(context); // Cerrar form
             widget.onGuardar();
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error), backgroundColor: Colors.red));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(error), backgroundColor: Colors.red),
+            );
           }
         }
       } catch (e) {
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
         }
       }
     }
