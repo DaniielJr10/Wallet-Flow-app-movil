@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../firebase/servicios/UsuarioService/usuarios_servicio.dart';
 import 'soporte_modelos.dart';
 import 'soporte_dialogs.dart';
 
@@ -18,14 +19,17 @@ class SoporteEmailService {
     try {
       final user = FirebaseAuth.instance.currentUser;
       final userEmail = user?.email ?? 'usuario@ejemplo.com';
-      final userName = user?.displayName ?? 'Usuario de Wallet Flow';
+      
+      // Obtener información del usuario incluyendo nombre desde Firestore
+      final userInfo = await obtenerInfoUsuario();
+      final userName = userInfo['nombreCompleto'] ?? 'Usuario de Wallet Flow';
       
       // Construir el cuerpo del correo
       final String cuerpoCorreo = SoporteConstantes.generarCuerpoCorreo(
         asunto: asunto,
         categoria: categoria,
         mensaje: mensaje,
-        nombreUsuario: userName,
+        nombreUsuario: userName, // Usar nombre completo para el correo
         emailUsuario: userEmail,
       );
 
@@ -80,19 +84,42 @@ class SoporteEmailService {
   }
 
   /// Obtiene la información del usuario actual
-  static Map<String, String> obtenerInfoUsuario() {
+  static Future<Map<String, String>> obtenerInfoUsuario() async {
     final user = FirebaseAuth.instance.currentUser;
+    final usuariosServicio = UsuariosServicio();
+    
+    // Obtener solo el primer nombre como en la pantalla principal
+    String nombreCompleto = 'Usuario';
+    
+    try {
+      // 1. Intentar obtener nombre de Firebase Auth (Google, etc)
+      if (user?.displayName?.isNotEmpty == true) {
+        nombreCompleto = user!.displayName!;
+      } else {
+        // 2. Si no, buscar en Firestore usando el servicio
+        final perfil = await usuariosServicio.obtenerPerfil();
+        
+        if (perfil != null && perfil.exists) {
+          final datos = perfil.data();
+          if (datos != null && datos['nombre'] != null) {
+            nombreCompleto = datos['nombre'] as String;
+          }
+        }
+      }
+    } catch (e) {
+      // Mantener valor por defecto en caso de error
+      print('Error obteniendo nombre de usuario: $e');
+    }
+    
+    String primerNombre = nombreCompleto.split(' ')[0];
     
     return {
-      'nombre': user?.displayName?.isNotEmpty == true 
-          ? user!.displayName! 
-          : 'Usuario',
+      'nombre': primerNombre,
+      'nombreCompleto': nombreCompleto,
       'email': user?.email?.isNotEmpty == true 
           ? user!.email! 
           : 'correo@ejemplo.com',
-      'iniciales': (user?.displayName?.isNotEmpty == true 
-          ? user!.displayName! 
-          : 'Usuario').trim()[0].toUpperCase(),
+      'iniciales': primerNombre.trim()[0].toUpperCase(),
     };
   }
 }

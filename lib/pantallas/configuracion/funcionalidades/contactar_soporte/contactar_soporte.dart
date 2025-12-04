@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'soporte_modelos.dart';
-import 'soporte_widgets.dart';
+import 'soporte_widgets_principales.dart';
+import 'soporte_widgets_formulario.dart';
 import 'soporte_email.dart';
 
 /// Pantalla principal de contactar soporte modularizada
@@ -119,7 +120,7 @@ class _ContactarSoportePantallaState extends State<ContactarSoportePantalla>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header con información del usuario
-                SoporteWidgets.buildUserHeader(),
+                SoporteWidgetsPrincipales.buildUserHeader(),
                 const SizedBox(height: 24),
                 
                 // Formulario principal
@@ -153,7 +154,7 @@ class _ContactarSoportePantallaState extends State<ContactarSoportePantalla>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Selector de categoría
-            SoporteWidgets.buildSelectorCategoria(
+            SoporteWidgetsFormulario.buildSelectorCategoria(
               categoriaSeleccionada: _categoriaSeleccionada,
               onChanged: (nuevaCategoria) {
                 setState(() => _categoriaSeleccionada = nuevaCategoria);
@@ -162,23 +163,23 @@ class _ContactarSoportePantallaState extends State<ContactarSoportePantalla>
             const SizedBox(height: 24),
             
             // Campo de asunto
-            SoporteWidgets.buildCampoAsunto(
+            SoporteWidgetsFormulario.buildCampoAsunto(
               controller: _asuntoController,
             ),
             const SizedBox(height: 20),
             
             // Campo de mensaje
-            SoporteWidgets.buildCampoMensaje(
+            SoporteWidgetsFormulario.buildCampoMensaje(
               controller: _mensajeController,
             ),
             const SizedBox(height: 24),
             
             // Información de contacto
-            SoporteWidgets.buildInfoContacto(context),
+            SoporteWidgetsPrincipales.buildInfoContacto(context),
             const SizedBox(height: 24),
             
             // Botón de envío
-            SoporteWidgets.buildBotonEnvio(
+            SoporteWidgetsPrincipales.buildBotonEnvio(
               enviandoCorreo: _enviandoCorreo,
               onPressed: _enviarCorreo,
             ),
