@@ -35,27 +35,66 @@ class FrecuenciaServicioGastos {
   }) async {
     try {
       if (_userId == null) return 'Usuario no autenticado';
+      if (monto <= 0) return 'El monto debe ser mayor a 0';
+      if (descripcion.trim().isEmpty) return 'La descripción es requerida';
 
-      // Crear el gasto normal + campos de repetición
-      final datos = {
-        'monto': monto,
-        'fecha': fechaInicial,
-        'descripcion': descripcion,
-        'categoria': categoria,
-        'metodoPago': metodoPago,
-        'usuarioId': _userId,
-        'fechaCreacion': FieldValue.serverTimestamp(),
-        // Solo 3 campos extra para automatización
-        'tieneRepeticion': true,
-        'frecuencia': FrecuenciaUtils.aString(frecuencia),
-        'proximaCreacion': FrecuenciaUtils.calcularProximaFecha(fechaInicial, frecuencia),
-      };
+      await _firestore.runTransaction((transaction) async {
+        // === FASE DE LECTURAS ===
+        DocumentSnapshot<Map<String, dynamic>>? cuentaDoc;
 
-      if (cuentaAsociada != null) {
-        datos['cuentaAsociada'] = cuentaAsociada;
-      }
+        if (cuentaAsociada != null && cuentaAsociada.isNotEmpty && cuentaAsociada != 'ninguna') {
+          final cuentaRef = _firestore
+              .collection('usuarios')
+              .doc(_userId)
+              .collection('cuentas')
+              .doc(cuentaAsociada);
 
-      await _gastosRef().add(datos);
+          cuentaDoc = await transaction.get(cuentaRef);
+          if (!cuentaDoc.exists) throw Exception('La cuenta asociada no existe');
+        }
+
+        // === FASE DE ESCRITURAS ===
+        final gastoRef = _gastosRef().doc();
+
+        final gastoData = {
+          'monto': monto,
+          'fecha': Timestamp.fromDate(fechaInicial),
+          'descripcion': descripcion.trim(),
+          'categoria': categoria,
+          'metodoPago': metodoPago,
+          'cuentaAsociada': cuentaAsociada != 'ninguna' ? cuentaAsociada : null,
+          'fechaCreacion': FieldValue.serverTimestamp(),
+          // Campos de repetición
+          'tieneRepeticion': true,
+          'frecuencia': FrecuenciaUtils.aString(frecuencia),
+          'proximaCreacion': FrecuenciaUtils.calcularProximaFecha(fechaInicial, frecuencia),
+        };
+
+        transaction.set(gastoRef, gastoData);
+
+        if (cuentaDoc != null && cuentaDoc.exists) {
+          final cuentaData = cuentaDoc.data()!;
+          final saldoActual = (cuentaData['saldo'] as num?)?.toDouble() ?? 0.0;
+          final nuevoSaldo = saldoActual - monto;
+
+          transaction.update(cuentaDoc.reference, {
+            'saldo': nuevoSaldo,
+            'ultimaActualizacion': FieldValue.serverTimestamp(),
+          });
+
+          final movimientoRef = cuentaDoc.reference.collection('movimientos').doc();
+          transaction.set(movimientoRef, {
+            'tipo': 'gasto',
+            'monto': -monto,
+            'descripcion': 'Gasto: $descripcion',
+            'categoria': categoria,
+            'fecha': Timestamp.fromDate(fechaInicial),
+            'gastoId': gastoRef.id,
+            'fechaCreacion': FieldValue.serverTimestamp(),
+          });
+        }
+      });
+
       return null;
     } catch (e) {
       return 'Error al crear gasto: $e';
@@ -97,30 +136,68 @@ class FrecuenciaServicioGastos {
   Future<void> _crearSiguienteGasto(String docId, Map<String, dynamic> data) async {
     final frecuencia = FrecuenciaUtils.desdeString(data['frecuencia'])!;
     final fechaActual = (data['proximaCreacion'] as Timestamp).toDate();
-    
-    // Crear nuevo gasto (copia del original)
-    final nuevoGasto = {
-      'monto': data['monto'],
-      'fecha': fechaActual,
-      'descripcion': data['descripcion'],
-      'categoria': data['categoria'],
-      'metodoPago': data['metodoPago'],
-      'usuarioId': data['usuarioId'],
-      'fechaCreacion': FieldValue.serverTimestamp(),
-      // Sin campos de repetición - es un gasto normal
-    };
+    final monto = (data['monto'] as num).toDouble();
+    final cuentaAsociada = data['cuentaAsociada'] as String?;
 
-    if (data.containsKey('cuentaAsociada')) {
-      nuevoGasto['cuentaAsociada'] = data['cuentaAsociada'];
-    }
+    await _firestore.runTransaction((transaction) async {
+      // === FASE DE LECTURAS ===
+      DocumentSnapshot<Map<String, dynamic>>? cuentaDoc;
 
-    // Crear el nuevo gasto
-    await _gastosRef().add(nuevoGasto);
+      if (cuentaAsociada != null && cuentaAsociada.isNotEmpty && cuentaAsociada != 'ninguna') {
+        final cuentaRef = _firestore
+            .collection('usuarios')
+            .doc(_userId)
+            .collection('cuentas')
+            .doc(cuentaAsociada);
 
-    // Actualizar la próxima fecha en el original
-    final siguienteFecha = FrecuenciaUtils.calcularProximaFecha(fechaActual, frecuencia);
-    await _gastosRef().doc(docId).update({
-      'proximaCreacion': siguienteFecha,
+        cuentaDoc = await transaction.get(cuentaRef);
+      }
+
+      // === FASE DE ESCRITURAS ===
+      // Crear nuevo gasto (copia del original)
+      final gastoRef = _gastosRef().doc();
+      final nuevoGasto = {
+        'monto': monto,
+        'fecha': Timestamp.fromDate(fechaActual),
+        'descripcion': data['descripcion'],
+        'categoria': data['categoria'],
+        'metodoPago': data['metodoPago'],
+        'cuentaAsociada': cuentaAsociada,
+        'fechaCreacion': FieldValue.serverTimestamp(),
+        // Sin campos de repetición - es un gasto normal
+      };
+
+      transaction.set(gastoRef, nuevoGasto);
+
+      // Actualizar saldo de la cuenta si existe
+      if (cuentaDoc != null && cuentaDoc.exists) {
+        final cuentaData = cuentaDoc.data()!;
+        final saldoActual = (cuentaData['saldo'] as num?)?.toDouble() ?? 0.0;
+        final nuevoSaldo = saldoActual - monto;
+
+        transaction.update(cuentaDoc.reference, {
+          'saldo': nuevoSaldo,
+          'ultimaActualizacion': FieldValue.serverTimestamp(),
+        });
+
+        final movimientoRef = cuentaDoc.reference.collection('movimientos').doc();
+        transaction.set(movimientoRef, {
+          'tipo': 'gasto_automatico',
+          'monto': -monto,
+          'descripcion': 'Gasto automático: ${data['descripcion']}',
+          'categoria': data['categoria'],
+          'fecha': Timestamp.fromDate(fechaActual),
+          'gastoId': gastoRef.id,
+          'fechaCreacion': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // Actualizar la próxima fecha en el original
+      final siguienteFecha = FrecuenciaUtils.calcularProximaFecha(fechaActual, frecuencia);
+      final gastoOriginalRef = _gastosRef().doc(docId);
+      transaction.update(gastoOriginalRef, {
+        'proximaCreacion': siguienteFecha,
+      });
     });
   }
 
@@ -143,22 +220,62 @@ class FrecuenciaServicioGastos {
   }) async {
     try {
       if (_userId == null) return 'Usuario no autenticado';
+      if (monto <= 0) return 'El monto debe ser mayor a 0';
+      if (descripcion.trim().isEmpty) return 'La descripción es requerida';
 
-      final datos = {
-        'monto': monto,
-        'fecha': fecha,
-        'descripcion': descripcion,
-        'categoria': categoria,
-        'metodoPago': metodoPago,
-        'usuarioId': _userId,
-        'fechaCreacion': FieldValue.serverTimestamp(),
-      };
+      await _firestore.runTransaction((transaction) async {
+        // === FASE DE LECTURAS ===
+        DocumentSnapshot<Map<String, dynamic>>? cuentaDoc;
 
-      if (cuentaAsociada != null) {
-        datos['cuentaAsociada'] = cuentaAsociada;
-      }
+        if (cuentaAsociada != null && cuentaAsociada.isNotEmpty && cuentaAsociada != 'ninguna') {
+          final cuentaRef = _firestore
+              .collection('usuarios')
+              .doc(_userId)
+              .collection('cuentas')
+              .doc(cuentaAsociada);
 
-      await _gastosRef().add(datos);
+          cuentaDoc = await transaction.get(cuentaRef);
+          if (!cuentaDoc.exists) throw Exception('La cuenta asociada no existe');
+        }
+
+        // === FASE DE ESCRITURAS ===
+        final gastoRef = _gastosRef().doc();
+
+        final gastoData = {
+          'monto': monto,
+          'fecha': Timestamp.fromDate(fecha),
+          'descripcion': descripcion.trim(),
+          'categoria': categoria,
+          'metodoPago': metodoPago,
+          'cuentaAsociada': cuentaAsociada != 'ninguna' ? cuentaAsociada : null,
+          'fechaCreacion': FieldValue.serverTimestamp(),
+        };
+
+        transaction.set(gastoRef, gastoData);
+
+        if (cuentaDoc != null && cuentaDoc.exists) {
+          final cuentaData = cuentaDoc.data()!;
+          final saldoActual = (cuentaData['saldo'] as num?)?.toDouble() ?? 0.0;
+          final nuevoSaldo = saldoActual - monto;
+
+          transaction.update(cuentaDoc.reference, {
+            'saldo': nuevoSaldo,
+            'ultimaActualizacion': FieldValue.serverTimestamp(),
+          });
+
+          final movimientoRef = cuentaDoc.reference.collection('movimientos').doc();
+          transaction.set(movimientoRef, {
+            'tipo': 'gasto',
+            'monto': -monto,
+            'descripcion': 'Gasto: $descripcion',
+            'categoria': categoria,
+            'fecha': Timestamp.fromDate(fecha),
+            'gastoId': gastoRef.id,
+            'fechaCreacion': FieldValue.serverTimestamp(),
+          });
+        }
+      });
+
       return null;
     } catch (e) {
       return 'Error al crear gasto: $e';
@@ -179,40 +296,127 @@ class FrecuenciaServicioGastos {
   }) async {
     try {
       if (_userId == null) return 'Usuario no autenticado';
+      if (monto <= 0) return 'El monto debe ser mayor a 0';
+      if (descripcion.trim().isEmpty) return 'La descripción es requerida';
 
-      final datos = <String, dynamic>{
-        'monto': monto,
-        'fecha': fecha,
-        'descripcion': descripcion,
-        'categoria': categoria,
-        'metodoPago': metodoPago,
-      };
+      await _firestore.runTransaction((transaction) async {
+        // === FASE DE LECTURAS ===
+        final gastoRef = _gastosRef().doc(gastoId);
+        final gastoDoc = await transaction.get(gastoRef);
 
-      if (cuentaAsociada != null) {
-        datos['cuentaAsociada'] = cuentaAsociada;
-      } else {
-        datos['cuentaAsociada'] = FieldValue.delete();
-      }
+        if (!gastoDoc.exists) throw Exception('El gasto no existe');
 
-      // Manejar cambios de frecuencia
-      if (frecuenciaActual != nuevaFrecuencia) {
-        if (nuevaFrecuencia == TipoFrecuencia.ninguna) {
-          // Quitar frecuencia - eliminar campos de repetición
-          datos['tieneRepeticion'] = FieldValue.delete();
-          datos['frecuencia'] = FieldValue.delete();
-          datos['proximaCreacion'] = FieldValue.delete();
-        } else {
-          // Agregar o cambiar frecuencia
-          datos['tieneRepeticion'] = true;
-          datos['frecuencia'] = FrecuenciaUtils.aString(nuevaFrecuencia);
-          datos['proximaCreacion'] = FrecuenciaUtils.calcularProximaFecha(fecha, nuevaFrecuencia);
+        final datosActuales = gastoDoc.data()!;
+        final montoAnterior = (datosActuales['monto'] as num).toDouble();
+        final cuentaAnterior = datosActuales['cuentaAsociada'] as String?;
+
+        DocumentSnapshot<Map<String, dynamic>>? cuentaAntDoc;
+        if (cuentaAnterior != null && cuentaAnterior.isNotEmpty && cuentaAnterior != 'ninguna') {
+          final cuentaAntRef = _firestore
+              .collection('usuarios')
+              .doc(_userId)
+              .collection('cuentas')
+              .doc(cuentaAnterior);
+          cuentaAntDoc = await transaction.get(cuentaAntRef);
         }
-      } else if (nuevaFrecuencia != TipoFrecuencia.ninguna) {
-        // Mantener frecuencia pero actualizar próxima fecha si cambió la fecha base
-        datos['proximaCreacion'] = FrecuenciaUtils.calcularProximaFecha(fecha, nuevaFrecuencia);
-      }
 
-      await _gastosRef().doc(gastoId).update(datos);
+        DocumentSnapshot<Map<String, dynamic>>? cuentaNuevaDoc;
+        if (cuentaAsociada != null && cuentaAsociada.isNotEmpty && cuentaAsociada != 'ninguna') {
+          final cuentaNuevaRef = _firestore
+              .collection('usuarios')
+              .doc(_userId)
+              .collection('cuentas')
+              .doc(cuentaAsociada);
+          
+          if (cuentaAsociada != cuentaAnterior) {
+            cuentaNuevaDoc = await transaction.get(cuentaNuevaRef);
+          } else {
+            cuentaNuevaDoc = cuentaAntDoc;
+          }
+          
+          if (cuentaNuevaDoc != null && !cuentaNuevaDoc.exists) {
+            throw Exception('La cuenta asociada no existe');
+          }
+        }
+
+        // === FASE DE ESCRITURAS ===
+        final nuevosdatos = <String, dynamic>{
+          'monto': monto,
+          'fecha': Timestamp.fromDate(fecha),
+          'descripcion': descripcion.trim(),
+          'categoria': categoria,
+          'metodoPago': metodoPago,
+          'cuentaAsociada': cuentaAsociada != 'ninguna' ? cuentaAsociada : null,
+          'fechaModificacion': FieldValue.serverTimestamp(),
+        };
+
+        // Manejar cambios de frecuencia
+        if (frecuenciaActual != nuevaFrecuencia) {
+          if (nuevaFrecuencia == TipoFrecuencia.ninguna) {
+            // Quitar frecuencia - eliminar campos de repetición
+            nuevosdatos['tieneRepeticion'] = FieldValue.delete();
+            nuevosdatos['frecuencia'] = FieldValue.delete();
+            nuevosdatos['proximaCreacion'] = FieldValue.delete();
+          } else {
+            // Agregar o cambiar frecuencia
+            nuevosdatos['tieneRepeticion'] = true;
+            nuevosdatos['frecuencia'] = FrecuenciaUtils.aString(nuevaFrecuencia);
+            nuevosdatos['proximaCreacion'] = FrecuenciaUtils.calcularProximaFecha(fecha, nuevaFrecuencia);
+          }
+        } else if (nuevaFrecuencia != TipoFrecuencia.ninguna) {
+          // Mantener frecuencia pero actualizar próxima fecha si cambió la fecha base
+          nuevosdatos['proximaCreacion'] = FrecuenciaUtils.calcularProximaFecha(fecha, nuevaFrecuencia);
+        }
+
+        transaction.update(gastoRef, nuevosdatos);
+
+        // === ACTUALIZACIÓN DE SALDOS DE CUENTAS ===
+        // Normalizar valores para comparación correcta
+        final cuentaAntNormalizada = (cuentaAnterior == null || cuentaAnterior.isEmpty || cuentaAnterior == 'ninguna') ? null : cuentaAnterior;
+        final cuentaNuevaNormalizada = (cuentaAsociada == null || cuentaAsociada.isEmpty || cuentaAsociada == 'ninguna') ? null : cuentaAsociada;
+        
+        if (cuentaAntNormalizada != cuentaNuevaNormalizada) {
+          // Cambio de cuenta: revertir en la anterior y descontar en la nueva
+          if (cuentaAntDoc != null && cuentaAntDoc.exists) {
+            final saldoAnterior = (cuentaAntDoc.data()!['saldo'] as num?)?.toDouble() ?? 0.0;
+            transaction.update(cuentaAntDoc.reference, {
+              'saldo': saldoAnterior + montoAnterior,
+              'ultimaActualizacion': FieldValue.serverTimestamp(),
+            });
+          }
+
+          if (cuentaNuevaDoc != null && cuentaNuevaDoc.exists) {
+            final saldoNuevo = (cuentaNuevaDoc.data()!['saldo'] as num?)?.toDouble() ?? 0.0;
+            transaction.update(cuentaNuevaDoc.reference, {
+              'saldo': saldoNuevo - monto,
+              'ultimaActualizacion': FieldValue.serverTimestamp(),
+            });
+
+            final movimientoRef = cuentaNuevaDoc.reference.collection('movimientos').doc();
+            transaction.set(movimientoRef, {
+              'tipo': 'gasto_actualizado',
+              'monto': -monto,
+              'descripcion': 'Gasto actualizado: $descripcion',
+              'categoria': categoria,
+              'fecha': Timestamp.fromDate(fecha),
+              'gastoId': gastoId,
+              'fechaCreacion': FieldValue.serverTimestamp(),
+            });
+          }
+        } else if (cuentaNuevaNormalizada != null) {
+          // Misma cuenta: solo actualizar la diferencia
+          if (cuentaAntDoc != null && cuentaAntDoc.exists) {
+            final saldoActual = (cuentaAntDoc.data()!['saldo'] as num?)?.toDouble() ?? 0.0;
+            final diferencia = monto - montoAnterior;
+            
+            transaction.update(cuentaAntDoc.reference, {
+              'saldo': saldoActual - diferencia,
+              'ultimaActualizacion': FieldValue.serverTimestamp(),
+            });
+          }
+        }
+      });
+
       return null;
     } catch (e) {
       return 'Error al actualizar gasto: $e';
