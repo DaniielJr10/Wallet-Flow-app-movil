@@ -175,9 +175,9 @@ class ConfiguracionDialogs {
           ),
           const SizedBox(height: 12),
           SmallInfoItem(
-            title: 'Plataforma',
-            subtitle: 'Flutter & Firebase',
-            icon: Icons.flutter_dash,
+            title: 'Correo',
+            subtitle: 'walletfloww@gmail.com',
+            icon: Icons.email,
           ),
         ],
       ),

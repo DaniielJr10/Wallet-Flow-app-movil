@@ -30,7 +30,7 @@ class AppBarDeudas extends StatelessWidget implements PreferredSizeWidget {
               mainAxisSize: MainAxisSize.min,
               children: const [
                 Icon(
-                  Icons.account_balance_wallet_rounded,
+                  Icons.receipt,
                   color: UtilsDeudas.colorPrincipal,
                   size: 28,
                 ),

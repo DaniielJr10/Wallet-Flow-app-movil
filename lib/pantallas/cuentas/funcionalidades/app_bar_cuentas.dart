@@ -22,7 +22,7 @@ class AppBarCuentas extends StatelessWidget implements PreferredSizeWidget {
               mainAxisSize: MainAxisSize.min,
               children: const [
                 Icon(
-                  Icons.account_balance_rounded,
+                  Icons.credit_card,
                   color: Color(0xFF007bff),
                   size: 28,
                 ),

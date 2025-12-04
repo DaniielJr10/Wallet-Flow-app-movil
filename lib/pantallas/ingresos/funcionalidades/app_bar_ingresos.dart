@@ -35,7 +35,7 @@ class AppBarIngresos extends StatelessWidget implements PreferredSizeWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.attach_money_rounded, color: UtilsIngresos.colorPrincipal, size: 28),
+                Icon(Icons.trending_up, color: UtilsIngresos.colorPrincipal, size: 28),
                 SizedBox(width: 8),
                 Text(
                   'INGRESOS',
