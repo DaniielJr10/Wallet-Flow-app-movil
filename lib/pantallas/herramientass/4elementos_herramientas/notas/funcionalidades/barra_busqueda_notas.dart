@@ -22,27 +22,31 @@ class BarraBusquedaNotas extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: UtilsNotas.colorBorde, width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.green.withOpacity(0.06),
-                  blurRadius: 12,
+                  color: UtilsNotas.colorPrincipal.withOpacity(0.08),
+                  blurRadius: 20,
                   offset: const Offset(0, 8),
                 )
               ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
               children: [
-                const Icon(Icons.search, color: UtilsNotas.colorPrincipal),
-                const SizedBox(width: 10),
+                Icon(Icons.search_rounded, color: UtilsNotas.colorPrincipal, size: 24),
+                const SizedBox(width: 12),
                 Expanded(
                   child: TextField(
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Buscar en mis notas...',
+                      hintStyle: TextStyle(color: UtilsNotas.colorTextoGris.withOpacity(0.7)),
                       border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onChanged: onSearchChanged,
+                    style: const TextStyle(fontSize: 15),
                   ),
                 ),
               ],
@@ -50,16 +54,27 @@ class BarraBusquedaNotas extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        ElevatedButton.icon(
+        ElevatedButton(
           onPressed: onNewNote,
-          icon: const Icon(Icons.add),
-          label: const Text('Nueva Nota'),
           style: ElevatedButton.styleFrom(
             backgroundColor: UtilsNotas.colorPrincipal,
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
             ),
+            elevation: 0,
+            shadowColor: UtilsNotas.colorPrincipal.withOpacity(0.4),
+          ),
+          child: Row(
+            children: const [
+              Icon(Icons.add_rounded, size: 22),
+              SizedBox(width: 8),
+              Text(
+                'Nueva Nota',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              ),
+            ],
           ),
         ),
       ],

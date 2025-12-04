@@ -19,15 +19,31 @@ class NotasScreen extends StatefulWidget {
   State<NotasScreen> createState() => _NotasScreenState();
 }
 
-class _NotasScreenState extends State<NotasScreen> {
+class _NotasScreenState extends State<NotasScreen> with TickerProviderStateMixin {
   final ServicioNotas _servicioNotas = ServicioNotas();
   List<Map<String, dynamic>> _notes = [];
   String _search = '';
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _cargarNotas();
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _cargarNotas() async {
@@ -112,34 +128,68 @@ class _NotasScreenState extends State<NotasScreen> {
     return Scaffold(
       backgroundColor: UtilsNotas.colorFondo,
       appBar: const AppBarNotas(),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const HeaderNotas(),
-              const SizedBox(height: 18),
-              BarraBusquedaNotas(
-                onSearchChanged: (v) => setState(() => _search = v),
-                onNewNote: () => _mostrarDialogo(),
-              ),
-              const SizedBox(height: 18),
-              Expanded(
-                child: GridNotas(
-                  notasFiltradas: filteredNotes,
-                  onTapNota: (i) {
-                    // Encontrar el índice real en la lista original
-                    final realIndex = _notes.indexOf(filteredNotes[i]);
-                    _mostrarDialogo(index: realIndex);
-                  },
-                  onDeleteNota: (i) {
-                    final realIndex = _notes.indexOf(filteredNotes[i]);
-                    _deleteNote(realIndex);
-                  },
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const HeaderNotas(),
+                const SizedBox(height: 20),
+                BarraBusquedaNotas(
+                  onSearchChanged: (v) => setState(() => _search = v),
+                  onNewNote: () => _mostrarDialogo(),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                Expanded(
+                  child: filteredNotes.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.note_add_outlined,
+                                size: 80,
+                                color: UtilsNotas.colorTextoGris.withOpacity(0.3),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _search.isEmpty ? 'No hay notas aún' : 'No se encontraron resultados',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: UtilsNotas.colorTextoGris,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _search.isEmpty
+                                    ? 'Crea tu primera nota financiera'
+                                    : 'Intenta con otra búsqueda',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: UtilsNotas.colorTextoGris.withOpacity(0.7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : GridNotas(
+                          notasFiltradas: filteredNotes,
+                          onTapNota: (i) {
+                            final realIndex = _notes.indexOf(filteredNotes[i]);
+                            _mostrarDialogo(index: realIndex);
+                          },
+                          onDeleteNota: (i) {
+                            final realIndex = _notes.indexOf(filteredNotes[i]);
+                            _deleteNote(realIndex);
+                          },
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
