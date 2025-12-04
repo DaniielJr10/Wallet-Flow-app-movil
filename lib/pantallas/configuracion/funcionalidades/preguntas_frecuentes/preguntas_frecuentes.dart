@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'faq_modelos.dart';
 import 'faq_datos.dart';
+import '../contactar_soporte.dart';
 
 /// Pantalla de Preguntas Frecuentes simplificada y fácil de usar
 class PreguntasFrecuentesPantalla extends StatefulWidget {
@@ -303,9 +304,16 @@ class _PreguntasFrecuentesPantallaState extends State<PreguntasFrecuentesPantall
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(color: const Color(0xFF10B981).withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -314,12 +322,12 @@ class _PreguntasFrecuentesPantallaState extends State<PreguntasFrecuentesPantall
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade100,
+                  color: const Color(0xFF10B981).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   Icons.support_agent,
-                  color: Colors.blue.shade600,
+                  color: const Color(0xFF10B981),
                   size: 24,
                 ),
               ),
@@ -333,14 +341,14 @@ class _PreguntasFrecuentesPantallaState extends State<PreguntasFrecuentesPantall
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.blue.shade700,
+                        color: const Color(0xFF10B981),
                       ),
                     ),
                     Text(
                       'Contáctanos directamente',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.blue.shade600,
+                        color: const Color(0xFF10B981).withOpacity(0.8),
                       ),
                     ),
                   ],
@@ -353,12 +361,17 @@ class _PreguntasFrecuentesPantallaState extends State<PreguntasFrecuentesPantall
             width: double.infinity,
             child: ElevatedButton.icon(
               onPressed: () {
-                Navigator.pushNamed(context, '/contactar-soporte');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ContactarSoporteScreen(),
+                  ),
+                );
               },
               icon: const Icon(Icons.chat_bubble_outline),
               label: const Text('Contactar Soporte'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade600,
+                backgroundColor: const Color(0xFF10B981),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
