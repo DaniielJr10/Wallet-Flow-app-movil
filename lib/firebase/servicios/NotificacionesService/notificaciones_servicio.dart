@@ -68,6 +68,21 @@ class NotificacionesServicio {
     );
   }
   
+  /// Programa una notificación para recordar un gasto frecuente
+  Future<void> programarRecordatorioGasto({
+    required String gastoId,
+    required double monto,
+    required String descripcion,
+    required DateTime fechaRecordatorio,
+  }) async {
+    await _programacion.programarRecordatorioGasto(
+      gastoId: gastoId,
+      monto: monto,
+      descripcion: descripcion,
+      fechaRecordatorio: fechaRecordatorio,
+    );
+  }
+  
   /// Cancela una notificación programada
   Future<void> cancelarNotificacion(String ingresoId) async {
     await _programacion.cancelarNotificacion(ingresoId);

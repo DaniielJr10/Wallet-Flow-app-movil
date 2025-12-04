@@ -111,6 +111,88 @@ class ProgramacionNotificaciones {
     }
   }
   
+  /// Programa una notificación para recordar un gasto frecuente
+  Future<void> programarRecordatorioGasto({
+    required String gastoId,
+    required double monto,
+    required String descripcion,
+    required DateTime fechaRecordatorio,
+  }) async {
+    try {
+      // Verificar si las notificaciones están activas
+      if (!await _config.notificacionesActivas()) {
+        print('Notificaciones desactivadas por el usuario');
+        return;
+      }
+      
+      // Verificar que la fecha sea futura
+      if (fechaRecordatorio.isBefore(DateTime.now())) {
+        print('No se puede programar notificación en el pasado');
+        return;
+      }
+      
+      // Inicializar timezone si es necesario
+      await _inicializarTimezone();
+      
+      // Generar ID único para la notificación
+      final notificationId = _utils.obtenerIdNotificacion(gastoId);
+      
+      // Formatear el mensaje para gastos
+      final mensaje = _utils.formatearMensajeGasto(
+        monto: monto,
+        descripcion: descripcion,
+      );
+      
+      // Configurar detalles de la notificación para Android
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'gastos_frecuentes', // ID del canal específico para gastos
+        'Recordatorios de Gastos', // Nombre del canal
+        channelDescription: 'Notificaciones para recordar gastos frecuentes',
+        importance: Importance.high,
+        priority: Priority.high,
+        showWhen: true,
+        icon: '@mipmap/ic_launcher',
+        color: const Color(0xFFF44336), // Rojo para gastos
+        playSound: true,
+        enableVibration: true,
+      );
+      
+      // Configurar detalles de la notificación para iOS
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        sound: 'default',
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+      
+      // Combinar configuraciones
+      const NotificationDetails notificationDetails = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+      
+      // Convertir DateTime a TZDateTime
+      final scheduledDate = tz.TZDateTime.from(fechaRecordatorio, tz.local);
+      
+      // Programar la notificación
+      await _config.plugin.zonedSchedule(
+        notificationId,
+        '💸 Recordatorio de Gasto',
+        mensaje,
+        scheduledDate,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        payload: gastoId, // Payload para identificar el gasto cuando se toque
+      );
+      
+      print('Notificación de gasto programada para $fechaRecordatorio (ID: $notificationId)');
+      
+    } catch (e) {
+      print('Error programando notificación de gasto: $e');
+    }
+  }
+  
   /// Cancela una notificación específica
   Future<void> cancelarNotificacion(String ingresoId) async {
     try {

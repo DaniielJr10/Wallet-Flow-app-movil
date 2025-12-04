@@ -4,6 +4,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../pantallas/gastos/funcionalidades/frecuencia.dart';
+import '../../NotificacionesService/notificaciones_servicio.dart';
 
 class FrecuenciaServicioGastos {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -38,6 +39,8 @@ class FrecuenciaServicioGastos {
       if (monto <= 0) return 'El monto debe ser mayor a 0';
       if (descripcion.trim().isEmpty) return 'La descripción es requerida';
 
+      String? gastoId; // Variable para guardar el ID del gasto creado
+
       await _firestore.runTransaction((transaction) async {
         // === FASE DE LECTURAS ===
         DocumentSnapshot<Map<String, dynamic>>? cuentaDoc;
@@ -55,6 +58,7 @@ class FrecuenciaServicioGastos {
 
         // === FASE DE ESCRITURAS ===
         final gastoRef = _gastosRef().doc();
+        gastoId = gastoRef.id; // Guardar el ID para usar después
 
         final gastoData = {
           'monto': monto,
@@ -94,6 +98,23 @@ class FrecuenciaServicioGastos {
           });
         }
       });
+
+      // === PROGRAMAR NOTIFICACIÓN DE RECORDATORIO PARA GASTOS ===
+      if (frecuencia != TipoFrecuencia.ninguna) {
+        try {
+          final proximaFecha = FrecuenciaUtils.calcularProximaFecha(fechaInicial, frecuencia);
+          await NotificacionesServicio.instance.programarRecordatorioGasto(
+            gastoId: gastoId!,
+            monto: monto,
+            descripcion: descripcion,
+            fechaRecordatorio: proximaFecha,
+          );
+          print('Notificación de gasto programada para: ${proximaFecha.toString()}');
+        } catch (e) {
+          print('Error programando notificación de gasto: $e');
+          // No fallar la creación del gasto si falla la notificación
+        }
+      }
 
       return null;
     } catch (e) {

@@ -29,6 +29,19 @@ class UtilsNotificaciones {
     return 'Es hora de registrar tu ingreso de $montoFormateado por $descripcionLimpia';
   }
   
+  /// Formatea el mensaje de la notificación para gastos
+  String formatearMensajeGasto({
+    required double monto,
+    required String descripcion,
+  }) {
+    final montoFormateado = FormatoNumeros.formatearParaMostrar(monto);
+    
+    // Limpiar y truncar descripción si es muy larga
+    final descripcionLimpia = _limpiarDescripcion(descripcion);
+    
+    return 'Es hora de registrar tu gasto de $montoFormateado por $descripcionLimpia';
+  }
+  
   /// Limpia y trunca la descripción para que quepa bien en la notificación
   String _limpiarDescripcion(String descripcion) {
     // Limpiar espacios y caracteres especiales

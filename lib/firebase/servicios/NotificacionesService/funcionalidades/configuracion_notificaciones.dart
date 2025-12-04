@@ -43,8 +43,8 @@ class ConfiguracionNotificaciones {
       );
       
       if (initialized == true) {
-        // Crear canal de notificaciones para Android
-        await _crearCanalAndroid();
+        // Crear canales de notificaciones para Android
+        await _crearCanalesAndroid();
         return true;
       }
       
@@ -56,19 +56,34 @@ class ConfiguracionNotificaciones {
     }
   }
   
-  /// Crea el canal de notificaciones para Android
-  Future<void> _crearCanalAndroid() async {
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'ingresos_frecuentes', // ID del canal
-      'Recordatorios de Ingresos', // Nombre visible
-      description: 'Notificaciones para recordar ingresos frecuentes',
-      importance: Importance.high,
-      sound: RawResourceAndroidNotificationSound('notification'),
-    );
-    
-    await _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+  /// Crea los canales de notificaciones para Android
+  Future<void> _crearCanalesAndroid() async {
+    final androidImplementation = _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        
+    if (androidImplementation != null) {
+      // Canal para ingresos
+      const AndroidNotificationChannel canalIngresos = AndroidNotificationChannel(
+        'ingresos_frecuentes', // ID del canal
+        'Recordatorios de Ingresos', // Nombre visible
+        description: 'Notificaciones para recordar ingresos frecuentes',
+        importance: Importance.high,
+        sound: RawResourceAndroidNotificationSound('notification'),
+      );
+      
+      // Canal para gastos
+      const AndroidNotificationChannel canalGastos = AndroidNotificationChannel(
+        'gastos_frecuentes', // ID del canal
+        'Recordatorios de Gastos', // Nombre visible
+        description: 'Notificaciones para recordar gastos frecuentes',
+        importance: Importance.high,
+        sound: RawResourceAndroidNotificationSound('notification'),
+      );
+      
+      // Crear ambos canales
+      await androidImplementation.createNotificationChannel(canalIngresos);
+      await androidImplementation.createNotificationChannel(canalGastos);
+    }
   }
   
   /// Maneja cuando el usuario toca una notificación
