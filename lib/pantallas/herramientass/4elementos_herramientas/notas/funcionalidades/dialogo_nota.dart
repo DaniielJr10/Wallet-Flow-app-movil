@@ -24,31 +24,27 @@ class DialogoNota extends StatefulWidget {
 
 class _DialogoNotaState extends State<DialogoNota> {
   late TextEditingController _noteController;
-  late TextEditingController _tagsController;
-  List<String> _localTags = [];
+  late TextEditingController _tituloController;
+  String _titulo = '';
 
   @override
   void initState() {
     super.initState();
     _noteController = TextEditingController(text: widget.initialText ?? '');
-    _tagsController = TextEditingController(text: widget.initialTags.join(', '));
-    _localTags = List.from(widget.initialTags);
+    _tituloController = TextEditingController(text: widget.initialTags.isNotEmpty ? widget.initialTags[0] : '');
+    _titulo = widget.initialTags.isNotEmpty ? widget.initialTags[0] : '';
   }
 
   @override
   void dispose() {
     _noteController.dispose();
-    _tagsController.dispose();
+    _tituloController.dispose();
     super.dispose();
   }
 
-  void _updateTags(String value) {
+  void _updateTitulo(String value) {
     setState(() {
-      _localTags = value
-          .split(',')
-          .map((s) => s.trim())
-          .where((s) => s.isNotEmpty)
-          .toList();
+      _titulo = value.trim();
     });
   }
 
@@ -126,6 +122,40 @@ class _DialogoNotaState extends State<DialogoNota> {
                 ),
                 const SizedBox(height: 20),
 
+                // Título input
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: UtilsNotas.colorBorde, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: UtilsNotas.colorPrincipal.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _tituloController,
+                    decoration: InputDecoration(
+                      hintText: 'Título',
+                      hintStyle: TextStyle(color: UtilsNotas.colorTextoGris.withOpacity(0.5)),
+                      filled: true,
+                      fillColor: Colors.transparent,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      prefixIcon: Icon(Icons.title_rounded, color: UtilsNotas.colorPrincipal),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onChanged: _updateTitulo,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
                 // Note input mejorado con borde y sombra
                 Container(
                   decoration: BoxDecoration(
@@ -157,86 +187,6 @@ class _DialogoNotaState extends State<DialogoNota> {
                     style: const TextStyle(fontSize: 15, height: 1.5),
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                // Tags input mejorado
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: UtilsNotas.colorBorde, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: UtilsNotas.colorPrincipal.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _tagsController,
-                    decoration: InputDecoration(
-                      hintText: 'Etiquetas (separadas por coma)',
-                      hintStyle: TextStyle(color: UtilsNotas.colorTextoGris.withOpacity(0.5)),
-                      filled: true,
-                      fillColor: Colors.transparent,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                      prefixIcon: Icon(Icons.label_rounded, color: UtilsNotas.colorPrincipal),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    onChanged: _updateTags,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Tags preview mejorado con gradientes
-                if (_localTags.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: UtilsNotas.colorTagBg.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: UtilsNotas.colorBorde),
-                    ),
-                    child: Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: _localTags
-                          .map((t) => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      UtilsNotas.colorPrincipal.withOpacity(0.15),
-                                      UtilsNotas.colorSecundario.withOpacity(0.15),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: UtilsNotas.colorPrincipal.withOpacity(0.3)),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.label_rounded, size: 14, color: UtilsNotas.colorAccento),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '#$t',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w800,
-                                        color: UtilsNotas.colorAccento,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ))
-                          .toList(),
-                    ),
-                  ),
                 const SizedBox(height: 24),
 
                 // Botones mejorados con diseño moderno
@@ -264,7 +214,8 @@ class _DialogoNotaState extends State<DialogoNota> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () {
-                          widget.onSave(_noteController.text, _localTags);
+                          final List<String> tags = _titulo.isNotEmpty ? [_titulo] : [];
+                          widget.onSave(_noteController.text, tags);
                           Navigator.of(context).pop();
                         },
                         style: ElevatedButton.styleFrom(
