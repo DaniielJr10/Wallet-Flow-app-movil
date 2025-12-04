@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 // import '../perfil/perfil.dart'; // removed: profile not shown in settings
 import 'funcionalidades/preguntas_frecuentes/preguntas_frecuentes.dart';
 import 'funcionalidades/contactar_soporte/contactar_soporte.dart';
-import 'funcionalidades/cambiar_contrasena.dart';
+import 'funcionalidades/cambiar_contraseña/cambiar_contrasena.dart';
 
 // ===== IMPORTS DE ARCHIVOS MODULARES =====
 import 'funcionalidades/configuracion_secciones.dart';
