@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 
 // import '../perfil/perfil.dart'; // removed: profile not shown in settings
-import 'funcionalidades/preguntas_frecuentes.dart';
+import 'funcionalidades/preguntas_frecuentes/preguntas_frecuentes.dart';
 import 'funcionalidades/contactar_soporte/contactar_soporte.dart';
 import 'funcionalidades/cambiar_contrasena.dart';
 
@@ -232,7 +232,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
 
 
   void _abrirFAQ() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const PreguntasFrecuentesScreen()));
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const PreguntasFrecuentesPantalla()));
   }
 
   void _contactarSoporte() {

@@ -2,7 +2,8 @@
 /// Contiene la navegación secundaria de la app, con un header personalizado
 /// y la lista de opciones organizadas por secciones (Acceso Rápido, Gestión, etc.).
 import 'package:flutter/material.dart';
-import '../../configuracion/funcionalidades/ayuda_soporte.dart';
+import '../../configuracion/funcionalidades/contactar_soporte/contactar_soporte.dart';
+import '../../configuracion/funcionalidades/preguntas_frecuentes/preguntas_frecuentes.dart';
 
 class PrincipalDrawer extends StatelessWidget {
   final Function(int) onNavigate;
@@ -61,9 +62,13 @@ class PrincipalDrawer extends StatelessWidget {
                   items: [
                     _buildMenuItem(Icons.settings_outlined, 'Ajustes', Colors.grey.shade700, () => _handleTap(context, 8)),
                     _buildMenuItem(Icons.notifications_outlined, 'Notificaciones', Colors.pink.shade600, () { Navigator.pop(context); /* TODO */ }, badge: '3'),
-                    _buildMenuItem(Icons.help_outline_rounded, 'Ayuda y Soporte', Colors.lime.shade600, () {
+                    _buildMenuItem(Icons.help_outline_rounded, 'Preguntas Frecuentes', Colors.blue.shade600, () {
                       Navigator.pop(context);
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const AyudaSoporteScreen()));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const PreguntasFrecuentesPantalla()));
+                    }),
+                    _buildMenuItem(Icons.support_agent, 'Contactar Soporte', Colors.lime.shade600, () {
+                      Navigator.pop(context);
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactarSoportePantalla()));
                     }),
                   ],
                 ),

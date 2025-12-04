@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'preguntas_frecuentes.dart';
+import 'preguntas_frecuentes/preguntas_frecuentes.dart';
 import 'contactar_soporte/contactar_soporte.dart';
 
 class AyudaSoporteScreen extends StatelessWidget {
@@ -31,7 +31,7 @@ class AyudaSoporteScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const PreguntasFrecuentesScreen()),
+                      MaterialPageRoute(builder: (context) => const PreguntasFrecuentesPantalla()),
                     );
                   },
                 ),

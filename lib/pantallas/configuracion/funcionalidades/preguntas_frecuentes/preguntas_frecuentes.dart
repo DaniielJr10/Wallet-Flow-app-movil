@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'faq_modelos.dart';
 import 'faq_datos.dart';
-import '../contactar_soporte.dart';
+import '../contactar_soporte/contactar_soporte.dart';
 
 /// Pantalla de Preguntas Frecuentes simplificada y fácil de usar
 class PreguntasFrecuentesPantalla extends StatefulWidget {
@@ -364,7 +364,7 @@ class _PreguntasFrecuentesPantallaState extends State<PreguntasFrecuentesPantall
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ContactarSoporteScreen(),
+                    builder: (context) => const ContactarSoportePantalla(),
                   ),
                 );
               },
