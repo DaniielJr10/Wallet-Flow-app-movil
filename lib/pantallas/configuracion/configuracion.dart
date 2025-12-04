@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 // import '../perfil/perfil.dart'; // removed: profile not shown in settings
 import 'funcionalidades/preguntas_frecuentes.dart';
-import 'funcionalidades/contactar_soporte.dart';
+import 'funcionalidades/contactar_soporte/contactar_soporte.dart';
 import 'funcionalidades/cambiar_contrasena.dart';
 
 // ===== IMPORTS DE ARCHIVOS MODULARES =====
@@ -236,7 +236,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
   }
 
   void _contactarSoporte() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ContactarSoporteScreen()));
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const ContactarSoportePantalla()));
   }
 
   void _mostrarAcercaDe() {
