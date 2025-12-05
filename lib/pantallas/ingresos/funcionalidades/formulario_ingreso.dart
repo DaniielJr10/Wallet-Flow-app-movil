@@ -208,12 +208,26 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
                 color: UtilsIngresos.colorPrincipal,
                 width: 2,
               ),
             ),
             filled: true,
-            fillColor: Colors.grey.shade50,
+            fillColor: Colors.white,
           ),
         ),
       ],
@@ -237,12 +251,26 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
                 color: UtilsIngresos.colorPrincipal,
                 width: 2,
               ),
             ),
             filled: true,
-            fillColor: Colors.grey.shade50,
+            fillColor: Colors.white,
           ),
         ),
       ],
@@ -271,7 +299,7 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: UtilsIngresos.colorPrincipal, width: 2),
+              border: Border.all(color: Colors.grey.shade400),
               borderRadius: BorderRadius.circular(12),
               color: Colors.grey.shade50,
             ),
@@ -464,12 +492,26 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
                 color: UtilsIngresos.colorPrincipal,
                 width: 2,
               ),
             ),
             filled: true,
-            fillColor: Colors.grey.shade50,
+            fillColor: Colors.white,
           ),
         ),
       ],
