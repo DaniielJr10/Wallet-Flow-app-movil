@@ -1,14 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../firebase/servicios/UsuarioService/usuarios_servicio.dart';
 import 'soporte_modelos.dart';
-import 'soporte_email.dart';
 import 'soporte_dialogs.dart';
 
 /// Widgets principales para la pantalla de contactar soporte
 class SoporteWidgetsPrincipales {
+  /// Obtiene información del usuario actual
+  static Future<Map<String, String>> _obtenerInfoUsuario() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final usuariosServicio = UsuariosServicio();
+    
+    String nombreCompleto = 'Usuario';
+    
+    try {
+      // Intentar obtener nombre de Firebase Auth
+      if (user?.displayName?.isNotEmpty == true) {
+        nombreCompleto = user!.displayName!;
+      } else {
+        // Si no, buscar en Firestore
+        final perfil = await usuariosServicio.obtenerPerfil();
+        
+        if (perfil != null && perfil.exists) {
+          final datos = perfil.data();
+          if (datos != null && datos['nombre'] != null) {
+            nombreCompleto = datos['nombre'] as String;
+          }
+        }
+      }
+    } catch (e) {
+      print('Error obteniendo nombre de usuario: $e');
+    }
+    
+    String primerNombre = nombreCompleto.split(' ')[0];
+    
+    return {
+      'nombre': primerNombre,
+      'nombreCompleto': nombreCompleto,
+      'email': user?.email?.isNotEmpty == true 
+          ? user!.email! 
+          : 'correo@ejemplo.com',
+      'iniciales': primerNombre.trim()[0].toUpperCase(),
+    };
+  }
+
   /// Construye el header con información del usuario
   static Widget buildUserHeader() {
     return FutureBuilder<Map<String, String>>(
-      future: SoporteEmailService.obtenerInfoUsuario(),
+      future: _obtenerInfoUsuario(),
       builder: (context, snapshot) {
         // Valores por defecto mientras carga
         final userInfo = snapshot.data ?? {

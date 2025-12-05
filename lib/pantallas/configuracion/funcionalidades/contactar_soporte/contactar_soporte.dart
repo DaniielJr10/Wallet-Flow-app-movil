@@ -2,28 +2,30 @@ import 'package:flutter/material.dart';
 import 'soporte_modelos.dart';
 import 'soporte_widgets_principales.dart';
 import 'soporte_widgets_formulario.dart';
-import 'soporte_email.dart';
+import 'emailjs_service.dart';
+import 'emailjs_config.dart';
+import 'configurar_emailjs.dart';
 
 /// Pantalla principal de contactar soporte modularizada
 class ContactarSoportePantalla extends StatefulWidget {
   const ContactarSoportePantalla({super.key});
 
   @override
-  State<ContactarSoportePantalla> createState() => _ContactarSoportePantallaState();
+  State<ContactarSoportePantalla> createState() =>
+      _ContactarSoportePantallaState();
 }
 
 class _ContactarSoportePantallaState extends State<ContactarSoportePantalla>
     with TickerProviderStateMixin {
-  
   // Controladores y claves
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _asuntoController = TextEditingController();
   final TextEditingController _mensajeController = TextEditingController();
-  
+
   // Estado de la pantalla
   String _categoriaSeleccionada = 'General';
   bool _enviandoCorreo = false;
-  
+
   // Controladores de animación
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -50,21 +52,17 @@ class _ContactarSoportePantallaState extends State<ContactarSoportePantalla>
       vsync: this,
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutBack,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutBack,
+          ),
+        );
 
     _animationController.forward();
   }
@@ -75,7 +73,7 @@ class _ContactarSoportePantallaState extends State<ContactarSoportePantalla>
 
     setState(() => _enviandoCorreo = true);
 
-    await SoporteEmailService.enviarCorreo(
+    await EmailJSService.enviarCorreoDirecto(
       context: context,
       asunto: _asuntoController.text.trim(),
       categoria: _categoriaSeleccionada,
@@ -96,6 +94,51 @@ class _ContactarSoportePantallaState extends State<ContactarSoportePantalla>
     setState(() => _categoriaSeleccionada = 'General');
   }
 
+  /// Muestra el estado de configuración de EmailJS
+  void _mostrarEstadoEmailJS() {
+    final isConfigured = EmailJSConfig.isConfigured;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              isConfigured ? Icons.check_circle : Icons.warning,
+              color: isConfigured ? Colors.green : Colors.orange,
+            ),
+            const SizedBox(width: 8),
+            const Text('Estado EmailJS'),
+          ],
+        ),
+        content: Text(
+          isConfigured
+              ? 'EmailJS está configurado correctamente. Los mensajes se enviarán directamente.'
+              : 'EmailJS no está configurado. Los mensajes usarán la aplicación de correo del dispositivo.',
+        ),
+        actions: [
+          if (!isConfigured)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ConfigurarEmailJSPantalla(),
+                  ),
+                );
+              },
+              child: const Text('Configurar'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,6 +152,22 @@ class _ContactarSoportePantallaState extends State<ContactarSoportePantalla>
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
+        actions: [
+          // Indicador de estado de EmailJS
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              onPressed: _mostrarEstadoEmailJS,
+              icon: Icon(
+                EmailJSConfig.isConfigured ? Icons.email : Icons.email_outlined,
+                color: EmailJSConfig.isConfigured ? Colors.green : Colors.orange,
+              ),
+              tooltip: EmailJSConfig.isConfigured 
+                ? 'EmailJS configurado'
+                : 'Configurar EmailJS',
+            ),
+          ),
+        ],
       ),
       body: FadeTransition(
         opacity: _fadeAnimation,
@@ -122,7 +181,7 @@ class _ContactarSoportePantallaState extends State<ContactarSoportePantalla>
                 // Header con información del usuario
                 SoporteWidgetsPrincipales.buildUserHeader(),
                 const SizedBox(height: 24),
-                
+
                 // Formulario principal
                 _buildFormulario(),
               ],
@@ -161,23 +220,23 @@ class _ContactarSoportePantallaState extends State<ContactarSoportePantalla>
               },
             ),
             const SizedBox(height: 24),
-            
+
             // Campo de asunto
             SoporteWidgetsFormulario.buildCampoAsunto(
               controller: _asuntoController,
             ),
             const SizedBox(height: 20),
-            
+
             // Campo de mensaje
             SoporteWidgetsFormulario.buildCampoMensaje(
               controller: _mensajeController,
             ),
             const SizedBox(height: 24),
-            
+
             // Información de contacto
             SoporteWidgetsPrincipales.buildInfoContacto(context),
             const SizedBox(height: 24),
-            
+
             // Botón de envío
             SoporteWidgetsPrincipales.buildBotonEnvio(
               enviandoCorreo: _enviandoCorreo,
