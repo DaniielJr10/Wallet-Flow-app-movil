@@ -231,19 +231,20 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
           position: _slideAnimation,
           child: _estaCargando
               ? const EstadoCargandoDeudas()
-              : Column(
-                  children: [
-                    ResumenDeudas(
-                      totalDeudaPendiente: _totalDeudaPendiente,
-                      deudasPorPagar: _deudasPorPagar,
-                      deudasPagadas: _deudasPagadas,
-                      totalDeudas: deudasFiltradas.length,
-                      scaleAnimation: _scaleAnimation,
-                    ),
-                    const SizedBox(height: 24),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: FiltrosYOrdenDeudas(
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ResumenDeudas(
+                        totalDeudaPendiente: _totalDeudaPendiente,
+                        deudasPorPagar: _deudasPorPagar,
+                        deudasPagadas: _deudasPagadas,
+                        totalDeudas: deudasFiltradas.length,
+                        scaleAnimation: _scaleAnimation,
+                      ),
+                      const SizedBox(height: 24),
+                      FiltrosYOrdenDeudas(
                         filterButtonKey: _filterButtonKey,
                         modoBusqueda: _modoBusqueda,
                         onSearchChanged: (v) => setState(() {
@@ -253,20 +254,16 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
                         onFilterPressed: _mostrarModalFiltro,
                         onNuevaDeudaPressed: () => _mostrarFormulario(esEdicion: false),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: ListaDeudasBuilder(
-                          deudas: deudasFiltradas,
-                          filtroSeleccionado: _filtroSeleccionado,
-                          onTapDeuda: _mostrarDetalles,
-                          onPagar: _mostrarDialogoPago,
-                        ),
+                      const SizedBox(height: 16),
+                      ListaDeudasBuilder(
+                        deudas: deudasFiltradas,
+                        filtroSeleccionado: _filtroSeleccionado,
+                        onTapDeuda: _mostrarDetalles,
+                        onPagar: _mostrarDialogoPago,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 100),
+                    ],
+                  ),
                 ),
         ),
       ),
