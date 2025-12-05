@@ -156,13 +156,27 @@ class _FormularioMetaState extends State<FormularioMeta> {
                           initialDate: _fechaAhorro ?? DateTime.now(),
                           firstDate: DateTime.now(),
                           lastDate: DateTime(2100),
+                          locale: const Locale('es', 'ES'),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: ColorScheme.light(
+                                  primary: UtilsAhorros.colorPrincipal,
+                                  onPrimary: Colors.white,
+                                  surface: Colors.white,
+                                  onSurface: Colors.black,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
                         );
                         if (picked != null) setState(() => _fechaAhorro = picked);
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: UtilsAhorros.colorPrincipal, width: 2),
+                          border: Border.all(color: Colors.grey.shade400),
                           borderRadius: BorderRadius.circular(12),
                           color: Colors.grey.shade50,
                         ),

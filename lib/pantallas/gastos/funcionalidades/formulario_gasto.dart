@@ -401,6 +401,20 @@ class _FormularioGastoState extends State<FormularioGasto> {
               initialDate: _fechaSeleccionada,
               firstDate: DateTime(2020),
               lastDate: DateTime(2030),
+              locale: const Locale('es', 'ES'),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: ColorScheme.light(
+                      primary: UtilsGastos.colorPrincipal,
+                      onPrimary: Colors.white,
+                      surface: Colors.white,
+                      onSurface: Colors.black,
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
             );
             if (picked != null) setState(() => _fechaSeleccionada = picked);
           },

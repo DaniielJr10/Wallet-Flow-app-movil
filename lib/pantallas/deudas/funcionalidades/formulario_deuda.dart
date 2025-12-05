@@ -183,13 +183,27 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                           initialDate: _fechaVenc,
                           firstDate: DateTime(2020),
                           lastDate: DateTime(2100),
+                          locale: const Locale('es', 'ES'),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: ColorScheme.light(
+                                  primary: primary,
+                                  onPrimary: Colors.white,
+                                  surface: Colors.white,
+                                  onSurface: Colors.black,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
                         );
                         if (picked != null) setState(() { _fechaVenc = picked; });
                       },
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          border: Border.all(color: primary, width: 2),
+                          border: Border.all(color: Colors.grey.shade400),
                           borderRadius: BorderRadius.circular(12),
                           color: Colors.grey.shade50,
                         ),
@@ -221,11 +235,38 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                             initialDate: _fechaRecordatorio ?? DateTime.now(),
                             firstDate: DateTime.now(),
                             lastDate: DateTime(2100),
+                            locale: const Locale('es', 'ES'),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: ColorScheme.light(
+                                    primary: primary,
+                                    onPrimary: Colors.white,
+                                    surface: Colors.white,
+                                    onSurface: Colors.black,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
                           );
                           if (picked == null) return;
                           final time = await showTimePicker(
                             context: context,
                             initialTime: TimeOfDay.fromDateTime(_fechaRecordatorio ?? DateTime.now()),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: ColorScheme.light(
+                                    primary: primary,
+                                    onPrimary: Colors.white,
+                                    surface: Colors.white,
+                                    onSurface: Colors.black,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
                           );
                           if (time == null) return;
                           setState(() {
