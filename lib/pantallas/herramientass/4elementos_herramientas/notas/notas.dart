@@ -53,40 +53,56 @@ class _NotasScreenState extends State<NotasScreen> with TickerProviderStateMixin
     });
   }
 
-  Future<void> _guardarCambios() async {
-    await _servicioNotas.guardarNotas(_notes);
-  }
+  // La sincronización se maneja por operación (crear/actualizar/eliminar) directamente en Firestore.
 
-  void _addNote(String text, List<String> tags) {
+  Future<void> _addNote(String text, List<String> tags) async {
     if (text.trim().isEmpty) return;
-    final note = {
-      "text": text.trim(),
-      "date": DateTime.now().toIso8601String(),
-      "tags": tags
-    };
-    setState(() {
-      _notes.insert(0, note);
-    });
-    _guardarCambios();
+    final creada = await _servicioNotas.crearNota(
+      texto: text.trim(),
+      etiquetas: tags,
+    );
+    if (creada != null) {
+      setState(() {
+        _notes.insert(0, creada);
+      });
+    }
   }
 
-  void _editNote(int index, String newText, List<String> tags) {
+  Future<void> _editNote(int index, String newText, List<String> tags) async {
     if (newText.trim().isEmpty) return;
-    setState(() {
-      _notes[index]['text'] = newText.trim();
-      _notes[index]['tags'] = tags;
-    });
-    _guardarCambios();
+    final nota = _notes[index];
+    final id = nota['id'] as String?;
+    if (id == null || id.isEmpty) {
+      // Si no tiene id (caso raro), crear en BD en vez de duplicar
+      await _addNote(newText, tags);
+      return;
+    }
+    final actualizado = {
+      ...nota,
+      'id': id,
+      'text': newText.trim(),
+      'tags': tags,
+    };
+    final ok = await _servicioNotas.actualizarNota(actualizado);
+    if (ok) {
+      setState(() {
+        _notes[index] = actualizado;
+      });
+    }
   }
 
-  void _deleteNote(int index) {
+  Future<void> _deleteNote(int index) async {
     // Buscar la nota real en la lista principal usando el objeto, 
     // no el índice de la lista filtrada, para evitar borrar la incorrecta.
     // En esta implementación simple, pasamos el índice real desde el builder.
+    final id = _notes[index]['id'] as String?;
+    if (id != null && id.isNotEmpty) {
+      final ok = await _servicioNotas.eliminarNotaPorId(id);
+      if (!ok) return;
+    }
     setState(() {
       _notes.removeAt(index);
     });
-    _guardarCambios();
   }
 
   void _mostrarDialogo({int? index}) {

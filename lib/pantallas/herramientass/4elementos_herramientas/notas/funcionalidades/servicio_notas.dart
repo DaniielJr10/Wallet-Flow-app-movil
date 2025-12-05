@@ -1,144 +1,163 @@
-/// SERVICIO DE PERSISTENCIA HÍBRIDO
-/// Encapsula la lógica para usar Firebase Firestore como principal
-/// y SharedPreferences como respaldo para compatibilidad y migración.
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+/// SERVICIO DE NOTAS SOLO EN BD (Firestore)
+/// Este servicio usa exclusivamente Firebase Firestore para leer/escribir.
+/// No se guarda nada en almacenamiento local.
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../../firebase/servicios/NotasService/notas_servicio.dart';
+import '../../../../../firebase/servicios/NotasService/modelo_nota.dart';
 
 class ServicioNotas {
-  static const String _keyLocal = 'notes';
-  static const String _keyMigrated = 'notes_migrated';
-  
   final NotasServicio _notasFirebase = NotasServicio();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// Cargar notas usando Firebase como fuente principal
+  /// Cargar notas desde Firebase (única fuente)
   Future<List<Map<String, dynamic>>> cargarNotas() async {
     try {
-      // Verificar si el usuario está autenticado
-      if (_auth.currentUser != null) {
-        // Intentar migrar datos locales si no se ha hecho antes
-        await _migrarDatosLocalesSiEsNecesario();
-        
-        // Obtener notas de Firebase
-        final notasFirebase = await _notasFirebase.obtenerNotas();
-        
-        // Convertir a formato compatible con la UI actual
-        return notasFirebase.map((nota) => nota.toLocal()).toList();
-      } else {
-        // Si no está autenticado, usar almacenamiento local
-        return await _cargarNotasLocales();
-      }
+      if (_auth.currentUser == null) return [];
+
+      final notasFirebase = await _notasFirebase.obtenerNotas();
+      return notasFirebase.map((nota) => nota.toLocal()).toList();
     } catch (e) {
-      print('Error al cargar notas de Firebase, usando respaldo local: $e');
-      return await _cargarNotasLocales();
+      print('Error al cargar notas de Firebase: $e');
+      return [];
     }
   }
 
-  /// Guardar notas usando Firebase como destino principal
+  /// Guardar/sincronizar notas en Firebase.
+  /// También elimina en BD las notas que ya no existan en la lista provista.
   Future<void> guardarNotas(List<Map<String, dynamic>> notes) async {
     try {
-      if (_auth.currentUser != null) {
-        // Guardar en Firebase
-        await _guardarNotasFirebase(notes);
-      } else {
-        // Si no está autenticado, guardar localmente
-        await _guardarNotasLocales(notes);
-      }
+      if (_auth.currentUser == null) return;
+
+      await _sincronizarNotasFirebase(notes);
     } catch (e) {
-      print('Error al guardar en Firebase, guardando localmente: $e');
-      await _guardarNotasLocales(notes);
+      print('Error al guardar en Firebase: $e');
     }
+  }
+
+  /// Crear una nota y devolver su representación local (incluye id)
+  Future<Map<String, dynamic>?> crearNota({
+    required String texto,
+    List<String> etiquetas = const [],
+    String color = '#FFE082',
+    bool esImportante = false,
+    String? categoria,
+  }) async {
+    if (_auth.currentUser == null) return null;
+    final creada = await _notasFirebase.crearNota(
+      texto: texto,
+      etiquetas: etiquetas,
+      color: color,
+      esImportante: esImportante,
+      categoria: categoria,
+    );
+    return creada?.toLocal();
+  }
+
+  /// Actualizar una sola nota en Firestore (no crea, requiere id)
+  Future<bool> actualizarNota(Map<String, dynamic> nota) async {
+    if (_auth.currentUser == null) return false;
+
+    final id = nota['id'] as String?;
+    if (id == null || id.isEmpty) {
+      print('ActualizarNota: id faltante, no se puede actualizar');
+      return false;
+    }
+
+    try {
+      final modelo = NotaModelo(
+        id: id,
+        texto: nota['text'] ?? nota['texto'] ?? '',
+        etiquetas: List<String>.from(nota['tags'] ?? nota['etiquetas'] ?? []),
+        color: nota['color'] ?? '#FFE082',
+        esImportante: nota['esImportante'] ?? false,
+        categoria: nota['categoria'],
+        fechaCreacion: DateTime.tryParse(nota['fechaCreacion'] ?? '' ?? '') ?? DateTime.now(),
+        fechaActualizacion: DateTime.now(),
+      );
+      return await _notasFirebase.actualizarNota(modelo);
+    } catch (e) {
+      print('Error al actualizar nota $id: $e');
+      return false;
+    }
+  }
+
+  /// Eliminar una nota por id directamente en Firestore
+  Future<bool> eliminarNotaPorId(String id) async {
+    if (_auth.currentUser == null) return false;
+    return await _notasFirebase.eliminarNota(id);
   }
 
   // ========== MÉTODOS PRIVADOS ==========
 
-  /// Cargar notas del almacenamiento local
-  Future<List<Map<String, dynamic>>> _cargarNotasLocales() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getStringList(_keyLocal) ?? [];
-    
-    return raw.map((s) {
-      try {
-        final m = jsonDecode(s) as Map<String, dynamic>;
-        return m;
-      } catch (_) {
-        // Recuperación de datos antiguos si no eran JSON válido
-        return {"text": s, "date": DateTime.now().toIso8601String(), "tags": []};
-      }
-    }).toList();
-  }
+  /// Sincroniza la lista de notas con Firestore:
+  /// - Crea las notas sin id
+  /// - Actualiza las que traen id
+  /// - Elimina en BD las que existen en BD pero no vienen en `notes`
+  Future<void> _sincronizarNotasFirebase(List<Map<String, dynamic>> notes) async {
+    // Obtener estado actual en BD
+    final actuales = await _notasFirebase.obtenerNotas();
+    final idsActuales = actuales.map((n) => n.id).toSet();
 
-  /// Guardar notas en almacenamiento local
-  Future<void> _guardarNotasLocales(List<Map<String, dynamic>> notes) async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = notes.map((m) => jsonEncode(m)).toList();
-    await prefs.setStringList(_keyLocal, raw);
-  }
+    // Mapear por id las notas entrantes
+    final entrantesConId = <String, Map<String, dynamic>>{};
+    final entrantesSinId = <Map<String, dynamic>>[];
 
-  /// Guardar notas en Firebase
-  Future<void> _guardarNotasFirebase(List<Map<String, dynamic>> notes) async {
-    // Esta función maneja la sincronización completa
-    // En una implementación real, sería mejor manejar operaciones individuales
-    // Aquí se simplifica para mantener compatibilidad con la interfaz actual
-    
-    // Procesar cada nota del array local
-    for (final notaLocal in notes) {
-      try {
-        // Si la nota no tiene ID, crear una nueva
-        if (!notaLocal.containsKey('id') || notaLocal['id'] == null) {
-          await _notasFirebase.crearNota(
-            texto: notaLocal['text'] ?? notaLocal['texto'] ?? '',
-            etiquetas: List<String>.from(notaLocal['tags'] ?? notaLocal['etiquetas'] ?? []),
-            color: notaLocal['color'] ?? '#FFE082',
-            esImportante: notaLocal['esImportante'] ?? false,
-            categoria: notaLocal['categoria'],
-          );
-        }
-      } catch (e) {
-        print('Error al procesar nota para Firebase: $e');
+    for (final n in notes) {
+      final id = n['id'] as String?;
+      if (id == null || id.isEmpty) {
+        entrantesSinId.add(n);
+      } else {
+        entrantesConId[id] = n;
       }
     }
-  }
 
-  /// Migrar datos locales a Firebase si es necesario
-  Future<void> _migrarDatosLocalesSiEsNecesario() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final yaMigrado = prefs.getBool(_keyMigrated) ?? false;
-      
-      if (yaMigrado) return;
-      
-      // Obtener datos locales
-      final notasLocales = await _cargarNotasLocales();
-      
-      if (notasLocales.isNotEmpty) {
-        print('Migrando ${notasLocales.length} notas locales a Firebase...');
-        
-        // Migrar cada nota
-        for (final notaLocal in notasLocales) {
-          try {
-            await _notasFirebase.crearNota(
-              texto: notaLocal['text'] ?? notaLocal['texto'] ?? '',
-              etiquetas: List<String>.from(notaLocal['tags'] ?? notaLocal['etiquetas'] ?? []),
-              color: notaLocal['color'] ?? '#FFE082',
-              esImportante: notaLocal['esImportante'] ?? false,
-              categoria: notaLocal['categoria'],
-            );
-          } catch (e) {
-            print('Error migrando nota individual: $e');
-          }
-        }
-        
-        print('Migración completada.');
+    // 1) Crear nuevas (sin id)
+    for (final n in entrantesSinId) {
+      try {
+        await _notasFirebase.crearNota(
+          texto: n['text'] ?? n['texto'] ?? '',
+          etiquetas: List<String>.from(n['tags'] ?? n['etiquetas'] ?? []),
+          color: n['color'] ?? '#FFE082',
+          esImportante: n['esImportante'] ?? false,
+          categoria: n['categoria'],
+        );
+      } catch (e) {
+        print('Error creando nota: $e');
       }
-      
-      // Marcar como migrado
-      await prefs.setBool(_keyMigrated, true);
-      
-    } catch (e) {
-      print('Error durante migración: $e');
+    }
+
+    // 2) Actualizar existentes (con id)
+    for (final actual in actuales) {
+      final entrante = entrantesConId[actual.id];
+      if (entrante != null) {
+        try {
+          final actualizado = NotaModelo(
+            id: actual.id,
+            texto: entrante['text'] ?? entrante['texto'] ?? actual.texto,
+            etiquetas: List<String>.from(entrante['tags'] ?? entrante['etiquetas'] ?? actual.etiquetas),
+            color: entrante['color'] ?? actual.color,
+            esImportante: entrante['esImportante'] ?? actual.esImportante,
+            categoria: entrante['categoria'] ?? actual.categoria,
+            fechaCreacion: actual.fechaCreacion,
+            fechaActualizacion: DateTime.now(),
+          );
+          await _notasFirebase.actualizarNota(actualizado);
+        } catch (e) {
+          print('Error actualizando nota ${actual.id}: $e');
+        }
+      }
+    }
+
+    // 3) Eliminar en BD las que no están en la lista entrante
+    final idsEntrantes = entrantesConId.keys.toSet();
+  final aEliminar = idsActuales.difference(idsEntrantes).where((id) => id != null && id.isNotEmpty);
+
+  for (final id in aEliminar) {
+      try {
+    await _notasFirebase.eliminarNota(id!);
+      } catch (e) {
+        print('Error eliminando nota $id: $e');
+      }
     }
   }
 }
