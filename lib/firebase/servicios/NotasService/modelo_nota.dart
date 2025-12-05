@@ -52,20 +52,31 @@ class NotaModelo {
 
   /// Convierte a Map para guardar en Firestore
   Map<String, dynamic> toFirestore() {
-    return {
+    final map = <String, dynamic>{
       'texto': texto,
       'fechaCreacion': fechaCreacion.toIso8601String(),
       'fechaActualizacion': fechaActualizacion.toIso8601String(),
       'etiquetas': etiquetas,
-      'color': color,
-      'esImportante': esImportante,
-      'categoria': categoria,
     };
+
+    // No enviar campos innecesarios
+    if (color != '#FFE082') {
+      map['color'] = color;
+    }
+    if (esImportante) {
+      map['esImportante'] = esImportante;
+    }
+    if (categoria != null) {
+      map['categoria'] = categoria;
+    }
+
+    return map;
   }
 
   /// Convierte a Map para compatibilidad local
   Map<String, dynamic> toLocal() {
     return {
+      'id': id,
       'text': texto,
       'date': fechaCreacion.toIso8601String(),
       'tags': etiquetas,

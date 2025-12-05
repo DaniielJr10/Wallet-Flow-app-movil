@@ -33,7 +33,7 @@ class NotasActualizar {
         fechaActualizacion: DateTime.now(),
       );
 
-      await _firestore
+  await _firestore
           .collection('usuarios')
           .doc(user.uid)
           .collection('notas')
@@ -58,7 +58,7 @@ class NotasActualizar {
         throw Exception('El texto no puede estar vacío');
       }
 
-      await _firestore
+  await _firestore
           .collection('usuarios')
           .doc(user.uid)
           .collection('notas')
@@ -124,7 +124,7 @@ class NotasActualizar {
         throw Exception('Formato de color inválido');
       }
 
-      await _firestore
+  await _firestore
           .collection('usuarios')
           .doc(user.uid)
           .collection('notas')
@@ -155,7 +155,7 @@ class NotasActualizar {
           .toSet()
           .toList();
 
-      await _firestore
+  await _firestore
           .collection('usuarios')
           .doc(user.uid)
           .collection('notas')

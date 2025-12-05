@@ -198,9 +198,30 @@ class _NotasScreenState extends State<NotasScreen> with TickerProviderStateMixin
                             final realIndex = _notes.indexOf(filteredNotes[i]);
                             _mostrarDialogo(index: realIndex);
                           },
-                          onDeleteNota: (i) {
+                          onDeleteNota: (i) async {
                             final realIndex = _notes.indexOf(filteredNotes[i]);
-                            _deleteNote(realIndex);
+                            final confirmar = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) {
+                                return AlertDialog(
+                                  title: const Text('¿Borrar nota?'),
+                                  content: const Text('¿Seguro que deseas borrar esta nota? Esta acción no se puede deshacer.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(false),
+                                      child: const Text('Cancelar'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(true),
+                                      child: const Text('Borrar'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                            if (confirmar == true) {
+                              await _deleteNote(realIndex);
+                            }
                           },
                         ),
                 ),

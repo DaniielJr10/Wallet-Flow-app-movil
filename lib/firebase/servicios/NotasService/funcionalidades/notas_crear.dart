@@ -38,6 +38,7 @@ class NotasCrear {
         fechaCreacion: ahora,
         fechaActualizacion: ahora,
         etiquetas: etiquetas,
+        // usar valores recibidos, pero toFirestore no enviará los que sean por defecto
         color: color,
         esImportante: esImportante,
         categoria: categoria?.trim(),
@@ -96,8 +97,8 @@ class NotasCrear {
           fechaCreacion: ahora,
           fechaActualizacion: ahora,
           etiquetas: List<String>.from(datos['etiquetas'] ?? []),
-          color: datos['color'] ?? '#FFE082',
-          esImportante: datos['esImportante'] ?? false,
+          color: (datos['color'] ?? '#FFE082'),
+          esImportante: (datos['esImportante'] ?? false),
           categoria: datos['categoria']?.toString().trim(),
         );
 
