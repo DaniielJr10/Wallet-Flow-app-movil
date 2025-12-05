@@ -12,6 +12,10 @@ class AppBarCuentas extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       backgroundColor: Colors.transparent,
       toolbarHeight: 120,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Color(0xFF007bff)),
+        onPressed: () => Navigator.pop(context),
+      ),
       title: Padding(
         padding: const EdgeInsets.only(top: 20),
         child: Column(
