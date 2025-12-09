@@ -7,7 +7,7 @@ import 'funcionalidades/resumen_ahorros.dart';
 import 'funcionalidades/barra_busqueda_ahorros.dart';
 import 'funcionalidades/lista_ahorros_builder.dart';
 import 'funcionalidades/formulario_meta.dart';
-import 'funcionalidades/detalle_meta.dart';
+import 'funcionalidades/detalle_ahorro_real.dart';
 import 'funcionalidades/utils_ahorros.dart';
 
 class PantallaAhorros extends StatefulWidget {
@@ -171,9 +171,8 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DetalleMeta(
-        metaId: metaId,
-        meta: meta,
+      builder: (context) => DetalleAhorroReal(
+        ahorro: meta,
         onEditar: () => _mostrarDialogoAgregarMeta(esEdicion: true, metaId: metaId, meta: meta),
         onEliminar: () => _confirmarEliminarMeta(metaId, meta['nombre'] ?? 'esta meta'),
       ),
