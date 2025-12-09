@@ -73,8 +73,7 @@ class _ModalAgregarDineroState extends State<ModalAgregarDinero> {
   @override
   Widget build(BuildContext context) {
     final montoActual = (widget.ahorro['montoActual'] ?? 0).toDouble();
-    final metaMonto = (widget.ahorro['metaMonto'] ?? 0).toDouble();
-    final progreso = metaMonto > 0 ? (montoActual / metaMonto * 100) : 0;
+    final metaMonto = (widget.ahorro['montoObjetivo'] ?? widget.ahorro['metaMonto'] ?? 0).toDouble();
 
     return Container(
       decoration: const BoxDecoration(
@@ -153,7 +152,7 @@ class _ModalAgregarDineroState extends State<ModalAgregarDinero> {
                     ),
                   ),
                   Text(
-                    'de \$${FormatoNumeros.formatearNumero(metaMonto)} (${progreso.toStringAsFixed(1)}%)',
+                    'de \$${FormatoNumeros.formatearNumero(metaMonto)}',
                     style: const TextStyle(color: Colors.grey),
                   ),
                 ],
