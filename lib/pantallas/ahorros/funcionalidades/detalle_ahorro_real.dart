@@ -5,10 +5,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../utilidades/formato_numeros.dart';
+import '../../../firebase/servicios/AhorroService/ahorros_servicio.dart';
 import 'utils_ahorros.dart';
 import 'modal_agregar_dinero.dart';
 
-class DetalleAhorroReal extends StatelessWidget {
+class DetalleAhorroReal extends StatefulWidget {
   final String ahorroId;
   final Map<String, dynamic> ahorro;
   final Function() onEditar;
@@ -23,19 +24,32 @@ class DetalleAhorroReal extends StatelessWidget {
   });
 
   @override
+  State<DetalleAhorroReal> createState() => _DetalleAhorroRealState();
+}
+
+class _DetalleAhorroRealState extends State<DetalleAhorroReal> {
+  late Map<String, dynamic> ahorroActualizado;
+
+  @override
+  void initState() {
+    super.initState();
+    ahorroActualizado = Map<String, dynamic>.from(widget.ahorro);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final categoria = ahorro['categoria'] ?? 'otros';
+    final categoria = ahorroActualizado['categoria'] ?? 'otros';
     final categoriaInfo = UtilsAhorros.obtenerInfoCategoria(categoria);
-    final montoActual = (ahorro['montoActual'] ?? 0.0).toDouble();
-    final montoObjetivo = (ahorro['montoObjetivo'] ?? 0.0).toDouble();
-    final fechaObjetivo = ahorro['fechaObjetivo'] is DateTime 
-        ? ahorro['fechaObjetivo'] as DateTime
-        : (ahorro['fechaObjetivo'] is Timestamp 
-            ? (ahorro['fechaObjetivo'] as Timestamp).toDate() 
+    final montoActual = (ahorroActualizado['montoActual'] ?? 0.0).toDouble();
+    final montoObjetivo = (ahorroActualizado['montoObjetivo'] ?? 0.0).toDouble();
+    final fechaObjetivo = ahorroActualizado['fechaObjetivo'] is DateTime 
+        ? ahorroActualizado['fechaObjetivo'] as DateTime
+        : (ahorroActualizado['fechaObjetivo'] is Timestamp 
+            ? (ahorroActualizado['fechaObjetivo'] as Timestamp).toDate() 
             : DateTime.now());
-    final fechaCreacion = ahorro['fechaCreacion'] is Timestamp 
-        ? (ahorro['fechaCreacion'] as Timestamp).toDate() 
-        : ahorro['fechaCreacion'] as DateTime?;
+    final fechaCreacion = ahorroActualizado['fechaCreacion'] is Timestamp 
+        ? (ahorroActualizado['fechaCreacion'] as Timestamp).toDate() 
+        : ahorroActualizado['fechaCreacion'] as DateTime?;
     
     final progreso = montoObjetivo > 0 ? (montoActual / montoObjetivo).clamp(0.0, 1.0) : 0.0;
     final diasRestantes = fechaObjetivo.difference(DateTime.now()).inDays;
@@ -87,7 +101,7 @@ class DetalleAhorroReal extends StatelessWidget {
                         )
                       ),
                       Text(
-                        ahorro['nombre'] ?? 'Ahorro sin nombre', 
+                        ahorroActualizado['nombre'] ?? 'Ahorro sin nombre', 
                         style: TextStyle(
                           fontSize: 14, 
                           color: Colors.white.withOpacity(0.9), 
@@ -134,7 +148,7 @@ class DetalleAhorroReal extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   // Items de detalle igual que ingresos/gastos
-                  _buildDetalleItem('Nombre', ahorro['nombre'] ?? 'Sin nombre', Icons.savings_outlined),
+                  _buildDetalleItem('Nombre', ahorroActualizado['nombre'] ?? 'Sin nombre', Icons.savings_outlined),
                   const SizedBox(height: 20),
                   _buildDetalleItem('Categoría', categoriaInfo['nombre'], Icons.category_outlined),
                   const SizedBox(height: 20),
@@ -173,7 +187,7 @@ class DetalleAhorroReal extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () { 
                       Navigator.pop(context); 
-                      onEditar(); 
+                      widget.onEditar(); 
                     },
                     icon: const Icon(Icons.edit_rounded, size: 18),
                     label: const Text('Editar'),
@@ -191,7 +205,7 @@ class DetalleAhorroReal extends StatelessWidget {
                 // Botón Agregar Dinero - En el medio con color morado
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _mostrarModalAgregarDinero(context, ahorroId, ahorro),
+                    onPressed: () => _mostrarModalAgregarDinero(context, widget.ahorroId, ahorroActualizado),
                     icon: const Icon(Icons.add_circle, size: 18),
                     label: const Text('Dinero'),
                     style: ElevatedButton.styleFrom(
@@ -210,7 +224,7 @@ class DetalleAhorroReal extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () { 
                       Navigator.pop(context); 
-                      onEliminar(); 
+                      widget.onEliminar(); 
                     },
                     icon: const Icon(Icons.delete_rounded, size: 18),
                     label: const Text('Eliminar'),
@@ -289,6 +303,22 @@ class DetalleAhorroReal extends StatelessWidget {
     return '${fecha.day} de ${meses[fecha.month - 1]} de ${fecha.year}';
   }
 
+  Future<void> _actualizarDatosAhorro() async {
+    try {
+      // Obtener datos actualizados de Firebase
+      final ahorrosService = AhorrosServicio();
+      final ahorroActualizadoFirebase = await ahorrosService.obtenerMetaPorId(widget.ahorroId);
+      
+      if (ahorroActualizadoFirebase != null) {
+        setState(() {
+          ahorroActualizado = ahorroActualizadoFirebase;
+        });
+      }
+    } catch (e) {
+      print('Error al actualizar datos del ahorro: $e');
+    }
+  }
+
   void _mostrarModalAgregarDinero(BuildContext context, String ahorroId, Map<String, dynamic> ahorro) {
     showModalBottomSheet(
       context: context,
@@ -297,9 +327,9 @@ class DetalleAhorroReal extends StatelessWidget {
       builder: (context) => ModalAgregarDinero(
         ahorroId: ahorroId,
         ahorro: ahorro,
-        onSuccess: () {
-          // El modal se cierra solo y muestra el snackbar
-          // Aquí podrías agregar lógica adicional si necesitas
+        onSuccess: () async {
+          // Actualizar los datos en tiempo real
+          await _actualizarDatosAhorro();
         },
       ),
     );
