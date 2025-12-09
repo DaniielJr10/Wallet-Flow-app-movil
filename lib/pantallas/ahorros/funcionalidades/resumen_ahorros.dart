@@ -18,7 +18,6 @@ class ResumenAhorros extends StatelessWidget {
           return const SizedBox(height: 120);
         }
         double totalAhorrado = 0;
-        double totalMetas = 0;
         int totalMetasCount = snapshot.data!.length;
         int metasCompletadas = 0;
         
@@ -26,13 +25,10 @@ class ResumenAhorros extends StatelessWidget {
           final montoActual = (meta['montoActual'] ?? 0.0).toDouble();
           final montoObjetivo = (meta['montoObjetivo'] ?? 0.0).toDouble();
           totalAhorrado += montoActual;
-          totalMetas += montoObjetivo;
           if (montoActual >= montoObjetivo) {
             metasCompletadas++;
           }
         }
-        
-        final double progresoPorcentaje = totalMetas > 0 ? (totalAhorrado / totalMetas) * 100 : 0;
         
         return Container(
           margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
@@ -72,7 +68,7 @@ class ResumenAhorros extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '$totalMetasCount meta${totalMetasCount != 1 ? 's' : ''}',
+                      '$totalMetasCount ahorro${totalMetasCount != 1 ? 's' : ''}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -94,77 +90,27 @@ class ResumenAhorros extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Meta Total',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ahorros Completados',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          FormatoNumeros.formatearParaMostrar(totalMetas),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '$metasCompletadas de $totalMetasCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Progreso',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${progresoPorcentaje.toStringAsFixed(1)}%',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Completadas',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '$metasCompletadas/$totalMetasCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
