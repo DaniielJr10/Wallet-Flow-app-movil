@@ -1,4 +1,4 @@
-// 4. Búsqueda y filtros para las metas de ahorro
+// 4. Búsqueda y filtros para los ahorros
 import 'package:flutter/material.dart';
 import 'utils_ahorros.dart';
 
@@ -41,7 +41,7 @@ class BarraBusquedaAhorros extends StatelessWidget {
                 controller: controller,
                 onChanged: onChanged,
                 decoration: InputDecoration(
-                  hintText: 'Buscar por nombre de meta...',
+                  hintText: 'Buscar por nombre del ahorro...',
                   hintStyle: TextStyle(
                     fontSize: 16,
                     color: Colors.grey.shade500,
@@ -121,14 +121,14 @@ class BarraBusquedaAhorros extends StatelessWidget {
                     children: [
                       Icon(Icons.tune_rounded, color: UtilsAhorros.colorPrincipal, size: 18),
                       SizedBox(width: 8),
-                      Text('Filtros de metas', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: UtilsAhorros.colorPrincipal)),
+                      Text('Filtros de ahorros', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: UtilsAhorros.colorPrincipal)),
                     ],
                   ),
                 ),
                 const PopupMenuDivider(height: 1),
-                _crearItemFiltro('todas', 'Todas las metas', Icons.list_rounded),
-                _crearItemFiltro('activas', 'Metas activas', Icons.play_circle_outline_rounded),
-                _crearItemFiltro('completadas', 'Metas completadas', Icons.check_circle_rounded),
+                _crearItemFiltro('todas', 'Todos los ahorros', Icons.list_rounded),
+                _crearItemFiltro('activas', 'Ahorros activos', Icons.play_circle_outline_rounded),
+                _crearItemFiltro('completadas', 'Ahorros completados', Icons.check_circle_rounded),
               ],
               onSelected: onFilterSelected,
             ),

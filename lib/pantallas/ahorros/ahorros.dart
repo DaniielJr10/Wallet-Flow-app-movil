@@ -96,7 +96,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Metas de ahorro',
+                      'Mis ahorros',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
