@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:cross_file/cross_file.dart';
 import '../../../../../util/web_downloader.dart';
 
 class GestorArchivos {
@@ -53,8 +54,8 @@ class GestorArchivos {
       
       await archivo.writeAsBytes(bytes);
       
-      await Share.shareFiles(
-        [archivo.path],
+      await Share.shareXFiles(
+        [XFile(archivo.path)],
         text: textoCompartir ?? 'Exportación desde Wallet Flow',
         subject: 'Datos Financieros - Wallet Flow',
       );
