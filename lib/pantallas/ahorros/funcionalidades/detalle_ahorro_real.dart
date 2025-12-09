@@ -6,14 +6,17 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_ahorros.dart';
+import 'modal_agregar_dinero.dart';
 
 class DetalleAhorroReal extends StatelessWidget {
+  final String ahorroId;
   final Map<String, dynamic> ahorro;
   final Function() onEditar;
   final Function() onEliminar;
 
   const DetalleAhorroReal({
     super.key,
+    required this.ahorroId,
     required this.ahorro,
     required this.onEditar,
     required this.onEliminar,
@@ -165,34 +168,59 @@ class DetalleAhorroReal extends StatelessWidget {
             ),
             child: Row(
               children: [
+                // Botón Editar
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () { 
                       Navigator.pop(context); 
                       onEditar(); 
                     },
-                    icon: const Icon(Icons.edit_rounded, size: 20),
+                    icon: const Icon(Icons.edit_rounded, size: 18),
                     label: const Text('Editar'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade600, 
                       foregroundColor: Colors.white, 
-                      padding: const EdgeInsets.symmetric(vertical: 14)
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 8),
+                // Botón Agregar Dinero - En el medio con color morado
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => _mostrarModalAgregarDinero(context, ahorroId, ahorro),
+                    icon: const Icon(Icons.add_circle, size: 18),
+                    label: const Text('Dinero'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: UtilsAhorros.colorPrincipal, // Color morado
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Botón Eliminar
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () { 
                       Navigator.pop(context); 
                       onEliminar(); 
                     },
-                    icon: const Icon(Icons.delete_rounded, size: 20),
+                    icon: const Icon(Icons.delete_rounded, size: 18),
                     label: const Text('Eliminar'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red.shade600, 
                       foregroundColor: Colors.white, 
-                      padding: const EdgeInsets.symmetric(vertical: 14)
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ),
@@ -259,5 +287,21 @@ class DetalleAhorroReal extends StatelessWidget {
       'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
     ];
     return '${fecha.day} de ${meses[fecha.month - 1]} de ${fecha.year}';
+  }
+
+  void _mostrarModalAgregarDinero(BuildContext context, String ahorroId, Map<String, dynamic> ahorro) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ModalAgregarDinero(
+        ahorroId: ahorroId,
+        ahorro: ahorro,
+        onSuccess: () {
+          // El modal se cierra solo y muestra el snackbar
+          // Aquí podrías agregar lógica adicional si necesitas
+        },
+      ),
+    );
   }
 }

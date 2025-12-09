@@ -172,6 +172,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => DetalleAhorroReal(
+        ahorroId: metaId,
         ahorro: meta,
         onEditar: () => _mostrarDialogoAgregarMeta(esEdicion: true, metaId: metaId, meta: meta),
         onEliminar: () => _confirmarEliminarMeta(metaId, meta['nombre'] ?? 'esta meta'),
