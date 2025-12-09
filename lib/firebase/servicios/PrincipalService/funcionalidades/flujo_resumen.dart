@@ -163,8 +163,8 @@ mixin FlujoResumen on ReferenciasPrincipal, CalculosTotales {
         double total = 0.0;
         for (final doc in snapshot.docs) {
           final data = doc.data();
-          final montoAhorrado = (data['montoAhorrado'] ?? 0.0);
-          total += (montoAhorrado is num) ? montoAhorrado.toDouble() : 0.0;
+          final montoActual = (data['montoActual'] ?? 0.0);
+          total += (montoActual is num) ? montoActual.toDouble() : 0.0;
         }
         totalAhorros = total;
         emitirResumen();
