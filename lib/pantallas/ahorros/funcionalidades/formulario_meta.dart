@@ -27,6 +27,7 @@ class _FormularioMetaState extends State<FormularioMeta> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _montoInicialController = TextEditingController();
+  final TextEditingController _agregarDineroController = TextEditingController();
   final TextEditingController _montoObjetivoController = TextEditingController();
   DateTime? _fechaAhorro = DateTime.now();
   String _categoriaAhorro = 'vacaciones';
@@ -38,6 +39,7 @@ class _FormularioMetaState extends State<FormularioMeta> {
     if (widget.esEdicion && widget.meta != null) {
       _nombreController.text = widget.meta!['nombre'] ?? '';
       _montoInicialController.text = FormatoNumeros.formatearParaMostrar(widget.meta!['montoInicial'] ?? 0.0);
+      // No prellenamos el campo de agregar dinero - siempre empieza vacío
       _montoObjetivoController.text = FormatoNumeros.formatearParaMostrar(widget.meta!['montoObjetivo'] ?? 0.0);
       _fechaAhorro = widget.meta!['fechaObjetivo'] is DateTime
           ? widget.meta!['fechaObjetivo']
@@ -126,6 +128,39 @@ class _FormularioMetaState extends State<FormularioMeta> {
                       ),
                     ),
                     const SizedBox(height: 20),
+                    // Campo para agregar dinero al ahorro (solo visible en edición)
+                    if (widget.esEdicion) ...[
+                      const Text('Agregar dinero al ahorro', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Monto actual: ${FormatoNumeros.formatearParaMostrar(widget.meta?['montoActual'] ?? 0.0)}',
+                        style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _agregarDineroController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FormateadorNumeros()],
+                        validator: (value) {
+                          // Este campo es opcional en edición
+                          if (value != null && value.isNotEmpty) {
+                            final monto = FormatoNumeros.convertirANumero(value);
+                            if (monto == null || monto <= 0) return 'Monto inválido';
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Opcional - Dinero a agregar',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1.2)),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: UtilsAhorros.colorPrincipal, width: 2)),
+                          filled: true,
+                          fillColor: Colors.white,
+                          prefixIcon: Icon(Icons.add_circle_outline, color: UtilsAhorros.colorPrincipal),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                     const Text('Monto objetivo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -252,10 +287,12 @@ class _FormularioMetaState extends State<FormularioMeta> {
   Future<void> _guardar() async {
     if (_formKey.currentState?.validate() ?? false) {
       final montoInicial = FormatoNumeros.convertirANumero(_montoInicialController.text) ?? 0.0;
+      final dineroAgregar = FormatoNumeros.convertirANumero(_agregarDineroController.text) ?? 0.0;
       final montoObjetivo = FormatoNumeros.convertirANumero(_montoObjetivoController.text) ?? 0.0;
       String? error;
 
       if (widget.esEdicion && widget.metaId != null) {
+        // Primero actualizamos los datos básicos
         error = await _ahorrosServicio.actualizarMetaAhorro(
           metaId: widget.metaId!,
           nombre: _nombreController.text.trim(),
@@ -263,6 +300,14 @@ class _FormularioMetaState extends State<FormularioMeta> {
           fechaObjetivo: _fechaAhorro ?? DateTime.now(),
           categoria: _categoriaAhorro,
         );
+        
+        // Si hay dinero para agregar y la actualización básica fue exitosa
+        if (error == null && dineroAgregar > 0) {
+          error = await _ahorrosServicio.agregarMontoMeta(
+            metaId: widget.metaId!,
+            montoAgregar: dineroAgregar,
+          );
+        }
       } else {
         error = await _ahorrosServicio.crearMetaAhorro(
           nombre: _nombreController.text.trim(),
@@ -301,6 +346,7 @@ class _FormularioMetaState extends State<FormularioMeta> {
   void dispose() {
     _nombreController.dispose();
     _montoInicialController.dispose();
+    _agregarDineroController.dispose();
     _montoObjetivoController.dispose();
     super.dispose();
   }
