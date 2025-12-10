@@ -133,23 +133,23 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Título
-                    const Text('Título', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                    // Nombre
+                    const Text('Nombre', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _tituloCtrl,
-                      decoration: _fieldDecoration(label: 'Título'),
-                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un título' : null,
+                      decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.label_outline, color: primary))),
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un nombre' : null,
                     ),
                     const SizedBox(height: 16),
 
                     // Categoría
-                    const Text('Categoría', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                    const Text('Categoría', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       value: _tipoSeleccionado,
                       isExpanded: true,
-                      decoration: _fieldDecoration(label: 'Categoría'),
+                      decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.category_outlined, color: primary))),
                       items: const [
                         DropdownMenuItem(value: 'Préstamo Personal', child: Text('Préstamo Personal')),
                         DropdownMenuItem(value: 'Tarjeta de Crédito', child: Text('Tarjeta de Crédito')),
@@ -162,12 +162,12 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                     const SizedBox(height: 16),
 
                     // Monto
-                    const Text('Monto', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                    const Text('Monto', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _montoCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: _fieldDecoration(label: 'Monto', prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.attach_money_rounded, color: primary))),
+                      decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.attach_money_rounded, color: primary))),
                       validator: (v) {
                         final n = double.tryParse(v ?? '');
                         return (n == null || n <= 0) ? 'Ingresa un monto válido' : null;
@@ -177,16 +177,16 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
 
 
                     // Acreedor
-                    const Text('Acreedor / Banco', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                    const Text('Acreedor / Banco', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _acreedorCtrl,
-                      decoration: _fieldDecoration(label: 'Acreedor / Banco', prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.account_balance_rounded, color: primary))),
+                      decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.account_balance_rounded, color: primary))),
                     ),
                     const SizedBox(height: 16),
 
                     // Fecha
-                    const Text('Fecha', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                    const Text('Fecha', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () async {
@@ -221,7 +221,7 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today_rounded, color: Colors.white, size: 20),
+                            Icon(Icons.calendar_today_rounded, color: primary, size: 20),
                             const SizedBox(width: 12),
                             Text('${_fechaVenc.day}/${_fechaVenc.month}/${_fechaVenc.year}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                           ],
@@ -234,7 +234,7 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Recordatorio', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                        const Text('Recordatorio', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
                         Switch(value: _tieneRecordatorio, onChanged: (v) => setState(() { _tieneRecordatorio = v; if (!v) _fechaRecordatorio = null; if (v && _fechaRecordatorio == null) _fechaRecordatorio = DateTime.now().add(const Duration(days:1)); })),
                       ],
                     ),
@@ -356,19 +356,9 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Icon(
-              Icons.repeat,
-              color: Colors.grey.shade600,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            const Text(
-              'Frecuencia',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey),
-            ),
-          ],
+        const Text(
+          'Frecuencia',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black),
         ),
         const SizedBox(height: 8),
         Container(
