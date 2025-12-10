@@ -36,10 +36,10 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
     final deuda = widget.deudaExistente ?? {};
     _tituloCtrl = TextEditingController(text: deuda['titulo'] ?? '');
     _montoCtrl = TextEditingController(text: (deuda['montoOriginal'] ?? deuda['montoPendiente'] ?? '').toString());
-    _acreedorCtrl = TextEditingController(text: deuda['acreedor'] ?? '');
+    _acreedorCtrl = TextEditingController(text: deuda['prestamista'] ?? deuda['acreedor'] ?? '');
     _tipoSeleccionado = deuda['tipo'] ?? 'Préstamo Personal';
-    _fechaDeuda = deuda['fechaDeuda'] ?? DateTime.now();
-    _fechaVenc = deuda['fechaVencimiento'] ?? DateTime.now().add(const Duration(days: 30));
+    _fechaDeuda = _convertirADateTime(deuda['fechaDeuda']) ?? DateTime.now();
+    _fechaVenc = _convertirADateTime(deuda['fechaVencimiento']) ?? DateTime.now().add(const Duration(days: 30));
     // Eliminado manejo de frecuencia
   }
 
@@ -413,5 +413,15 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
         }
       }
     }
+  }
+
+  DateTime? _convertirADateTime(dynamic fecha) {
+    if (fecha == null) return null;
+    if (fecha is Timestamp) {
+      return fecha.toDate();
+    } else if (fecha is DateTime) {
+      return fecha;
+    }
+    return null;
   }
 }
