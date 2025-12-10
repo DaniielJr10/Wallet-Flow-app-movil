@@ -177,8 +177,21 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
                         hint: 'Número completo de la cuenta',
                         icon: Icons.credit_card,
                         keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        validator: (value) => (value == null || value.trim().isEmpty) ? 'El número de cuenta es requerido' : null,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'El número de cuenta es requerido';
+                          }
+                          if (value.length < 9) {
+                            return 'Mínimo 9 dígitos';
+                          }
+                          if (value.length > 14) {
+                            return 'Máximo 14 dígitos';
+                          }
+                          return null;
+                        },
                       ),
 
                       const SizedBox(height: 12),
@@ -264,7 +277,43 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
   }
 
   Future<void> _guardarCuenta() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      // Validación adicional para mostrar mensaje específico sobre el número de cuenta
+      final esDineroEnMano = _tipoSeleccionado == 'dinero_en_mano';
+      if (!esDineroEnMano && _numeroController.text.isNotEmpty) {
+        final longitud = _numeroController.text.length;
+        String mensaje = '';
+        
+        if (longitud < 9) {
+          mensaje = 'El número de cuenta debe tener al menos 9 dígitos. Actualmente tiene $longitud dígitos.';
+        } else if (longitud > 14) {
+          mensaje = 'El número de cuenta no puede tener más de 14 dígitos. Actualmente tiene $longitud dígitos.';
+        }
+        
+        if (mensaje.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(mensaje)),
+                ],
+              ),
+              backgroundColor: Colors.red.shade700,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+              action: SnackBarAction(
+                label: 'Entendido',
+                textColor: Colors.white,
+                onPressed: () {},
+              ),
+            ),
+          );
+        }
+      }
+      return;
+    }
 
     setState(() {
       _cargando = true;
