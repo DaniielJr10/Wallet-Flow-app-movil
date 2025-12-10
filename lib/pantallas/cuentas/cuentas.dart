@@ -257,18 +257,18 @@ class _PantallaCuentasState extends State<PantallaCuentas> with TickerProviderSt
         if (mounted) {
           if (error == null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$nombre eliminada correctamente'), backgroundColor: Colors.green),
+              SnackBar(content: Text('$nombre eliminada correctamente'), backgroundColor: const Color(0xFF007bff)),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: $error'), backgroundColor: Colors.red),
+              SnackBar(content: Text('Error: $error'), backgroundColor: const Color(0xFF007bff)),
             );
           }
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al eliminar la cuenta'), backgroundColor: Colors.red),
+            const SnackBar(content: Text('Error al eliminar la cuenta'), backgroundColor: Color(0xFF007bff)),
           );
         }
       }

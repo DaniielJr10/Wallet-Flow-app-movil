@@ -300,7 +300,7 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
                   Expanded(child: Text(mensaje)),
                 ],
               ),
-              backgroundColor: Colors.red.shade700,
+              backgroundColor: const Color(0xFF007bff),
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 4),
               action: SnackBarAction(
@@ -351,7 +351,7 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
                   ? 'Cuenta actualizada correctamente'
                   : 'Cuenta creada correctamente'
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: const Color(0xFF007bff),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -359,7 +359,7 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: $error'),
-              backgroundColor: Colors.red,
+              backgroundColor: const Color(0xFF007bff),
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -370,7 +370,7 @@ class _FormularioCuentaState extends State<FormularioCuenta> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: const Color(0xFF007bff),
             behavior: SnackBarBehavior.floating,
           ),
         );
