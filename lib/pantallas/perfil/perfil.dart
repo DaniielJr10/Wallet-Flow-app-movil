@@ -7,20 +7,17 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'dart:convert';
 // CAMBIO: Importamos el servicio correcto
 import '../../firebase/servicios/UsuarioService/usuarios_servicio.dart';
-import '../../firebase/servicios/PrincipalService/principal_servicio.dart';
+import '../principal/funcionalidades/foto_perfil_manager.dart';
 
 // Importaciones modularizadas
 import 'funcionalidades/app_bar_perfil.dart';
 import 'funcionalidades/foto_perfil.dart';
 import 'funcionalidades/formulario_info.dart';
 // import 'funcionalidades/estadisticas_perfil.dart';
-import 'funcionalidades/preferencias_perfil.dart';
 import 'funcionalidades/estados_perfil.dart';
 import 'funcionalidades/modales_perfil.dart';
 import 'funcionalidades/utils_perfil.dart';
@@ -66,8 +63,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
     'ultimoAcceso': null,
   };
 
-  double _limiteGastoMensual = 0.0;
-  String _categoriaFavorita = 'General';
+
 
   @override
   void initState() {
@@ -132,14 +128,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
         // Priorizar foto de Firestore si existe, sino la de Auth
         _urlFotoPerfil = datosFirestore['fotoUrl'] ?? user.photoURL;
 
-        // Cargar preferencias si existen
-        if (datosFirestore['limiteGastoMensual'] != null) {
-             final v = datosFirestore['limiteGastoMensual'];
-             _limiteGastoMensual = (v is num) ? v.toDouble() : double.tryParse(v.toString()) ?? 0.0;
-        }
-        if (datosFirestore['categoriaFavorita'] != null) {
-            _categoriaFavorita = datosFirestore['categoriaFavorita'];
-        }
+
       }
     } catch (e) {
       _mostrarMensaje('Error al cargar los datos del perfil', esError: true);
@@ -194,6 +183,9 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
 
   Future<void> _procesarFoto(ImageSource source) async {
     try {
+      setState(() => _guardando = true);
+      _loadingController.repeat();
+      
       final XFile? foto = await _imagePicker.pickImage(
         source: source,
         maxWidth: 800,
@@ -203,40 +195,94 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
       
       if (foto != null) {
         await _subirImagenYActualizar(File(foto.path));
+      } else {
+        setState(() => _guardando = false);
+        _loadingController.stop();
+        _loadingController.reset();
       }
     } catch (e) {
-      _mostrarMensaje('Error al procesar la foto', esError: true);
+      print('Error al procesar foto: $e');
+      _mostrarMensaje('Error al seleccionar la foto: ${e.toString()}', esError: true);
+      setState(() => _guardando = false);
+      _loadingController.stop();
+      _loadingController.reset();
     }
   }
 
   Future<void> _subirImagenYActualizar(File imagenFile) async {
     try {
-      setState(() => _guardando = true);
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception('Usuario no autenticado');
+      if (user == null) {
+        throw Exception('Usuario no autenticado. Por favor, inicia sesión nuevamente.');
+      }
 
-      final storageRef = FirebaseStorage.instance.ref().child('perfil_fotos').child('${user.uid}.jpg');
-      await storageRef.putFile(imagenFile);
-      final downloadURL = await storageRef.getDownloadURL();
-
-      await user.updatePhotoURL(downloadURL);
+      print('Procesando imagen...');
       
-      // CAMBIO: Usamos UsuariosServicio para guardar la URL
-      await _usuariosServicio.actualizarPerfil({'fotoUrl': downloadURL});
+      // Convertir imagen a Base64 (más pequeña)
+      final bytes = await imagenFile.readAsBytes();
+      final base64String = base64Encode(bytes);
+      
+      print('Imagen procesada, guardando en Firestore...');
 
-      setState(() => _urlFotoPerfil = downloadURL);
+      // Solo guardar en Firestore (Firebase Auth tiene límite de tamaño)
+      await _usuariosServicio.actualizarPerfil({
+        'fotoUrl': 'data:image/jpeg;base64,$base64String',
+        'tieneImagenPersonalizada': true
+      });
+      
+      // También actualizar el displayName para forzar refresh
+      await user.updateDisplayName(_datosUsuario['nombre']);
+      
+      print('Firestore actualizado');
+
+      final nuevaFotoUrl = 'data:image/jpeg;base64,$base64String';
+      
+      setState(() {
+        _urlFotoPerfil = nuevaFotoUrl;
+      });
+      
+      // Notificar el cambio globalmente
+      FotoPerfilManager().notificarCambioFoto(nuevaFotoUrl);
+      
       _mostrarMensaje('Foto actualizada correctamente');
     } catch (e) {
-      _mostrarMensaje('Error al subir la foto', esError: true);
+      print('Error al procesar imagen: $e');
+      _mostrarMensaje('Error al actualizar la foto: ${e.toString()}', esError: true);
     } finally {
       setState(() => _guardando = false);
+      _loadingController.stop();
+      _loadingController.reset();
     }
   }
 
-  void _eliminarFoto() {
-    setState(() => _urlFotoPerfil = null);
-    _mostrarMensaje('Foto de perfil eliminada');
-    // Opcional: Llamar a servicio para borrar del storage/firestore
+  Future<void> _eliminarFoto() async {
+    try {
+      setState(() => _guardando = true);
+      _loadingController.repeat();
+      
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Usuario no autenticado');
+
+      // Solo actualizar en Firestore
+      await _usuariosServicio.actualizarPerfil({
+        'fotoUrl': null,
+        'tieneImagenPersonalizada': false
+      });
+
+      setState(() => _urlFotoPerfil = null);
+      
+      // Notificar el cambio globalmente
+      FotoPerfilManager().notificarCambioFoto(null);
+      
+      _mostrarMensaje('Foto de perfil eliminada');
+    } catch (e) {
+      print('Error al eliminar foto: $e');
+      _mostrarMensaje('Error al eliminar la foto', esError: true);
+    } finally {
+      setState(() => _guardando = false);
+      _loadingController.stop();
+      _loadingController.reset();
+    }
   }
 
   void _cancelarEdicion() {

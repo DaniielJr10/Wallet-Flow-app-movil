@@ -3,6 +3,7 @@
 /// Si está en modo edición, superpone un botón flotante para cambiar la foto.
 /// Maneja la carga de imágenes de red con un fallback a un icono por defecto.
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'utils_perfil.dart';
 
 class FotoPerfil extends StatelessWidget {
@@ -51,13 +52,7 @@ class FotoPerfil extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(56),
                 child: urlFoto != null
-                    ? Image.network(
-                        urlFoto!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildAvatarPorDefecto();
-                        },
-                      )
+                    ? _buildImageWidget()
                     : _buildAvatarPorDefecto(),
               ),
             ),
@@ -95,6 +90,30 @@ class FotoPerfil extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildImageWidget() {
+    if (urlFoto!.startsWith('data:image')) {
+      // Es una imagen Base64
+      final base64String = urlFoto!.split(',')[1];
+      final bytes = base64Decode(base64String);
+      return Image.memory(
+        bytes,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildAvatarPorDefecto();
+        },
+      );
+    } else {
+      // Es una URL de red
+      return Image.network(
+        urlFoto!,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildAvatarPorDefecto();
+        },
+      );
+    }
   }
 
   Widget _buildAvatarPorDefecto() {

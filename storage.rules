@@ -1,0 +1,16 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Reglas para fotos de perfil
+    match /perfil_fotos/{userId}.jpg {
+      allow read: if true; // Cualquiera puede leer las fotos de perfil
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Reglas para otros archivos (si los necesitas en el futuro)
+    match /{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+  }
+}
