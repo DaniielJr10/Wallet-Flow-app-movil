@@ -128,58 +128,25 @@ class TarjetaDeuda extends StatelessWidget {
                   const SizedBox(height: 8),
                   
                   // Botón de pagar o indicador de pagada
-                  if (!esPagada && montoPendiente > 0)
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        if (onPagar != null) onPagar!(deuda);
-                      },
-                      icon: const Icon(Icons.payment, size: 14),
-                      label: const Text(
-                        'Pagar',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: UtilsDeudas.colorPrincipal,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        minimumSize: Size.zero,
-                      ),
-                    )
-                  else
+                  // Si la deuda está pagada o no hay monto pendiente, mostrar el indicador correspondiente
+                  if (esPagada || montoPendiente <= 0)
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withOpacity(0.1),
+                        color: const Color(0xFF10B981).withOpacity(0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.check_circle,
-                            size: 14,
-                            color: Color(0xFF10B981),
-                          ),
-                          SizedBox(width: 4),
-                          Text(
+                          const Icon(Icons.check_circle, size: 14, color: Color(0xFF10B981)),
+                          const SizedBox(width: 4),
+                          const Text(
                             'Pagada',
                             style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
                               color: Color(0xFF10B981),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
                             ),
                           ),
                         ],

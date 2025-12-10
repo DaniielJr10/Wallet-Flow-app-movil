@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_deudas.dart';
+import 'dialogos_deudas.dart';
 
 class DetalleHistorialDeuda extends StatelessWidget {
   final Map<String, dynamic> deuda;
@@ -171,6 +172,31 @@ class DetalleHistorialDeuda extends StatelessWidget {
                     label: const Text('Editar'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => DialogoPagoDeuda(
+                          deuda: deuda,
+                          onPagoRegistrado: () {
+                            Navigator.of(ctx).pop();
+                            // Aquí puedes agregar lógica adicional si lo necesitas
+                          },
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.payment, size: 18),
+                    label: const Text('Pagar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: UtilsDeudas.colorPrincipal,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
