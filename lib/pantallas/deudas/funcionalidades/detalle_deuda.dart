@@ -1,5 +1,6 @@
 // Modal para mostrar el historial de pagos y detalles de una deuda.
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_deudas.dart';
 
@@ -106,16 +107,17 @@ class DetalleHistorialDeuda extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  _buildDetalleRow('Descripción', deuda['titulo'], Icons.description_outlined),
+                  _buildDetalleRow('Nombre', deuda['titulo'], Icons.label_outline),
                   const SizedBox(height: 12),
-                  _buildDetalleRow('Tipo', deuda['tipo'], Icons.category_outlined),
+                  _buildDetalleRow('Monto original', '\$${FormatoNumeros.formatearParaMostrar(deuda['montoOriginal'] ?? deuda['montoPendiente'])}', Icons.attach_money_rounded),
                   const SizedBox(height: 12),
-                  _buildDetalleRow('Acreedor', deuda['acreedor'] ?? '', Icons.account_balance_outlined),
+                  _buildDetalleRow('Prestamista', deuda['prestamista'] ?? deuda['acreedor'] ?? '', Icons.person_outline),
                   const SizedBox(height: 12),
-                  _buildDetalleRow('Fecha vencimiento', deuda['fechaVencimiento'] != null ? UtilsDeudas.formatearFecha(deuda['fechaVencimiento']) : '—', Icons.calendar_today_outlined),
+                  _buildDetalleRow('Fecha de la deuda', deuda['fechaDeuda'] != null ? UtilsDeudas.formatearFecha(_convertirADateTime(deuda['fechaDeuda'])) : '—', Icons.event),
                   const SizedBox(height: 12),
-                  
-                  _buildDetalleRow('Tasa interés', '${deuda['tasaInteres'] ?? 0}% anual', Icons.percent),
+                  _buildDetalleRow('Fecha de vencimiento', deuda['fechaVencimiento'] != null ? UtilsDeudas.formatearFecha(_convertirADateTime(deuda['fechaVencimiento'])) : '—', Icons.alarm),
+                  const SizedBox(height: 12),
+                  _buildDetalleRow('Categoría', deuda['tipo'], _obtenerIconoCategoria(deuda['tipo'])),
                   const SizedBox(height: 18),
 
                   Align(
@@ -232,5 +234,35 @@ class DetalleHistorialDeuda extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  IconData _obtenerIconoCategoria(String? tipo) {
+    switch (tipo) {
+      case 'Préstamo Personal':
+        return Icons.person;
+      case 'Préstamo Familiar/Amigos':
+        return Icons.family_restroom;
+      case 'Préstamo Estudiantil':
+        return Icons.school;
+      case 'Deuda por Servicios':
+        return Icons.receipt_long;
+      case 'Deuda Médica':
+        return Icons.local_hospital;
+      case 'Microcrédito':
+        return Icons.savings;
+      case 'Otro':
+        return Icons.more_horiz;
+      default:
+        return Icons.receipt_long;
+    }
+  }
+
+  DateTime _convertirADateTime(dynamic fecha) {
+    if (fecha is Timestamp) {
+      return fecha.toDate();
+    } else if (fecha is DateTime) {
+      return fecha;
+    }
+    return DateTime.now();
   }
 }
