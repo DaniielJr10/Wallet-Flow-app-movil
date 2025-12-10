@@ -10,6 +10,7 @@ class FotoPerfil extends StatelessWidget {
   final bool modoEdicion;
   final VoidCallback onCambiarFoto;
   final Animation<double> scaleAnimation;
+  final String nombreUsuario;
 
   const FotoPerfil({
     super.key,
@@ -17,6 +18,7 @@ class FotoPerfil extends StatelessWidget {
     required this.modoEdicion,
     required this.onCambiarFoto,
     required this.scaleAnimation,
+    required this.nombreUsuario,
   });
 
   @override
@@ -60,28 +62,34 @@ class FotoPerfil extends StatelessWidget {
               ),
             ),
             
-            // Botón para cambiar foto (solo visible en edición)
-            if (modoEdicion)
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: onCambiarFoto,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: UtilsPerfil.colorPrincipal,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+            // Botón para cambiar foto (siempre visible)
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: GestureDetector(
+                onTap: onCambiarFoto,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: UtilsPerfil.colorPrincipal,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.edit,
+                    color: Colors.white,
+                    size: 16,
                   ),
                 ),
               ),
+            ),
           ],
         ),
         ),
@@ -102,10 +110,15 @@ class FotoPerfil extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(56),
       ),
-      child: const Icon(
-        Icons.person,
-        color: Colors.white,
-        size: 48,
+      child: Center(
+        child: Text(
+          nombreUsuario.isNotEmpty ? nombreUsuario[0].toUpperCase() : 'U',
+          style: const TextStyle(
+            fontSize: 48,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }

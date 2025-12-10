@@ -111,8 +111,9 @@ class HeaderSaludo extends StatelessWidget {
             onPressed: onLogoutTap,
             icon: const Icon(
               Icons.logout_rounded,
-              color: Colors.red,
-              size: 28,
+              color: Color(0xFFB71C1C), // Rojo más intenso
+              size: 32, // Más grande/grueso
+              weight: 800, // Si usas Flutter 3.10+ para iconos variables
             ),
             style: IconButton.styleFrom(
               backgroundColor: Colors.transparent,

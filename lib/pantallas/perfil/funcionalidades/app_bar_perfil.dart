@@ -26,20 +26,18 @@ class AppBarPerfil extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      expandedHeight: 120,
+      expandedHeight: 80,
       floating: false,
       pinned: true,
-      backgroundColor: UtilsPerfil.colorHeaderInicio,
+      backgroundColor: Colors.transparent, // Sin fondo
       elevation: 0,
       actions: [
         if (modoEdicion) ...[
-          // Botón cancelar
           IconButton(
             onPressed: onCancelar,
-            icon: const Icon(Icons.close, color: Colors.white),
+            icon: const Icon(Icons.close, color: Colors.grey),
             tooltip: 'Cancelar',
           ),
-          // Botón guardar con animación
           if (guardando)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -50,7 +48,7 @@ class AppBarPerfil extends StatelessWidget {
                     angle: rotationAnimation.value * 2 * 3.14159,
                     child: const Icon(
                       Icons.refresh,
-                      color: Colors.white,
+                      color: Colors.grey,
                     ),
                   );
                 },
@@ -59,33 +57,31 @@ class AppBarPerfil extends StatelessWidget {
           else
             IconButton(
               onPressed: onGuardar,
-              icon: const Icon(Icons.save, color: Colors.white),
+              icon: const Icon(Icons.save, color: Colors.grey),
               tooltip: 'Guardar cambios',
             ),
         ],
-        // Note: edit entry removed; editing is triggered by tapping fields/avatar
       ],
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          modoEdicion ? 'Editar Perfil' : 'Mi Perfil',
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                UtilsPerfil.colorHeaderInicio,
-                UtilsPerfil.colorHeaderFin,
-              ],
+        centerTitle: true,
+        titlePadding: const EdgeInsets.only(bottom: 16),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.person, color: Color(0xFF2ecc71), size: 26),
+            const SizedBox(width: 8),
+            Text(
+              modoEdicion ? 'Editar Perfil' : 'Mi Perfil',
+              style: const TextStyle(
+                color: Color(0xFF2ecc71),
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
             ),
-          ),
+          ],
         ),
+        background: null,
       ),
     );
   }

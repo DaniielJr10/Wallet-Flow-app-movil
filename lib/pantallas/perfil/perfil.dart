@@ -293,6 +293,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
                             urlFoto: _urlFotoPerfil,
                             modoEdicion: _modoEdicion,
                             scaleAnimation: _scaleAnimation,
+                            nombreUsuario: _datosUsuario['nombre'] ?? 'Usuario',
                             onCambiarFoto: () => ModalesPerfil.mostrarOpcionesFoto(
                               context: context,
                               onCamara: () => _procesarFoto(ImageSource.camera),
