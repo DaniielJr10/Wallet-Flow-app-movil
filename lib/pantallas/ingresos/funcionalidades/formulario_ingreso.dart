@@ -204,7 +204,10 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
             return null;
           },
           decoration: InputDecoration(
-            prefixText: '\$ ',
+            prefixIcon: const Icon(
+              Icons.attach_money_rounded,
+              color: UtilsIngresos.colorPrincipal,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
@@ -248,6 +251,10 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
           validator: (v) =>
               (v == null || v.isEmpty) ? 'Ingresa una descripción' : null,
           decoration: InputDecoration(
+            prefixIcon: const Icon(
+              Icons.description_outlined,
+              color: UtilsIngresos.colorPrincipal,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
@@ -336,11 +343,76 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
   }
 
   Widget _buildSelectorCategoria() {
-    return _buildDropdown(
-      'Categoría',
-      _categoriaSeleccionada,
-      UtilsIngresos.categorias,
-      (v) => setState(() => _categoriaSeleccionada = v!),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Categoría',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: _categoriaSeleccionada,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: UtilsIngresos.colorPrincipal,
+                width: 2,
+              ),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+          selectedItemBuilder: (BuildContext context) {
+            return UtilsIngresos.categorias.map((categoria) {
+              return Row(
+                children: [
+                  Icon(
+                    UtilsIngresos.obtenerIconoCategoria(categoria),
+                    size: 20,
+                    color: UtilsIngresos.colorPrincipal,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(UtilsIngresos.capitalizar(categoria)),
+                ],
+              );
+            }).toList();
+          },
+          items: UtilsIngresos.categorias.map((categoria) {
+            return DropdownMenuItem(
+              value: categoria,
+              child: Row(
+                children: [
+                  Icon(
+                    UtilsIngresos.obtenerIconoCategoria(categoria),
+                    size: 20,
+                    color: UtilsIngresos.colorPrincipal,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(UtilsIngresos.capitalizar(categoria)),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (v) => setState(() => _categoriaSeleccionada = v!),
+        ),
+      ],
     );
   }
 
@@ -480,7 +552,18 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
     List<String> items,
     Function(String?) onChanged, {
     List<DropdownMenuItem<String>>? customItems,
+    IconData? icon,
   }) {
+    // Determinar el icono basado en el label si no se proporciona uno
+    IconData iconoFinal = icon ?? Icons.arrow_drop_down_circle_outlined;
+    if (label == 'Categoría') {
+      iconoFinal = Icons.category_outlined;
+    } else if (label == 'Método de Pago') {
+      iconoFinal = Icons.payment_outlined;
+    } else if (label == 'Cuenta Asociada') {
+      iconoFinal = Icons.account_balance_outlined;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -491,18 +574,11 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: value,
-          items:
-              customItems ??
-              items
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(UtilsIngresos.capitalizar(e)),
-                    ),
-                  )
-                  .toList(),
-          onChanged: onChanged,
           decoration: InputDecoration(
+            prefixIcon: Icon(
+              iconoFinal,
+              color: UtilsIngresos.colorPrincipal,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
@@ -527,6 +603,17 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
             filled: true,
             fillColor: Colors.white,
           ),
+          items:
+              customItems ??
+              items
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(UtilsIngresos.capitalizar(e)),
+                    ),
+                  )
+                  .toList(),
+          onChanged: onChanged,
         ),
       ],
     );
