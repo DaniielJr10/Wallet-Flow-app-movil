@@ -218,7 +218,7 @@ class DetalleHistorialDeuda extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icono, color: Colors.grey.shade700, size: 18),
+            child: Icon(icono, color: UtilsDeudas.colorPrincipal, size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
