@@ -195,73 +195,73 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                     DropdownButtonFormField<String>(
                       value: _tipoSeleccionado,
                       isExpanded: true,
-                      decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.category_outlined, color: primary))),
+                      decoration: _fieldDecoration(), // Sin ícono prefix
                       items: const [
                         DropdownMenuItem(
-                          value: 'Préstamo Personal', 
+                          value: 'Préstamo Personal',
                           child: Row(
                             children: [
-                              Icon(Icons.person, size: 18),
+                              Icon(Icons.person, size: 18, color: Color(0xFFF97316)),
                               SizedBox(width: 8),
                               Text('Préstamo Personal'),
                             ],
                           ),
                         ),
                         DropdownMenuItem(
-                          value: 'Préstamo Familiar/Amigos', 
+                          value: 'Préstamo Familiar/Amigos',
                           child: Row(
                             children: [
-                              Icon(Icons.family_restroom, size: 18),
+                              Icon(Icons.family_restroom, size: 18, color: Color(0xFFF97316)),
                               SizedBox(width: 8),
                               Text('Préstamo Familiar/Amigos'),
                             ],
                           ),
                         ),
                         DropdownMenuItem(
-                          value: 'Préstamo Estudiantil', 
+                          value: 'Préstamo Estudiantil',
                           child: Row(
                             children: [
-                              Icon(Icons.school, size: 18),
+                              Icon(Icons.school, size: 18, color: Color(0xFFF97316)),
                               SizedBox(width: 8),
                               Text('Préstamo Estudiantil'),
                             ],
                           ),
                         ),
                         DropdownMenuItem(
-                          value: 'Deuda por Servicios', 
+                          value: 'Deuda por Servicios',
                           child: Row(
                             children: [
-                              Icon(Icons.receipt_long, size: 18),
+                              Icon(Icons.receipt_long, size: 18, color: Color(0xFFF97316)),
                               SizedBox(width: 8),
                               Text('Deuda por Servicios'),
                             ],
                           ),
                         ),
                         DropdownMenuItem(
-                          value: 'Deuda Médica', 
+                          value: 'Deuda Médica',
                           child: Row(
                             children: [
-                              Icon(Icons.local_hospital, size: 18),
+                              Icon(Icons.local_hospital, size: 18, color: Color(0xFFF97316)),
                               SizedBox(width: 8),
                               Text('Deuda Médica'),
                             ],
                           ),
                         ),
                         DropdownMenuItem(
-                          value: 'Microcrédito', 
+                          value: 'Microcrédito',
                           child: Row(
                             children: [
-                              Icon(Icons.savings, size: 18),
+                              Icon(Icons.savings, size: 18, color: Color(0xFFF97316)),
                               SizedBox(width: 8),
                               Text('Microcrédito'),
                             ],
                           ),
                         ),
                         DropdownMenuItem(
-                          value: 'Otro', 
+                          value: 'Otro',
                           child: Row(
                             children: [
-                              Icon(Icons.more_horiz, size: 18),
+                              Icon(Icons.more_horiz, size: 18, color: Color(0xFFF97316)),
                               SizedBox(width: 8),
                               Text('Otro'),
                             ],
