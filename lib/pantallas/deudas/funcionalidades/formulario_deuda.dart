@@ -154,12 +154,12 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    // Acreedor
-                    const Text('Acreedor / Banco', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
+                    // Prestamista
+                    const Text('Prestamista', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _acreedorCtrl,
-                      decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.account_balance_rounded, color: primary))),
+                      decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.person_outline, color: primary))),
                     ),
                     const SizedBox(height: 16),
                     // Fecha
