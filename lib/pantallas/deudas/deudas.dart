@@ -1,7 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../firebase/servicios/DeudaService/deudas_servicio.dart';
-import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 
 // Importación de funcionalidades modularizadas
 import 'funcionalidades/app_bar_deudas.dart';
@@ -29,7 +28,6 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
   late Animation<double> _scaleAnimation;
 
   final DeudasServicio _deudasServicio = DeudasServicio();
-  final CuentasServicio _cuentasServicio = CuentasServicio();
   final GlobalKey _filterButtonKey = GlobalKey();
 
   List<Map<String, dynamic>> _deudas = [];
@@ -310,6 +308,7 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
           deuda: deuda,
           onEditar: () => _mostrarFormulario(esEdicion: true, deuda: deuda),
           onEliminar: () => _confirmarEliminar(deuda),
+          onPagoRealizado: _cargarDeudas,
         ),
       ),
     );
@@ -341,35 +340,12 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
     if (resultado == null) return;
 
     final pago = resultado['monto'] as double;
-    final cuentaId = resultado['cuentaId'] as String;
 
     setState(() { _estaCargando = true; });
     try {
-      // Verificar cuenta y saldo
-      final cuentaDoc = await _cuentasServicio.obtenerCuentaPorId(cuentaId);
-      if (cuentaDoc == null) {
-        _mostrarMensaje('Cuenta no encontrada', esError: true);
-        return;
-      }
-      final cuentaData = cuentaDoc.data() as Map<String, dynamic>;
-      final saldoActual = (cuentaData['saldo'] ?? 0).toDouble();
-
-      // No permitir pagar mÃ¡s que la deuda: ajustar pago al pendiente
+      // No permitir pagar más que la deuda: ajustar pago al pendiente
       final montoPend = (deuda['montoPendiente'] ?? 0).toDouble();
       final pagoFinal = pago > montoPend ? montoPend : pago;
-
-      if (pagoFinal > saldoActual) {
-        _mostrarMensaje('Saldo insuficiente en la cuenta seleccionada', esError: true);
-        return;
-      }
-
-      // Actualizar saldo de la cuenta con el pagoFinal
-      final nuevoSaldoCuenta = saldoActual - pagoFinal;
-      final cuentaError = await _cuentasServicio.actualizarSaldo(cuentaId: cuentaId, nuevoSaldo: nuevoSaldoCuenta);
-      if (cuentaError != null) {
-        _mostrarMensaje('Error al actualizar cuenta: $cuentaError', esError: true);
-        return;
-      }
 
       // Actualizar deuda
       double nuevoPend = montoPend - pagoFinal;
@@ -380,7 +356,7 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
       }
 
       final historial = List<Map<String, dynamic>>.from(deuda['historialPagos'] ?? []);
-      historial.add({'monto': pago, 'fecha': DateTime.now(), 'cuenta': cuentaId});
+      historial.add({'monto': pagoFinal, 'fecha': DateTime.now()});
 
       await _deudasServicio.editarDeuda(deuda['id'], {
         'montoPendiente': nuevoPend,
@@ -389,7 +365,7 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
       });
 
       _cargarDeudas();
-      _mostrarMensaje('Pago registrado', esError: false);
+      _mostrarMensaje('Pago registrado correctamente', esError: false);
     } catch (e) {
       debugPrint('Error al registrar pago: $e');
       _mostrarMensaje('Error al registrar el pago', esError: true);

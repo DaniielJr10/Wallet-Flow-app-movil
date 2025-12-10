@@ -4,17 +4,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'utils_deudas.dart';
 import 'dialogos_deudas.dart';
+import '../../../firebase/servicios/DeudaService/deudas_servicio.dart';
 
 class DetalleHistorialDeuda extends StatelessWidget {
   final Map<String, dynamic> deuda;
   final VoidCallback onEditar;
   final VoidCallback onEliminar;
+  final VoidCallback? onPagoRealizado;
 
   const DetalleHistorialDeuda({
     super.key,
     required this.deuda,
     required this.onEditar,
     required this.onEliminar,
+    this.onPagoRealizado,
   });
 
   @override
@@ -181,17 +184,25 @@ class DetalleHistorialDeuda extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      showDialog(
+                    onPressed: () async {
+                      final resultado = await showDialog<Map<String, dynamic>>(
                         context: context,
                         builder: (ctx) => DialogoPagoDeuda(
                           deuda: deuda,
-                          onPagoRegistrado: () {
-                            Navigator.of(ctx).pop();
-                            // Aquí puedes agregar lógica adicional si lo necesitas
-                          },
+                          onPagoRegistrado: () {},
                         ),
                       );
+                      
+                      if (resultado != null) {
+                        Navigator.pop(context); // Cerrar modal de detalles
+                        
+                        // Procesar el pago
+                        await _procesarPago(resultado['monto'], deuda);
+                        
+                        if (onPagoRealizado != null) {
+                          onPagoRealizado!(); // Recargar lista
+                        }
+                      }
                     },
                     icon: const Icon(Icons.payment, size: 18),
                     label: const Text('Pagar'),
@@ -213,7 +224,7 @@ class DetalleHistorialDeuda extends StatelessWidget {
                     icon: const Icon(Icons.delete_rounded, size: 18),
                     label: const Text('Eliminar'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF97316),
+                      backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -290,5 +301,34 @@ class DetalleHistorialDeuda extends StatelessWidget {
       return fecha;
     }
     return DateTime.now();
+  }
+
+  Future<void> _procesarPago(double pago, Map<String, dynamic> deuda) async {
+    try {
+      final deudasServicio = DeudasServicio();
+      
+      // No permitir pagar más que la deuda
+      final montoPend = (deuda['montoPendiente'] ?? 0).toDouble();
+      final pagoFinal = pago > montoPend ? montoPend : pago;
+
+      // Actualizar deuda
+      double nuevoPend = montoPend - pagoFinal;
+      String nuevoEstado = deuda['estado'] ?? 'Pendiente';
+      if (nuevoPend <= 0) {
+        nuevoPend = 0.0;
+        nuevoEstado = 'Pagada';
+      }
+
+      final historial = List<Map<String, dynamic>>.from(deuda['historialPagos'] ?? []);
+      historial.add({'monto': pagoFinal, 'fecha': DateTime.now()});
+
+      await deudasServicio.editarDeuda(deuda['id'], {
+        'montoPendiente': nuevoPend,
+        'estado': nuevoEstado,
+        'historialPagos': historial,
+      });
+    } catch (e) {
+      debugPrint('Error al procesar pago: $e');
+    }
   }
 }

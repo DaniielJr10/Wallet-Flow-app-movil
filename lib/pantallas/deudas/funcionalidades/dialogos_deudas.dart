@@ -1,7 +1,5 @@
 // Diálogos y alertas de confirmación para acciones sobre deudas.
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../firebase/servicios/CuentaService/cuentas_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 
 class DialogoConfirmarEliminarDeuda extends StatelessWidget {
@@ -72,8 +70,6 @@ class DialogoPagoDeuda extends StatefulWidget {
 
 class _DialogoPagoDeudaState extends State<DialogoPagoDeuda> {
   final TextEditingController _montoCtrl = TextEditingController();
-  final CuentasServicio _cuentasServicio = CuentasServicio();
-  String _cuentaSeleccionada = 'ninguna';
 
   @override
   void dispose() {
@@ -197,104 +193,7 @@ class _DialogoPagoDeudaState extends State<DialogoPagoDeuda> {
                   const SizedBox(height: 20),
                   
                   // Selector de cuentas
-                  StreamBuilder<QuerySnapshot>(
-                    stream: _cuentasServicio.obtenerCuentas(),
-                    builder: (context, snapshot) {
-                      final items = <DropdownMenuItem<String>>[];
-                      items.add(const DropdownMenuItem(
-                        value: 'ninguna',
-                        child: Text('Selecciona una cuenta'),
-                      ));
-                      if (snapshot.hasData) {
-                        for (var doc in snapshot.data!.docs) {
-                          final data = doc.data() as Map<String, dynamic>;
-                          if (data['activa'] == true) {
-                            final label = data['tipo'] == 'dinero_en_mano'
-                                ? 'Dinero en mano'
-                                : '${data['banco'] ?? ''} - ${data['numeroCuenta'] ?? ''}';
-                            items.add(DropdownMenuItem(
-                              value: doc.id,
-                              child: Text(label),
-                            ));
-                          }
-                        }
-                      }
 
-                      // mostrar saldo disponible de la cuenta seleccionada
-                      String? saldoCuentaTexto;
-                      if (snapshot.hasData && _cuentaSeleccionada != 'ninguna') {
-                        try {
-                          final doc = snapshot.data!.docs.firstWhere(
-                            (d) => d.id == _cuentaSeleccionada,
-                          );
-                          final data = doc.data() as Map<String, dynamic>;
-                          saldoCuentaTexto = FormatoNumeros.formatearParaMostrar(
-                            (data['saldo'] ?? 0).toDouble(),
-                          );
-                        } catch (_) {
-                          saldoCuentaTexto = null;
-                        }
-                      }
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Cuenta desde la que pagar',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF374151),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade300),
-                            ),
-                            child: DropdownButtonFormField<String>(
-                              value: _cuentaSeleccionada,
-                              items: items,
-                              onChanged: (v) {
-                                setState(() {
-                                  _cuentaSeleccionada = v ?? 'ninguna';
-                                });
-                              },
-                              decoration: const InputDecoration(
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                              ),
-                              icon: const Icon(Icons.arrow_drop_down),
-                            ),
-                          ),
-                          if (saldoCuentaTexto != null) ...[
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.account_balance,
-                                  size: 16,
-                                  color: Colors.grey.shade600,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Saldo disponible: $saldoCuentaTexto',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.grey.shade600,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      );
-                    },
-                  ),
-                  
-                  const SizedBox(height: 20),
                   
                   // Campo de monto
                   const Text(
@@ -377,16 +276,8 @@ class _DialogoPagoDeudaState extends State<DialogoPagoDeuda> {
                               );
                               return;
                             }
-                            if (_cuentaSeleccionada == 'ninguna') {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Selecciona una cuenta')),
-                              );
-                              return;
-                            }
-
                             Navigator.of(context).pop({
                               'monto': pago,
-                              'cuentaId': _cuentaSeleccionada,
                             });
                           },
                           icon: const Icon(Icons.check_circle, size: 18),
