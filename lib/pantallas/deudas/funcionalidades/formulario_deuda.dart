@@ -1,6 +1,7 @@
 // Formulario unificado para crear y editar deudas.
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../firebase/servicios/DeudaService/deudas_servicio.dart';
 import 'utils_deudas.dart';
 
 class FormularioDeuda extends StatefulWidget {
@@ -21,13 +22,13 @@ class FormularioDeuda extends StatefulWidget {
 
 class _FormularioDeudaState extends State<FormularioDeuda> {
   final _formKey = GlobalKey<FormState>();
+  final DeudasServicio _deudasServicio = DeudasServicio();
   late TextEditingController _tituloCtrl;
   late TextEditingController _montoCtrl;
   late TextEditingController _acreedorCtrl;
   late String _tipoSeleccionado;
+  late DateTime _fechaDeuda;
   late DateTime _fechaVenc;
-  bool _tieneRecordatorio = false;
-  DateTime? _fechaRecordatorio;
 
   @override
   void initState() {
@@ -37,13 +38,8 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
     _montoCtrl = TextEditingController(text: (deuda['montoOriginal'] ?? deuda['montoPendiente'] ?? '').toString());
     _acreedorCtrl = TextEditingController(text: deuda['acreedor'] ?? '');
     _tipoSeleccionado = deuda['tipo'] ?? 'Préstamo Personal';
+    _fechaDeuda = deuda['fechaDeuda'] ?? DateTime.now();
     _fechaVenc = deuda['fechaVencimiento'] ?? DateTime.now().add(const Duration(days: 30));
-    if (deuda.containsKey('recordatorio') && deuda['recordatorio'] != null) {
-      final r = deuda['recordatorio'];
-      if (r is Timestamp) _fechaRecordatorio = r.toDate();
-      else if (r is DateTime) _fechaRecordatorio = r;
-      if (_fechaRecordatorio != null) _tieneRecordatorio = true;
-    }
     // Eliminado manejo de frecuencia
   }
 
@@ -145,8 +141,52 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                       decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.person_outline, color: primary))),
                     ),
                     const SizedBox(height: 16),
-                    // Fecha
-                    const Text('Fecha', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
+                    // Fecha de la deuda
+                    const Text('Fecha de la deuda', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _fechaDeuda,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                          locale: const Locale('es', 'ES'),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: ColorScheme.light(
+                                  primary: primary,
+                                  onPrimary: Colors.white,
+                                  surface: Colors.white,
+                                  onSurface: Colors.black,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (picked != null) setState(() { _fechaDeuda = picked; });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade400),
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.grey.shade50,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.event, color: primary, size: 20),
+                            const SizedBox(width: 12),
+                            Text('${_fechaDeuda.day}/${_fechaDeuda.month}/${_fechaDeuda.year}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Fecha de vencimiento
+                    const Text('Fecha de vencimiento', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () async {
@@ -181,7 +221,7 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.calendar_today_rounded, color: primary, size: 20),
+                            Icon(Icons.alarm, color: primary, size: 20),
                             const SizedBox(width: 12),
                             Text('${_fechaVenc.day}/${_fechaVenc.month}/${_fechaVenc.year}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                           ],
@@ -270,83 +310,6 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                       ],
                       onChanged: (v) => setState(() { _tipoSeleccionado = v ?? _tipoSeleccionado; }),
                     ),
-                    const SizedBox(height: 16),
-                    // Recordatorio
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Recordatorio', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
-                        Switch(value: _tieneRecordatorio, onChanged: (v) => setState(() { _tieneRecordatorio = v; if (!v) _fechaRecordatorio = null; if (v && _fechaRecordatorio == null) _fechaRecordatorio = DateTime.now().add(const Duration(days:1)); })),
-                      ],
-                    ),
-                    if (_tieneRecordatorio) ...[
-                      const SizedBox(height:8),
-                      GestureDetector(
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: _fechaRecordatorio ?? DateTime.now(),
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime(2100),
-                            locale: const Locale('es', 'ES'),
-                            builder: (context, child) {
-                              return Theme(
-                                data: Theme.of(context).copyWith(
-                                  colorScheme: ColorScheme.light(
-                                    primary: primary,
-                                    onPrimary: Colors.white,
-                                    surface: Colors.white,
-                                    onSurface: Colors.black,
-                                  ),
-                                ),
-                                child: child!,
-                              );
-                            },
-                          );
-                          if (picked == null) return;
-                          final time = await showTimePicker(
-                            context: context,
-                            initialTime: TimeOfDay.fromDateTime(_fechaRecordatorio ?? DateTime.now()),
-                            builder: (context, child) {
-                              return Theme(
-                                data: Theme.of(context).copyWith(
-                                  colorScheme: ColorScheme.light(
-                                    primary: primary,
-                                    onPrimary: Colors.white,
-                                    surface: Colors.white,
-                                    onSurface: Colors.black,
-                                  ),
-                                ),
-                                child: child!,
-                              );
-                            },
-                          );
-                          if (time == null) return;
-                          setState(() {
-                            _fechaRecordatorio = DateTime(picked.year, picked.month, picked.day, time.hour, time.minute);
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(12),
-                            color: Colors.grey.shade50,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.notifications, color: primary),
-                              const SizedBox(width: 12),
-                              Text(
-                                _fechaRecordatorio != null
-                                  ? '${_fechaRecordatorio!.day}/${_fechaRecordatorio!.month}/${_fechaRecordatorio!.year} ${_fechaRecordatorio!.hour.toString().padLeft(2, '0')}:${_fechaRecordatorio!.minute.toString().padLeft(2, '0')}'
-                                  : 'Seleccionar fecha y hora',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 28),
                     Row(
                       children: [
@@ -390,20 +353,51 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
   Future<void> _guardar() async {
     if (_formKey.currentState?.validate() ?? false) {
       final monto = double.tryParse(_montoCtrl.text) ?? 0.0;
+      
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(child: CircularProgressIndicator()),
       );
+
       try {
         String? error;
-        // Guardar deuda normal (sin frecuencia)
-        error = null; // Aquí deberías llamar al servicio que guarda la deuda normal
+        
+        final deudaData = {
+          'titulo': _tituloCtrl.text.trim(),
+          'tipo': _tipoSeleccionado,
+          'montoOriginal': monto,
+          'montoPendiente': monto,
+          'prestamista': _acreedorCtrl.text.trim(),
+          'fechaDeuda': Timestamp.fromDate(_fechaDeuda),
+          'fechaVencimiento': Timestamp.fromDate(_fechaVenc),
+          'fechaCreacion': Timestamp.fromDate(DateTime.now()),
+          'estado': 'Pendiente',
+          'historialPagos': [],
+        };
+
+        if (widget.esEdicion) {
+          error = await _deudasServicio.editarDeuda(
+            widget.deudaExistente!['id'],
+            deudaData,
+          );
+        } else {
+          error = await _deudasServicio.crearDeuda(deudaData);
+        }
+
         if (mounted) {
           Navigator.pop(context); // Cerrar loading
           if (error == null) {
             Navigator.pop(context); // Cerrar form
             widget.onGuardar();
+            
+            // Mostrar mensaje de éxito
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(widget.esEdicion ? 'Deuda actualizada' : 'Deuda creada'),
+                backgroundColor: Colors.green,
+              ),
+            );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(error), backgroundColor: Colors.red),
