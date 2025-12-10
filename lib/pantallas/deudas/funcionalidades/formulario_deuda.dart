@@ -197,11 +197,76 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                       isExpanded: true,
                       decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.category_outlined, color: primary))),
                       items: const [
-                        DropdownMenuItem(value: 'Préstamo Personal', child: Text('Préstamo Personal')),
-                        DropdownMenuItem(value: 'Tarjeta de Crédito', child: Text('Tarjeta de Crédito')),
-                        DropdownMenuItem(value: 'Préstamo Vehicular', child: Text('Préstamo Vehicular')),
-                        DropdownMenuItem(value: 'Préstamo Hipotecario', child: Text('Préstamo Hipotecario')),
-                        DropdownMenuItem(value: 'Otro', child: Text('Otro')),
+                        DropdownMenuItem(
+                          value: 'Préstamo Personal', 
+                          child: Row(
+                            children: [
+                              Icon(Icons.person, size: 18),
+                              SizedBox(width: 8),
+                              Text('Préstamo Personal'),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Préstamo Familiar/Amigos', 
+                          child: Row(
+                            children: [
+                              Icon(Icons.family_restroom, size: 18),
+                              SizedBox(width: 8),
+                              Text('Préstamo Familiar/Amigos'),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Préstamo Estudiantil', 
+                          child: Row(
+                            children: [
+                              Icon(Icons.school, size: 18),
+                              SizedBox(width: 8),
+                              Text('Préstamo Estudiantil'),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Deuda por Servicios', 
+                          child: Row(
+                            children: [
+                              Icon(Icons.receipt_long, size: 18),
+                              SizedBox(width: 8),
+                              Text('Deuda por Servicios'),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Deuda Médica', 
+                          child: Row(
+                            children: [
+                              Icon(Icons.local_hospital, size: 18),
+                              SizedBox(width: 8),
+                              Text('Deuda Médica'),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Microcrédito', 
+                          child: Row(
+                            children: [
+                              Icon(Icons.savings, size: 18),
+                              SizedBox(width: 8),
+                              Text('Microcrédito'),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Otro', 
+                          child: Row(
+                            children: [
+                              Icon(Icons.more_horiz, size: 18),
+                              SizedBox(width: 8),
+                              Text('Otro'),
+                            ],
+                          ),
+                        ),
                       ],
                       onChanged: (v) => setState(() { _tipoSeleccionado = v ?? _tipoSeleccionado; }),
                     ),
