@@ -8,7 +8,7 @@ class UtilsCuentas {
   static Color obtenerColorTipoCuenta(String tipo) {
     switch (tipo) {
       case 'ahorros':
-        return const Color(0xFF10B981);
+        return const Color(0xFF3B82F6); // Azul para ahorros
       case 'corriente':
         return const Color(0xFF3B82F6);
       case 'credito':
