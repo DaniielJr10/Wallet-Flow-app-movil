@@ -124,23 +124,6 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                       validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un nombre' : null,
                     ),
                     const SizedBox(height: 16),
-                    // Categoría
-                    const Text('Categoría', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      value: _tipoSeleccionado,
-                      isExpanded: true,
-                      decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.category_outlined, color: primary))),
-                      items: const [
-                        DropdownMenuItem(value: 'Préstamo Personal', child: Text('Préstamo Personal')),
-                        DropdownMenuItem(value: 'Tarjeta de Crédito', child: Text('Tarjeta de Crédito')),
-                        DropdownMenuItem(value: 'Préstamo Vehicular', child: Text('Préstamo Vehicular')),
-                        DropdownMenuItem(value: 'Préstamo Hipotecario', child: Text('Préstamo Hipotecario')),
-                        DropdownMenuItem(value: 'Otro', child: Text('Otro')),
-                      ],
-                      onChanged: (v) => setState(() { _tipoSeleccionado = v ?? _tipoSeleccionado; }),
-                    ),
-                    const SizedBox(height: 16),
                     // Monto
                     const Text('Monto', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
                     const SizedBox(height: 8),
@@ -205,7 +188,24 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 16),
+                    // Categoría
+                    const Text('Categoría', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: _tipoSeleccionado,
+                      isExpanded: true,
+                      decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.category_outlined, color: primary))),
+                      items: const [
+                        DropdownMenuItem(value: 'Préstamo Personal', child: Text('Préstamo Personal')),
+                        DropdownMenuItem(value: 'Tarjeta de Crédito', child: Text('Tarjeta de Crédito')),
+                        DropdownMenuItem(value: 'Préstamo Vehicular', child: Text('Préstamo Vehicular')),
+                        DropdownMenuItem(value: 'Préstamo Hipotecario', child: Text('Préstamo Hipotecario')),
+                        DropdownMenuItem(value: 'Otro', child: Text('Otro')),
+                      ],
+                      onChanged: (v) => setState(() { _tipoSeleccionado = v ?? _tipoSeleccionado; }),
+                    ),
+                    const SizedBox(height: 16),
                     // Recordatorio
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
