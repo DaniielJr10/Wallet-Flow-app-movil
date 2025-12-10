@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../firebase/servicios/DeudaService/deudas_servicio.dart';
 import 'utils_deudas.dart';
+import '../../../utilidades/formato_numeros.dart';
 
 class FormularioDeuda extends StatefulWidget {
   final bool esEdicion;
@@ -126,9 +127,10 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
                     TextFormField(
                       controller: _montoCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.attach_money_rounded, color: primary))),
+                      inputFormatters: [FormateadorNumerosConDecimales(decimales: 2)],
+                      decoration: _fieldDecoration(prefix: Padding(padding: const EdgeInsets.only(left:12,right:6), child: Icon(Icons.attach_money_rounded, color: primary)) ),
                       validator: (v) {
-                        final n = double.tryParse(v ?? '');
+                        final n = double.tryParse(v?.replaceAll('.', '').replaceAll(',', '.') ?? '');
                         return (n == null || n <= 0) ? 'Ingresa un monto válido' : null;
                       },
                     ),
