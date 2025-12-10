@@ -20,6 +20,7 @@ class TarjetaDeuda extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorEstado = UtilsDeudas.obtenerColorEstado(deuda);
+    final colorIcono = (deuda['estado'] ?? '') == 'Pendiente' ? UtilsDeudas.colorPrincipal : colorEstado;
     final fechaVenc = deuda['fechaVencimiento'] as DateTime?;
     final esPagada = (deuda['estado'] ?? '') == 'Pagada';
     final montoPendiente = (deuda['montoPendiente'] ?? 0).toDouble();
@@ -53,7 +54,7 @@ class TarjetaDeuda extends StatelessWidget {
                 ),
                 child: Icon(
                   UtilsDeudas.obtenerIconoTipoDeuda(deuda['tipo']),
-                  color: colorEstado,
+                  color: colorIcono,
                   size: 24,
                 ),
               ),
