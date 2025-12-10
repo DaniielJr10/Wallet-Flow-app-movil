@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../firebase/servicios/PrincipalService/principal_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
 import 'item_resumen.dart';
+import 'item_herramientas.dart';
 
 class ResumenFinancieroCard extends StatelessWidget {
   final PrincipalServicio servicio;
@@ -114,10 +115,8 @@ class ResumenFinancieroCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ItemResumen(
+                    child: ItemHerramientas(
                       title: 'Herramientas',
-                      amount: '',
-                      icon: Icons.build_outlined,
                       color: Colors.indigo.shade600,
                       onTap: () => onNavigate(7),
                     ),
