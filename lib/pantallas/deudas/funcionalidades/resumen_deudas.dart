@@ -105,19 +105,7 @@ class ResumenDeudas extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildSmallCard(
-                    icon: Icons.list_alt,
-                    label: 'Total Deudas',
-                    value: '$totalDeudas',
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(child: SizedBox.shrink()),
-              ],
-            ),
+            // Se eliminó la tarjeta de 'Total Deudas'
           ],
         ),
       ),
