@@ -38,6 +38,19 @@ class TarjetaGasto extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: UtilsGastos.colorPrincipal.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                UtilsGastos.obtenerIconoCategoria(gasto['categoria'] ?? 'otro'),
+                color: UtilsGastos.colorPrincipal,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

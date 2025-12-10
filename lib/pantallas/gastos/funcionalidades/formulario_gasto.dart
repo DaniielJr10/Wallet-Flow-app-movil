@@ -183,12 +183,7 @@ class _FormularioGastoState extends State<FormularioGasto> {
                     const SizedBox(height: 20),
                     _buildSelectorFecha(),
                     const SizedBox(height: 20),
-                    _buildDropdown(
-                      'Categoría',
-                      _categoriaSeleccionada,
-                      UtilsGastos.categorias,
-                      (v) => setState(() => _categoriaSeleccionada = v!),
-                    ),
+                    _buildDropdownCategoria(),
                     const SizedBox(height: 20),
                     _buildDropdown(
                       'Método de Pago',
@@ -328,6 +323,14 @@ class _FormularioGastoState extends State<FormularioGasto> {
     List<String> items,
     Function(String?) onChanged,
   ) {
+    // Determinar el icono para el prefixIcon basado en el label
+    IconData? iconoPrefijo;
+    if (label == 'Método de Pago') {
+      iconoPrefijo = Icons.payment_outlined;
+    } else if (label == 'Cuenta Asociada') {
+      iconoPrefijo = Icons.account_balance_outlined;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -352,6 +355,9 @@ class _FormularioGastoState extends State<FormularioGasto> {
               .toList(),
           onChanged: onChanged,
           decoration: InputDecoration(
+            prefixIcon: iconoPrefijo != null
+                ? Icon(iconoPrefijo, color: UtilsGastos.colorPrincipal)
+                : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
@@ -375,7 +381,88 @@ class _FormularioGastoState extends State<FormularioGasto> {
             ),
             filled: true,
             fillColor: Colors.white,
+            contentPadding: iconoPrefijo == null
+                ? const EdgeInsets.symmetric(horizontal: 16, vertical: 16)
+                : null,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownCategoria() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Categoría',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: _categoriaSeleccionada,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E7EB),
+                width: 1.2,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: UtilsGastos.colorPrincipal,
+                width: 2,
+              ),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+          selectedItemBuilder: (BuildContext context) {
+            return UtilsGastos.categorias.map((categoria) {
+              return Row(
+                children: [
+                  Icon(
+                    UtilsGastos.obtenerIconoCategoria(categoria),
+                    size: 20,
+                    color: UtilsGastos.colorPrincipal,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(UtilsGastos.capitalizar(categoria)),
+                ],
+              );
+            }).toList();
+          },
+          items: UtilsGastos.categorias.map((categoria) {
+            return DropdownMenuItem(
+              value: categoria,
+              child: Row(
+                children: [
+                  Icon(
+                    UtilsGastos.obtenerIconoCategoria(categoria),
+                    size: 20,
+                    color: UtilsGastos.colorPrincipal,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(UtilsGastos.capitalizar(categoria)),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (v) => setState(() => _categoriaSeleccionada = v!),
         ),
       ],
     );
