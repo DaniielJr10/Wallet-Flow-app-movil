@@ -47,6 +47,11 @@ class UtilsDeudas {
   }
 
   static String formatearFecha(DateTime fecha) {
+    final meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    return '${fecha.day} ${meses[fecha.month - 1]} ${fecha.year}';
+  }
+
+  static String formatearFechaVencimiento(DateTime fecha) {
     final diferencia = fecha.difference(DateTime.now()).inDays;
     
     if (diferencia < 0) {

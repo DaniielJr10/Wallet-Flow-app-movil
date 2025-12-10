@@ -119,7 +119,7 @@ class DetalleHistorialDeuda extends StatelessWidget {
                   const SizedBox(height: 12),
                   _buildDetalleRow('Fecha de la deuda', deuda['fechaDeuda'] != null ? UtilsDeudas.formatearFecha(_convertirADateTime(deuda['fechaDeuda'])) : '—', Icons.event),
                   const SizedBox(height: 12),
-                  _buildDetalleRow('Fecha de vencimiento', deuda['fechaVencimiento'] != null ? UtilsDeudas.formatearFecha(_convertirADateTime(deuda['fechaVencimiento'])) : '—', Icons.alarm),
+                  _buildDetalleRow('Fecha de vencimiento', deuda['fechaVencimiento'] != null ? UtilsDeudas.formatearFechaVencimiento(_convertirADateTime(deuda['fechaVencimiento'])) : '—', Icons.alarm),
                   const SizedBox(height: 12),
                   _buildDetalleRow('Categoría', deuda['tipo'], _obtenerIconoCategoria(deuda['tipo'])),
                   const SizedBox(height: 18),
