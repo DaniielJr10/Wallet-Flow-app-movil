@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../utilidades/formato_numeros.dart';
 import '../../../firebase/servicios/AhorroService/ahorros_servicio.dart';
+import 'utils_ahorros.dart';
 
 class ModalAgregarDinero extends StatefulWidget {
   final String ahorroId;
@@ -52,7 +53,7 @@ class _ModalAgregarDineroState extends State<ModalAgregarDinero> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('¡\$${FormatoNumeros.formatearNumero(monto)} agregado exitosamente!'),
-            backgroundColor: Colors.green,
+            backgroundColor: UtilsAhorros.colorPrincipal,
           ),
         );
       }
@@ -61,7 +62,7 @@ class _ModalAgregarDineroState extends State<ModalAgregarDinero> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al agregar dinero: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: UtilsAhorros.colorPrincipal,
           ),
         );
       }

@@ -168,6 +168,7 @@ class _PantallaIngresosState extends State<PantallaIngresos> with TickerProvider
       builder: (context) => DialogoEliminarIngreso(
         ingresoId: ingresoId,
         onEliminado: () => setState(() {}),
+        parentContext: this.context,
       ),
     );
   }

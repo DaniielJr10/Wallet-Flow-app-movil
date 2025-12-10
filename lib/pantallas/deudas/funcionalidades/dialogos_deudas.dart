@@ -272,7 +272,7 @@ class _DialogoPagoDeudaState extends State<DialogoPagoDeuda> {
                             final pago = double.tryParse(raw) ?? 0.0;
                             if (pago <= 0) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Ingresa un monto válido')),
+                                const SnackBar(content: Text('Ingresa un monto válido'), backgroundColor: Color(0xFFF97316)),
                               );
                               return;
                             }

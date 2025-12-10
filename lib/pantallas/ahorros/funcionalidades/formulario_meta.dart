@@ -335,7 +335,7 @@ class _FormularioMetaState extends State<FormularioMeta> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(error),
-              backgroundColor: Colors.red,
+              backgroundColor: UtilsAhorros.colorPrincipal,
             ),
           );
         }

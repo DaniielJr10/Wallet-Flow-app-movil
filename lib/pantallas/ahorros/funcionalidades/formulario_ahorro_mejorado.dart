@@ -446,14 +446,14 @@ class _FormularioAhorroMejoradoState extends State<FormularioAhorroMejorado> {
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error), backgroundColor: Colors.red),
+            SnackBar(content: Text(error), backgroundColor: UtilsAhorros.colorPrincipal),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error: $e'), backgroundColor: UtilsAhorros.colorPrincipal),
         );
       }
     } finally {

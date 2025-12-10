@@ -735,9 +735,18 @@ class _FormularioGastoState extends State<FormularioGasto> {
           if (error == null) {
             Navigator.pop(context); // Cerrar form
             widget.onGuardar();
+            
+            // Mostrar mensaje de éxito
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(widget.esEdicion ? 'Gasto actualizado correctamente' : 'Gasto creado correctamente'),
+                backgroundColor: const Color(0xFFDC2626),
+                duration: const Duration(seconds: 2),
+              ),
+            );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(error), backgroundColor: Colors.red),
+              SnackBar(content: Text(error), backgroundColor: const Color(0xFFDC2626)),
             );
           }
         }
@@ -745,7 +754,7 @@ class _FormularioGastoState extends State<FormularioGasto> {
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+            SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFDC2626)),
           );
         }
       }

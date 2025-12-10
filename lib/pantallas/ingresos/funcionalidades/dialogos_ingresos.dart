@@ -7,11 +7,13 @@ import '../../../firebase/servicios/ingresoService/ingresos_servicio.dart';
 class DialogoEliminarIngreso extends StatelessWidget {
   final String ingresoId;
   final VoidCallback onEliminado;
+  final BuildContext parentContext;
 
   const DialogoEliminarIngreso({
     super.key,
     required this.ingresoId,
     required this.onEliminado,
+    required this.parentContext,
   });
 
   @override
@@ -44,15 +46,35 @@ class DialogoEliminarIngreso extends StatelessWidget {
     try {
       final error = await servicio.eliminarIngreso(ingresoId);
       if (error == null) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: const Text('Ingreso eliminado correctamente'), backgroundColor: Colors.red.shade600),
-          );
-          onEliminado();
-        }
+        onEliminado();
+        await Future.delayed(const Duration(milliseconds: 300));
+        ScaffoldMessenger.of(parentContext).showSnackBar(
+          const SnackBar(
+            content: Text('Ingreso eliminado correctamente'),
+            backgroundColor: Color(0xFF2ecc71),
+            duration: Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(parentContext).showSnackBar(
+          SnackBar(
+            content: Text('Error: $error'),
+            backgroundColor: const Color(0xFF2ecc71),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
-      // Manejo de error silencioso o toast
+      ScaffoldMessenger.of(parentContext).showSnackBar(
+        SnackBar(
+          content: Text('Error al eliminar: $e'),
+          backgroundColor: const Color(0xFF2ecc71),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 }

@@ -239,7 +239,7 @@ class _PantallaAhorrosState extends State<PantallaAhorros> with TickerProviderSt
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error), backgroundColor: Colors.red),
+            SnackBar(content: Text(error), backgroundColor: UtilsAhorros.colorPrincipal),
           );
         }
       }

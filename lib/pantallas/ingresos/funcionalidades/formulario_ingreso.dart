@@ -720,7 +720,7 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Ingreso actualizado y frecuencia eliminada'),
-                      backgroundColor: Colors.orange,
+                      backgroundColor: Color(0xFF2ecc71),
                       duration: Duration(seconds: 3),
                     ),
                   );
@@ -730,7 +730,7 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
                       content: Text(
                         'Ingreso actualizado con nueva frecuencia ${FrecuenciaUtils.obtenerNombre(_frecuenciaSeleccionada).toLowerCase()}',
                       ),
-                      backgroundColor: Colors.green,
+                      backgroundColor: const Color(0xFF2ecc71),
                       duration: const Duration(seconds: 4),
                     ),
                   );
@@ -740,11 +740,20 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
                       content: Text(
                         'Ingreso actualizado. Frecuencia cambiada a ${FrecuenciaUtils.obtenerNombre(_frecuenciaSeleccionada).toLowerCase()}',
                       ),
-                      backgroundColor: Colors.green,
+                      backgroundColor: const Color(0xFF2ecc71),
                       duration: const Duration(seconds: 4),
                     ),
                   );
                 }
+              } else {
+                // Mensaje simple de actualización cuando no hay cambio de frecuencia
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Ingreso actualizado correctamente'),
+                    backgroundColor: Color(0xFF2ecc71),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
               }
             } else if (_frecuenciaSeleccionada != TipoFrecuencia.ninguna) {
               // Mensaje para nuevo ingreso con frecuencia
@@ -753,14 +762,23 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
                   content: Text(
                     'Ingreso creado con repetición ${FrecuenciaUtils.obtenerNombre(_frecuenciaSeleccionada).toLowerCase()}. Se generará automáticamente.',
                   ),
-                  backgroundColor: Colors.green,
+                  backgroundColor: const Color(0xFF2ecc71),
                   duration: const Duration(seconds: 4),
+                ),
+              );
+            } else {
+              // Mensaje para nuevo ingreso sin frecuencia
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Ingreso creado correctamente'),
+                  backgroundColor: Color(0xFF2ecc71),
+                  duration: Duration(seconds: 2),
                 ),
               );
             }
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(error), backgroundColor: Colors.red),
+              SnackBar(content: Text(error), backgroundColor: const Color(0xFF2ecc71)),
             );
           }
         }
@@ -768,7 +786,7 @@ class _FormularioIngresoState extends State<FormularioIngreso> {
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error inesperado: $e'), backgroundColor: Colors.red),
+            SnackBar(content: Text('Error inesperado: $e'), backgroundColor: const Color(0xFF2ecc71)),
           );
         }
       }

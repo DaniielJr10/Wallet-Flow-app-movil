@@ -397,12 +397,12 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(widget.esEdicion ? 'Deuda actualizada' : 'Deuda creada'),
-                backgroundColor: Colors.green,
+                backgroundColor: const Color(0xFFF97316),
               ),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(error), backgroundColor: Colors.red),
+              SnackBar(content: Text(error), backgroundColor: const Color(0xFFF97316)),
             );
           }
         }
@@ -410,7 +410,7 @@ class _FormularioDeudaState extends State<FormularioDeuda> {
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error inesperado: $e'), backgroundColor: Colors.red),
+            SnackBar(content: Text('Error inesperado: $e'), backgroundColor: const Color(0xFFF97316)),
           );
         }
       }

@@ -173,6 +173,7 @@ class _PantallaGastosState extends State<PantallaGastos> with TickerProviderStat
       builder: (context) => DialogoEliminarGasto(
         gastoId: gastoId,
         onEliminado: () => setState(() {}),
+        parentContext: this.context,
       ),
     );
   }

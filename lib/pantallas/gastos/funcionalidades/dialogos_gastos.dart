@@ -5,11 +5,13 @@ import '../../../firebase/servicios/gastoService/gastos_servicio.dart';
 class DialogoEliminarGasto extends StatelessWidget {
   final String gastoId;
   final VoidCallback onEliminado;
+  final BuildContext parentContext;
 
   const DialogoEliminarGasto({
     super.key,
     required this.gastoId,
     required this.onEliminado,
+    required this.parentContext,
   });
 
   @override
@@ -51,27 +53,35 @@ class DialogoEliminarGasto extends StatelessWidget {
       // Ejecutar eliminación en background con timeout
       final error = await servicio.eliminarGasto(gastoId).timeout(const Duration(seconds: 15));
 
-      if (context.mounted) {
-        if (error == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Gasto eliminado correctamente'),
-              backgroundColor: Colors.red.shade600,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error), backgroundColor: Colors.red),
-          );
-        }
-      }
-    } on Exception catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al eliminar: $e'), backgroundColor: Colors.red),
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (error == null) {
+        ScaffoldMessenger.of(parentContext).showSnackBar(
+          const SnackBar(
+            content: Text('Gasto eliminado correctamente'),
+            backgroundColor: Color(0xFFDC2626),
+            duration: Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(parentContext).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: const Color(0xFFDC2626),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
+    } on Exception catch (e) {
+      ScaffoldMessenger.of(parentContext).showSnackBar(
+        SnackBar(
+          content: Text('Error al eliminar: $e'),
+          backgroundColor: const Color(0xFFDC2626),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 }

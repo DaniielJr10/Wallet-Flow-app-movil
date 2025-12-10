@@ -378,7 +378,7 @@ class _PantallaDeudasState extends State<PantallaDeudas> with TickerProviderStat
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(mensaje),
-        backgroundColor: esError ? Colors.red : const Color(0xFFF97316),
+        backgroundColor: const Color(0xFFF97316),
         behavior: SnackBarBehavior.floating,
       ),
     );
