@@ -33,15 +33,25 @@ class UtilsPerfil {
 
   static String formatearFecha(dynamic fecha) {
     if (fecha == null) return 'No disponible';
-    // Si viene de Firebase Timestamp, convertirlo antes de llamar a esta función o manejarlo aquí
-    // Asumimos que llega DateTime o String compatible
-    if (fecha is! DateTime) return 'Fecha inválida';
+    
+    DateTime fechaDateTime;
+    if (fecha is DateTime) {
+      fechaDateTime = fecha;
+    } else if (fecha is String) {
+      try {
+        fechaDateTime = DateTime.parse(fecha);
+      } catch (e) {
+        return 'Fecha inválida';
+      }
+    } else {
+      return 'Fecha inválida';
+    }
     
     final meses = [
       'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
       'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
     ];
     
-    return '${fecha.day} de ${meses[fecha.month - 1]} de ${fecha.year}';
+    return '${fechaDateTime.day} de ${meses[fechaDateTime.month - 1]} de ${fechaDateTime.year}';
   }
 }

@@ -114,6 +114,10 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
       final datosFirestore = perfilDoc?.data() ?? {};
 
       if (user != null) {
+        // Debug: Verificar las fechas
+        print('Fecha registro: ${user.metadata.creationTime}');
+        print('Último acceso: ${user.metadata.lastSignInTime}');
+        
         _datosUsuario = {
           'nombre': datosFirestore['nombre'] ?? user.displayName ?? '',
           'email': datosFirestore['email'] ?? user.email ?? '',
