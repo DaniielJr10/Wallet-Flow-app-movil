@@ -14,6 +14,7 @@ class FormularioInformacion extends StatelessWidget {
   final bool modoEdicion;
   final Map<String, dynamic> datosUsuario;
   final VoidCallback onRequestEdit;
+  final Future<void> Function(String)? onGuardarNombre;
 
   const FormularioInformacion({
     super.key,
@@ -24,6 +25,7 @@ class FormularioInformacion extends StatelessWidget {
     required this.modoEdicion,
     required this.datosUsuario,
     required this.onRequestEdit,
+    this.onGuardarNombre,
   });
 
   @override
@@ -74,50 +76,41 @@ class FormularioInformacion extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Campo nombre (tocar para activar edición)
-            GestureDetector(
-              onTap: modoEdicion ? null : onRequestEdit,
-              child: AbsorbPointer(
-                absorbing: !modoEdicion,
-                child: CampoTextoPerfil(
-                  controller: nombreController,
-                  label: 'Nombre Completo',
-                  icono: Icons.person,
-                  habilitado: modoEdicion,
-                  validador: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'El nombre es requerido';
-                    }
-                    if (value.trim().length < 2) {
-                      return 'El nombre debe tener al menos 2 caracteres';
-                    }
-                    return null;
-                  },
-                ),
-              ),
+            // Campo nombre con edición independiente
+            CampoTextoPerfil(
+              controller: nombreController,
+              label: 'Nombre Completo',
+              icono: Icons.person,
+              habilitado: modoEdicion,
+              mostrarIconoEditar: !modoEdicion,
+              onGuardarCambio: onGuardarNombre,
+              validador: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'El nombre es requerido';
+                }
+                if (value.trim().length < 2) {
+                  return 'El nombre debe tener al menos 2 caracteres';
+                }
+                return null;
+              },
             ),
 
             const SizedBox(height: 16),
 
-            // Campo email (tocar para activar edición)
-            GestureDetector(
-              onTap: modoEdicion ? null : onRequestEdit,
-              child: AbsorbPointer(
-                absorbing: !modoEdicion,
-                child: CampoTextoPerfil(
-                  controller: emailController,
-                  label: 'Correo Electrónico',
-                  icono: Icons.email,
-                  habilitado: modoEdicion,
-                  tipoTeclado: TextInputType.emailAddress,
-                    validador: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'El email es requerido';
-                      }
-                      return null;
-                    },
-                ),
-              ),
+            // Campo email (solo lectura por seguridad)
+            CampoTextoPerfil(
+              controller: emailController,
+              label: 'Correo Electrónico',
+              icono: Icons.email,
+              habilitado: false, // Email no editable por seguridad
+              tipoTeclado: TextInputType.emailAddress,
+              mostrarIconoEditar: false, // No mostrar icono porque no es editable
+              validador: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'El email es requerido';
+                }
+                return null;
+              },
             ),
 
             const SizedBox(height: 16),

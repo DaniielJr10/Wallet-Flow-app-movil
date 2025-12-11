@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 import '../../firebase/autenticacion_servicio.dart';
 // BORRADO: import '../../firebase/base_datos_servicio.dart'; 
 // NUEVO IMPORT:
@@ -30,6 +31,7 @@ import 'funcionalidades/app_bar_drawer.dart';
 import 'funcionalidades/bottom_nav_principal.dart';
 import 'funcionalidades/dialogos_principal.dart';
 import 'funcionalidades/utils_principal.dart';
+import 'funcionalidades/nombre_usuario_manager.dart';
 
 class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
@@ -50,6 +52,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> with TickerProvid
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   String _nombreUsuario = 'Usuario';
+  StreamSubscription<String>? _nombreSub;
 
   @override
   void initState() {
@@ -59,6 +62,11 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> with TickerProvid
     _animationController.forward();
     _cargarNombreUsuario();
     _procesarEntradaSautomaticas(); // Procesar ingresos y gastos automáticos al inicio
+    _nombreSub = NombreUsuarioManager().nombreStream.listen((nuevoNombre) {
+      if (mounted) {
+        setState(() => _nombreUsuario = nuevoNombre.split(' ')[0]);
+      }
+    });
   }
 
   Future<void> _cargarNombreUsuario() async {
@@ -172,6 +180,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> with TickerProvid
   @override
   void dispose() {
     _animationController.dispose();
+  _nombreSub?.cancel();
     super.dispose();
   }
 

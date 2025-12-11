@@ -21,6 +21,7 @@ import 'funcionalidades/formulario_info.dart';
 import 'funcionalidades/estados_perfil.dart';
 import 'funcionalidades/modales_perfil.dart';
 import 'funcionalidades/utils_perfil.dart';
+import '../principal/funcionalidades/nombre_usuario_manager.dart';
 
 class PantallaPerfil extends StatefulWidget {
   final bool iniciarEnEdicion;
@@ -134,6 +135,37 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
       _mostrarMensaje('Error al cargar los datos del perfil', esError: true);
     } finally {
       if (mounted) setState(() => _estaCargando = false);
+    }
+  }
+
+  Future<void> _guardarSoloNombre(String nuevoNombre) async {
+    if (nuevoNombre.trim().length < 2) {
+      throw Exception('El nombre debe tener al menos 2 caracteres');
+    }
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Actualizar Auth (DisplayName)
+        if (nuevoNombre != user.displayName) {
+          await user.updateDisplayName(nuevoNombre);
+        }
+        
+        // Actualizar Firestore usando UsuariosServicio
+        await _usuariosServicio.actualizarPerfil({
+          'nombre': nuevoNombre,
+        });
+        
+        // Actualizar estado local
+        _datosUsuario['nombre'] = nuevoNombre;
+        
+        _mostrarMensaje('Nombre actualizado correctamente');
+  // Notificar cambio global de nombre
+  NombreUsuarioManager().notificarCambioNombre(nuevoNombre);
+      }
+    } catch (e) {
+      _mostrarMensaje('Error al guardar el nombre: $e', esError: true);
+      rethrow;
     }
   }
 
@@ -356,6 +388,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> with TickerProviderStat
                             modoEdicion: _modoEdicion,
                             datosUsuario: _datosUsuario,
                             onRequestEdit: () => setState(() => _modoEdicion = true),
+                            onGuardarNombre: _guardarSoloNombre,
                           ),
                           const SizedBox(height: 24),
                           // Se eliminó la sección de estadísticas de uso
