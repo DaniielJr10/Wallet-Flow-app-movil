@@ -206,6 +206,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       notificacionesActivas: _notificacionesActivas,
       onNotificacionesChanged: (value) => setState(() => _notificacionesActivas = value),
       guardarConfiguracion: _guardarConfiguracion,
+      context: context, // Nuevo parámetro agregado
     );
   }
 

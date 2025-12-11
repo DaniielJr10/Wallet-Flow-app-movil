@@ -10,6 +10,7 @@
  */
 
 import 'package:flutter/material.dart';
+import 'notificaciones/pantalla_configuracion_notificaciones.dart';
 
 class ConfiguracionSecciones {
   
@@ -18,15 +19,28 @@ class ConfiguracionSecciones {
     required bool notificacionesActivas,
     required ValueChanged<bool> onNotificacionesChanged,
     required Future<void> Function(String, dynamic) guardarConfiguracion,
+    required BuildContext context, // Nuevo parámetro requerido
   }) {
     return _buildSeccion(
       titulo: 'Notificaciones',
       icono: Icons.notifications,
       color: const Color(0xFFF59E0B),
       children: [
+        _buildOpcionTile(
+          titulo: 'Configurar Notificaciones',
+          subtitulo: 'Personaliza qué notificaciones recibir',
+          icono: Icons.tune,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const PantallaConfiguracionNotificaciones(),
+              ),
+            );
+          },
+        ),
         _buildSwitchTile(
-          titulo: 'Notificaciones Push',
-          subtitulo: 'Recibir alertas importantes',
+          titulo: 'Notificaciones Generales',
+          subtitulo: 'Activar/desactivar todas las notificaciones',
           icono: Icons.notifications_active,
           valor: notificacionesActivas,
           onChanged: (value) async {
