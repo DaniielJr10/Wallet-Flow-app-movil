@@ -62,7 +62,7 @@ class FormularioInformacion extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 36),
 
             // Campo nombre con edición independiente
             CampoTextoPerfil(
