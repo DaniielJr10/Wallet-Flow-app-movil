@@ -26,6 +26,16 @@ class ConfiguracionSecciones {
       icono: Icons.notifications,
       color: const Color(0xFFF59E0B),
       children: [
+        _buildSwitchTile(
+          titulo: 'Notificaciones Generales',
+          subtitulo: 'Activar/desactivar todas las notificaciones',
+          icono: Icons.notifications_active,
+          valor: notificacionesActivas,
+          onChanged: (value) async {
+            onNotificacionesChanged(value);
+            await guardarConfiguracion('notificaciones_activas', value);
+          },
+        ),
         _buildOpcionTile(
           titulo: 'Configurar Notificaciones',
           subtitulo: 'Personaliza qué notificaciones recibir',
@@ -36,16 +46,6 @@ class ConfiguracionSecciones {
                 builder: (context) => const PantallaConfiguracionNotificaciones(),
               ),
             );
-          },
-        ),
-        _buildSwitchTile(
-          titulo: 'Notificaciones Generales',
-          subtitulo: 'Activar/desactivar todas las notificaciones',
-          icono: Icons.notifications_active,
-          valor: notificacionesActivas,
-          onChanged: (value) async {
-            onNotificacionesChanged(value);
-            await guardarConfiguracion('notificaciones_activas', value);
           },
         ),
       ],
