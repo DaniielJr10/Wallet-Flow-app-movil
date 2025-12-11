@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'preferencias_notificaciones.dart';
 import 'validador_notificaciones.dart';
+import '../../../ahorros/funcionalidades/notificaciones/notificaciones_ahorros.dart';
 
 /// Gestor COMPLETAMENTE FUNCIONAL que coordina todos los sistemas de notificaciones
 /// ✅ SIN ERRORES DE COMPILACIÓN - VERSIÓN 100% OPERATIVA
@@ -159,7 +160,13 @@ class GestorNotificacionesConfiguracion {
   Future<void> _configurarNotificacionesAhorros(bool activa) async {
     try {
       await PreferenciasNotificaciones.guardarPreferencia('ahorros', activa);
-      await _aplicarConfiguracionSegura('ahorros', activa);
+      
+      // CONEXIÓN CON EL SISTEMA REAL DE AHORROS
+      if (activa) {
+        await _activarSistemaAhorros();
+      } else {
+        await _desactivarSistemaAhorros();
+      }
       
       if (kDebugMode) {
         print('🏦 Ahorros: ${activa ? "ACTIVADAS ✅" : "DESACTIVADAS ❌"}');
@@ -248,6 +255,38 @@ class GestorNotificacionesConfiguracion {
     }
   }
 
+  /// Activa el sistema de ahorros específicamente
+  Future<void> _activarSistemaAhorros() async {
+    try {
+      // CONEXIÓN REAL con el sistema de ahorros
+      await NotificacionesAhorros.configurarSistema(true);
+      
+      if (kDebugMode) {
+        print('🔔 Sistema de AHORROS ACTIVADO - Recordatorios de metas habilitados');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error activando sistema de ahorros: $e');
+      }
+    }
+  }
+
+  /// Desactiva el sistema de ahorros
+  Future<void> _desactivarSistemaAhorros() async {
+    try {
+      // CONEXIÓN REAL con el sistema de ahorros
+      await NotificacionesAhorros.configurarSistema(false);
+      
+      if (kDebugMode) {
+        print('🔇 Sistema de AHORROS DESACTIVADO - Notificaciones de metas canceladas');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error desactivando sistema de ahorros: $e');
+      }
+    }
+  }
+
   /// Activa sistemas según las preferencias individuales guardadas
   Future<void> _activarSistemasSegundoPreferencias() async {
     try {
@@ -284,7 +323,16 @@ class GestorNotificacionesConfiguracion {
       resultado.addAll(preferencias);
       resultado.addAll(estadoSistemas);
       
-      // PASO 4: Agregar información del estado general
+      // PASO 4: Verificar sistema de ahorros específicamente
+      try {
+        final ahorrosActivas = await NotificacionesAhorros.estanActivas();
+        resultado['sistema_ahorros_conectado'] = ahorrosActivas;
+      } catch (e) {
+        resultado['sistema_ahorros_conectado'] = false;
+        if (kDebugMode) print('Sistema de ahorros no disponible: $e');
+      }
+      
+      // PASO 5: Agregar información del estado general
       resultado['sistema_funcional'] = true;
       resultado['preferencias_cargadas'] = preferencias.isNotEmpty;
       resultado['validador_operativo'] = !estadoSistemas.containsKey('error');
