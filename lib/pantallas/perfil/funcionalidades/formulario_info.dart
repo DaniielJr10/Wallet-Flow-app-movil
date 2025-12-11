@@ -50,20 +50,8 @@ class FormularioInformacion extends StatelessWidget {
           children: [
             // Título de la sección
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3B82F6).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.person_outline,
-                    color: Color(0xFF3B82F6),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
                 const Text(
                   'Información Personal',
                   style: TextStyle(
@@ -84,6 +72,8 @@ class FormularioInformacion extends StatelessWidget {
               habilitado: modoEdicion,
               mostrarIconoEditar: !modoEdicion,
               onGuardarCambio: onGuardarNombre,
+              iconColor: const Color(0xFF2ecc71),
+              fillColor: const Color(0xFFEFFCF4),
               validador: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'El nombre es requerido';
@@ -105,6 +95,8 @@ class FormularioInformacion extends StatelessWidget {
               habilitado: false, // Email no editable por seguridad
               tipoTeclado: TextInputType.emailAddress,
               mostrarIconoEditar: false, // No mostrar icono porque no es editable
+              iconColor: const Color(0xFF2ecc71),
+              fillColor: const Color(0xFFEFFCF4),
               validador: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'El email es requerido';
@@ -148,7 +140,7 @@ class FormularioInformacion extends StatelessWidget {
       children: [
         Icon(
           icono,
-          color: const Color(0xFF6B7280),
+          color: const Color(0xFF2ecc71),
           size: 16,
         ),
         const SizedBox(width: 8),

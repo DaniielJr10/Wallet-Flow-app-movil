@@ -15,6 +15,8 @@ class CampoTextoPerfil extends StatefulWidget {
   final String? Function(String?)? validador;
   final bool mostrarIconoEditar;
   final Future<void> Function(String)? onGuardarCambio;
+  final Color? iconColor;
+  final Color? fillColor;
 
   const CampoTextoPerfil({
     super.key,
@@ -27,6 +29,8 @@ class CampoTextoPerfil extends StatefulWidget {
     this.validador,
     this.mostrarIconoEditar = false,
     this.onGuardarCambio,
+  this.iconColor,
+  this.fillColor,
   });
 
   @override
@@ -123,46 +127,43 @@ class _CampoTextoPerfilState extends State<CampoTextoPerfil> {
         validator: widget.validador,
         onFieldSubmitted: _estEditando ? (_) => _guardarCambios() : null,
         decoration: InputDecoration(
-        labelText: widget.label,
-        prefixIcon: Icon(
-          widget.icono,
-          color: puedeEditar ? UtilsPerfil.colorPrincipal : Colors.grey,
-        ),
+           labelText: widget.label,
+           prefixIcon: Icon(
+             widget.icono,
+             color: widget.iconColor ?? (puedeEditar ? UtilsPerfil.colorPrincipal : Colors.grey),
+           ),
         suffixIcon: _buildSuffixIcon(),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: const BorderSide(color: Color(0xFF2ecc71)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: _estEditando ? UtilsPerfil.colorPrincipal : const Color(0xFFE5E7EB),
-            width: _estEditando ? 2 : 1,
-          ),
+          borderSide: const BorderSide(color: Color(0xFF2ecc71), width: 1.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: UtilsPerfil.colorPrincipal, width: 2),
+          borderSide: const BorderSide(color: Color(0xFF2ecc71), width: 2),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: widget.mostrarIconoEditar 
-              ? BorderSide(color: UtilsPerfil.colorPrincipal.withOpacity(0.3), width: 1)
-              : const BorderSide(color: Color(0xFFF3F4F6)),
+          borderSide: const BorderSide(color: Color(0xFF2ecc71), width: 1.5),
         ),
         filled: true,
-        fillColor: puedeEditar 
+        fillColor: widget.fillColor ?? (
+          puedeEditar 
             ? Colors.white 
             : widget.mostrarIconoEditar 
                 ? UtilsPerfil.colorPrincipal.withOpacity(0.05)
-                : const Color(0xFFF9FAFB),
+                : const Color(0xFFF9FAFB)
+        ),
         labelStyle: TextStyle(
           color: puedeEditar ? const Color(0xFF374151) : Colors.grey,
         ),
       ),
       style: TextStyle(
-        color: puedeEditar ? const Color(0xFF111827) : Colors.grey,
-        fontWeight: FontWeight.w500,
+  color: Colors.black,
+  fontWeight: FontWeight.bold,
       ),
       ),
     );
