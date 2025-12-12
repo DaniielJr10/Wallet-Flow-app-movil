@@ -97,6 +97,8 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       if (key == 'notificaciones_activas') {
         await NotificacionesServicio.instance.configurarNotificaciones(value);
         debugPrint('Configuración de notificaciones aplicada: $value');
+        // No mostrar aviso para las notificaciones generales
+        return;
       }
       
       if (mounted) {
