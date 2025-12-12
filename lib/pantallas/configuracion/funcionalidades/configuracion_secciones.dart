@@ -20,6 +20,7 @@ class ConfiguracionSecciones {
     required ValueChanged<bool> onNotificacionesChanged,
     required Future<void> Function(String, dynamic) guardarConfiguracion,
     required BuildContext context, // Nuevo parámetro requerido
+    required Future<void> Function() onRegresarDeConfiguracion, // Callback para recargar
   }) {
     return _buildSeccion(
       titulo: 'Notificaciones',
@@ -40,12 +41,14 @@ class ConfiguracionSecciones {
           titulo: 'Configurar Notificaciones',
           subtitulo: 'Personaliza qué notificaciones recibir',
           icono: Icons.tune,
-          onTap: () {
-            Navigator.of(context).push(
+          onTap: () async {
+            await Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => const PantallaConfiguracionNotificaciones(),
               ),
             );
+            // Recargar configuración al regresar
+            await onRegresarDeConfiguracion();
           },
         ),
       ],

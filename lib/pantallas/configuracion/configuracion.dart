@@ -76,11 +76,12 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       await Future.delayed(const Duration(milliseconds: 500));
       
       // Cargar configuración de notificaciones
-      final notificacionesActivas = await NotificacionesServicio.instance.notificacionesActivas();
+      // El switch debe aparecer activo si hay al menos una notificación específica activa
+      final hayNotificacionActiva = await PreferenciasNotificaciones.hayNotificacionEspecificaActiva();
       
       if (mounted) {
         setState(() {
-          _notificacionesActivas = notificacionesActivas;
+          _notificacionesActivas = hayNotificacionActiva;
         });
       }
       
@@ -100,6 +101,9 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
         // Si se desactivan las generales, desactivar todas las específicas
         if (value == false) {
           await _desactivarTodasLasNotificacionesEspecificas();
+        } else {
+          // Si se activan las generales, activar todas las específicas
+          await _activarTodasLasNotificacionesEspecificas();
         }
         
         debugPrint('Configuración de notificaciones aplicada: $value');
@@ -133,6 +137,21 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       debugPrint('Todas las notificaciones específicas han sido desactivadas');
     } catch (e) {
       debugPrint('Error desactivando notificaciones específicas: $e');
+    }
+  }
+
+  /// Activa todas las notificaciones específicas cuando se activan las generales
+  Future<void> _activarTodasLasNotificacionesEspecificas() async {
+    try {
+      final tiposNotificaciones = ['ingresos', 'gastos', 'deudas', 'ahorros', 'presupuesto', 'metas'];
+      
+      for (String tipo in tiposNotificaciones) {
+        await PreferenciasNotificaciones.guardarPreferencia(tipo, true);
+      }
+      
+      debugPrint('Todas las notificaciones específicas han sido activadas');
+    } catch (e) {
+      debugPrint('Error activando notificaciones específicas: $e');
     }
   }
 
@@ -230,6 +249,7 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       onNotificacionesChanged: (value) => setState(() => _notificacionesActivas = value),
       guardarConfiguracion: _guardarConfiguracion,
       context: context, // Nuevo parámetro agregado
+      onRegresarDeConfiguracion: _cargarConfiguracion, // Recargar cuando se regrese
     );
   }
 

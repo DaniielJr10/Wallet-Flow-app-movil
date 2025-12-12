@@ -106,4 +106,17 @@ class PreferenciasNotificaciones {
   static Future<bool> notificacionesHabilitadasGlobalmente() async {
     return await obtenerPreferencia('generales');
   }
+
+  /// Verifica si hay al menos una notificación específica activa
+  /// Retorna true si ingresos, gastos, ahorros o deudas está activa
+  static Future<bool> hayNotificacionEspecificaActiva() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    final ingresos = prefs.getBool(_keyNotificacionesIngresos) ?? true;
+    final gastos = prefs.getBool(_keyNotificacionesGastos) ?? true;
+    final ahorros = prefs.getBool(_keyNotificacionesAhorros) ?? true;
+    final deudas = prefs.getBool(_keyNotificacionesDeudas) ?? true;
+    
+    return ingresos || gastos || ahorros || deudas;
+  }
 }
