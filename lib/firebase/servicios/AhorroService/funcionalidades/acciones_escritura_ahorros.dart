@@ -7,7 +7,8 @@ import 'referencias_ahorros.dart';
 mixin AccionesEscrituraAhorros on ReferenciasAhorros {
   
   /// === CREAR NUEVA META DE AHORRO ===
-  Future<String?> crearMetaAhorro({
+  /// Retorna un Map con 'error' (String?) y 'metaId' (String?) 
+  Future<Map<String, String?>> crearMetaAhorro({
     required String nombre,
     required double montoInicial,
     required double montoObjetivo,
@@ -15,12 +16,14 @@ mixin AccionesEscrituraAhorros on ReferenciasAhorros {
     required String categoria,
   }) async {
     try {
-      if (userId == null) return 'Usuario no autenticado';
-      if (nombre.trim().isEmpty) return 'El nombre es requerido';
-      if (montoObjetivo <= 0) return 'El monto objetivo debe ser mayor a 0';
+      if (userId == null) return {'error': 'Usuario no autenticado', 'metaId': null};
+      if (nombre.trim().isEmpty) return {'error': 'El nombre es requerido', 'metaId': null};
+      if (montoObjetivo <= 0) return {'error': 'El monto objetivo debe ser mayor a 0', 'metaId': null};
 
+      String? metaId;
       await firestore.runTransaction((transaction) async {
         final metaRef = ahorrosRef().doc();
+        metaId = metaRef.id; // Guardar el ID generado
         final metaData = {
           'nombre': nombre.trim(),
           'montoInicial': montoInicial,
@@ -32,9 +35,9 @@ mixin AccionesEscrituraAhorros on ReferenciasAhorros {
         };
         transaction.set(metaRef, metaData);
       });
-      return null;
+      return {'error': null, 'metaId': metaId};
     } catch (e) {
-      return 'Error al crear la meta: ${e.toString()}';
+      return {'error': 'Error al crear la meta: ${e.toString()}', 'metaId': null};
     }
   }
 

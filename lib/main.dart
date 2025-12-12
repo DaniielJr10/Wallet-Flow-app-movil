@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'firebase/firebase_options.dart';
 import 'firebase/servicios/NotificacionesService/notificaciones_servicio.dart';
+import 'pantallas/ahorros/funcionalidades/notificaciones/servicio_notificaciones_ahorros.dart';
 import 'auth_wrapper.dart';
 
 void main() async {
@@ -26,6 +27,18 @@ void main() async {
     }
   } catch (e) {
     print('❌ Error inicializando notificaciones: $e');
+  }
+  
+  // Inicializar servicio de notificaciones de ahorros
+  try {
+    final ahorrosNotificacionesInicializadas = await ServicioNotificacionesAhorros.instance.inicializar();
+    if (ahorrosNotificacionesInicializadas) {
+      print('✅ Servicio de notificaciones de ahorros inicializado correctamente');
+    } else {
+      print('⚠️ No se pudo inicializar el servicio de notificaciones de ahorros');
+    }
+  } catch (e) {
+    print('❌ Error inicializando notificaciones de ahorros: $e');
   }
   
   runApp(const WalletFlowApp());

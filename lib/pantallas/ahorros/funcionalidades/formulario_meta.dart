@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../firebase/servicios/AhorroService/ahorros_servicio.dart';
 import '../../../utilidades/formato_numeros.dart';
+import '../../../pantallas/configuracion/funcionalidades/notificaciones/preferencias_notificaciones.dart';
+import 'notificaciones/servicio_notificaciones_ahorros.dart';
 import 'utils_ahorros.dart';
 
 class FormularioMeta extends StatefulWidget {
@@ -284,15 +286,17 @@ class _FormularioMetaState extends State<FormularioMeta> {
       final montoInicial = FormatoNumeros.convertirANumero(_montoInicialController.text) ?? 0.0;
       final montoActual = widget.esEdicion ? FormatoNumeros.convertirANumero(_montoActualController.text) ?? 0.0 : montoInicial;
       final montoObjetivo = FormatoNumeros.convertirANumero(_montoObjetivoController.text) ?? 0.0;
+      final fechaObjetivo = _fechaAhorro ?? DateTime.now();
+      final nombreMeta = _nombreController.text.trim();
       String? error;
 
       if (widget.esEdicion && widget.metaId != null) {
         // Primero actualizamos los datos básicos
         error = await _ahorrosServicio.actualizarMetaAhorro(
           metaId: widget.metaId!,
-          nombre: _nombreController.text.trim(),
+          nombre: nombreMeta,
           montoObjetivo: montoObjetivo,
-          fechaObjetivo: _fechaAhorro ?? DateTime.now(),
+          fechaObjetivo: fechaObjetivo,
           categoria: _categoriaAhorro,
         );
         
@@ -308,15 +312,39 @@ class _FormularioMetaState extends State<FormularioMeta> {
               montoAgregar: diferencia,
             );
           }
+          
+          // Reprogramar notificaciones con los nuevos datos
+          await _programarNotificacionesVencimiento(
+            metaId: widget.metaId!,
+            nombreMeta: nombreMeta,
+            montoObjetivo: montoObjetivo,
+            montoActual: montoActual,
+            fechaLimite: fechaObjetivo,
+          );
         }
       } else {
-        error = await _ahorrosServicio.crearMetaAhorro(
-          nombre: _nombreController.text.trim(),
+        // Crear nueva meta
+        final resultado = await _ahorrosServicio.crearMetaAhorro(
+          nombre: nombreMeta,
           montoInicial: montoInicial,
           montoObjetivo: montoObjetivo,
-          fechaObjetivo: _fechaAhorro ?? DateTime.now(),
+          fechaObjetivo: fechaObjetivo,
           categoria: _categoriaAhorro,
         );
+        
+        error = resultado['error'];
+        final metaId = resultado['metaId'];
+        
+        // Si se creó exitosamente, programar notificaciones
+        if (error == null && metaId != null) {
+          await _programarNotificacionesVencimiento(
+            metaId: metaId,
+            nombreMeta: nombreMeta,
+            montoObjetivo: montoObjetivo,
+            montoActual: montoInicial,
+            fechaLimite: fechaObjetivo,
+          );
+        }
       }
 
       if (error == null) {
@@ -340,6 +368,41 @@ class _FormularioMetaState extends State<FormularioMeta> {
           );
         }
       }
+    }
+  }
+
+  /// Programa las notificaciones de vencimiento para una meta
+  Future<void> _programarNotificacionesVencimiento({
+    required String metaId,
+    required String nombreMeta,
+    required double montoObjetivo,
+    required double montoActual,
+    required DateTime fechaLimite,
+  }) async {
+    try {
+      // Verificar si las notificaciones de ahorros están activas
+      final notificacionesActivas = await PreferenciasNotificaciones.obtenerPreferencia('ahorros');
+      
+      if (!notificacionesActivas) {
+        print('🔇 Notificaciones de ahorros desactivadas - No se programan alertas');
+        return;
+      }
+      
+      // Generar un ID numérico para la meta (usando hashCode del metaId)
+      final metaIdNumerico = metaId.hashCode.abs() % 1000000;
+      
+      // Programar alertas de vencimiento (7, 3 y 1 días antes)
+      await ServicioNotificacionesAhorros.instance.programarAlertaMetaProximaVencer(
+        metaId: metaIdNumerico,
+        nombreMeta: nombreMeta,
+        montoObjetivo: montoObjetivo,
+        montoActual: montoActual,
+        fechaLimite: fechaLimite,
+      );
+      
+      print('✅ Notificaciones de vencimiento programadas para: $nombreMeta');
+    } catch (e) {
+      print('❌ Error programando notificaciones: $e');
     }
   }
   
