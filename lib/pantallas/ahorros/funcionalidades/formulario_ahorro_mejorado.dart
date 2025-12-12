@@ -425,13 +425,14 @@ class _FormularioAhorroMejoradoState extends State<FormularioAhorroMejorado> {
       } else {
         // Crear nuevo ahorro
         final montoInicial = FormatoNumeros.convertirANumero(_montoInicialController.text) ?? 0.0;
-        error = await _ahorrosServicio.crearMetaAhorro(
+        final resultado = await _ahorrosServicio.crearMetaAhorro(
           nombre: nombre,
           montoInicial: montoInicial,
           montoObjetivo: montoObjetivo,
           fechaObjetivo: _fechaObjetivo,
           categoria: _categoriaSeleccionada,
         );
+        error = resultado['error'];
       }
 
       if (mounted) {
