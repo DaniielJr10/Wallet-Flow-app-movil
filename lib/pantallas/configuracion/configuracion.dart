@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 // Importación del servicio de notificaciones
 import '../../firebase/servicios/NotificacionesService/notificaciones_servicio.dart';
-
+import 'funcionalidades/notificaciones/preferencias_notificaciones.dart';
 
 // import '../perfil/perfil.dart'; // removed: profile not shown in settings
 import 'funcionalidades/preguntas_frecuentes/preguntas_frecuentes.dart';
@@ -96,6 +96,12 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       // Si se cambia la configuración de notificaciones, aplicar al servicio
       if (key == 'notificaciones_activas') {
         await NotificacionesServicio.instance.configurarNotificaciones(value);
+        
+        // Si se desactivan las generales, desactivar todas las específicas
+        if (value == false) {
+          await _desactivarTodasLasNotificacionesEspecificas();
+        }
+        
         debugPrint('Configuración de notificaciones aplicada: $value');
         // No mostrar aviso para las notificaciones generales
         return;
@@ -112,6 +118,21 @@ class _PantallaConfiguracionState extends State<PantallaConfiguracion>
       }
     } catch (e) {
       debugPrint('Error al guardar configuración: $e');
+    }
+  }
+
+  /// Desactiva todas las notificaciones específicas cuando se desactivan las generales
+  Future<void> _desactivarTodasLasNotificacionesEspecificas() async {
+    try {
+      final tiposNotificaciones = ['ingresos', 'gastos', 'deudas', 'ahorros', 'presupuesto', 'metas'];
+      
+      for (String tipo in tiposNotificaciones) {
+        await PreferenciasNotificaciones.guardarPreferencia(tipo, false);
+      }
+      
+      debugPrint('Todas las notificaciones específicas han sido desactivadas');
+    } catch (e) {
+      debugPrint('Error desactivando notificaciones específicas: $e');
     }
   }
 

@@ -29,6 +29,12 @@ class GestorNotificacionesConfiguracion {
         case 'ahorros':
           await _manejarNotificacionesAhorros(activa);
           break;
+        case 'presupuesto':
+          await _manejarNotificacionesPresupuesto(activa);
+          break;
+        case 'metas':
+          await _manejarNotificacionesMetas(activa);
+          break;
         default:
           if (kDebugMode) {
             print('Tipo de notificación no reconocido: $tipo');
@@ -49,7 +55,7 @@ class GestorNotificacionesConfiguracion {
   /// Aplica cambios masivos
   Future<void> aplicarCambioMasivo(bool activar) async {
     try {
-      final tipos = ['ingresos', 'gastos', 'deudas', 'ahorros'];
+      final tipos = ['ingresos', 'gastos', 'deudas', 'ahorros', 'presupuesto', 'metas'];
       
       for (final tipo in tipos) {
         await aplicarCambioNotificacion(tipo, activar);
@@ -140,6 +146,36 @@ class GestorNotificacionesConfiguracion {
     } catch (e) {
       if (kDebugMode) {
         print('Error en notificaciones de ahorros: $e');
+      }
+    }
+  }
+
+  /// Maneja notificaciones de presupuesto
+  Future<void> _manejarNotificacionesPresupuesto(bool activa) async {
+    try {
+      if (activa) {
+        await _activarSistemaEspecifico('presupuesto');
+      } else {
+        await _desactivarSistemaEspecifico('presupuesto');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error en notificaciones de presupuesto: $e');
+      }
+    }
+  }
+
+  /// Maneja notificaciones de metas
+  Future<void> _manejarNotificacionesMetas(bool activa) async {
+    try {
+      if (activa) {
+        await _activarSistemaEspecifico('metas');
+      } else {
+        await _desactivarSistemaEspecifico('metas');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error en notificaciones de metas: $e');
       }
     }
   }
